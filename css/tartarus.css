@@ -1,0 +1,169 @@
+/* P3R Companion — Tartarus Shadow Database */
+
+@keyframes glowPulse{0%,100%{text-shadow:0 0 20px var(--cyan-glow),0 0 40px rgba(0,229,255,0.2)}50%{text-shadow:0 0 30px var(--cyan-glow),0 0 60px rgba(0,229,255,0.3)}}
+
+#tartarus{
+  --cyan-dim:rgba(0,229,255,0.15);--cyan-glow:rgba(0,229,255,0.4);
+  --wk:#ff1744;--rs:#1565c0;--nu:#546e7a;--rp:#7b1fa2;--dr:#2e7d32;
+}
+
+#tartarus .header{text-align:center;padding:2rem 1rem 1rem}
+#tartarus .header h1{font-family:'Cinzel',serif;font-size:3.5rem;font-weight:900;letter-spacing:0.3em;color:var(--cyan);animation:glowPulse 4s ease-in-out infinite;text-transform:uppercase}
+#tartarus .header .subtitle{font-size:1rem;color:var(--text-dim);letter-spacing:0.2em;margin-top:0.25rem}
+
+#tartarus .nav-tabs{display:flex;justify-content:center;gap:0.5rem;padding:1rem;flex-wrap:wrap}
+#tartarus .nav-tab{padding:0.5rem 1.2rem;border-radius:4px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:0.95rem;background:var(--glass);border:1px solid var(--glass-border);color:var(--text-dim);transition:all 0.3s;letter-spacing:0.05em}
+#tartarus .nav-tab:hover,#tartarus .nav-tab.active{color:var(--text-bright);border-color:var(--cyan);box-shadow:0 0 12px rgba(0,229,255,0.2)}
+#tartarus .nav-tab.active{background:rgba(0,229,255,0.1)}
+
+#tartarus .controls{max-width:1400px;margin:0 auto;padding:0.75rem 1rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center}
+#tartarus .search-box{flex:1;min-width:200px;padding:0.6rem 1rem;border-radius:4px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:1rem;outline:none;transition:border-color 0.3s}
+#tartarus .search-box:focus{border-color:var(--cyan)}
+#tartarus .search-box::placeholder{color:var(--text-dim)}
+#tartarus .filter-btn{padding:0.4rem 0.8rem;border-radius:3px;cursor:pointer;background:var(--glass);border:1px solid var(--glass-border);color:var(--text-dim);font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:500;transition:all 0.2s}
+#tartarus .filter-btn:hover{border-color:var(--cyan-dim);color:var(--text)}
+#tartarus .filter-btn.active{background:rgba(0,229,255,0.1);border-color:var(--cyan);color:var(--cyan)}
+#tartarus .filter-group{display:flex;gap:0.3rem;align-items:center;flex-wrap:wrap}
+#tartarus .filter-label{color:var(--text-dim);font-size:0.8rem;margin-right:0.2rem}
+#tartarus select.filter-select{padding:0.4rem 0.6rem;border-radius:3px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.85rem;outline:none;cursor:pointer}
+#tartarus select.filter-select option{background:#0d1229;color:var(--text)}
+
+#tartarus .main{max-width:1400px;margin:0 auto;padding:0 1rem 2rem;display:flex;gap:1rem}
+#tartarus .table-wrap{flex:1;overflow-x:auto}
+#tartarus .sidebar{width:300px;flex-shrink:0}
+
+#tartarus .shadow-table{width:100%;border-collapse:collapse;background:var(--glass);border:1px solid var(--glass-border);border-radius:6px;overflow:hidden}
+#tartarus .shadow-table thead{position:sticky;top:0;z-index:10}
+#tartarus .shadow-table th{background:rgba(8,12,26,0.95);padding:0.5rem 0.4rem;font-weight:600;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--glass-border);user-select:none}
+#tartarus .shadow-table th:hover{color:var(--cyan)}
+#tartarus .shadow-table th.sorted-asc::after{content:' ▲';color:var(--cyan);font-size:0.7rem}
+#tartarus .shadow-table th.sorted-desc::after{content:' ▼';color:var(--cyan);font-size:0.7rem}
+#tartarus .shadow-table td{padding:0.4rem;font-size:0.85rem;border-bottom:1px solid rgba(0,229,255,0.05);white-space:nowrap}
+#tartarus .shadow-table tbody tr{cursor:pointer;transition:background 0.2s}
+#tartarus .shadow-table tbody tr:hover{background:rgba(0,229,255,0.05)}
+#tartarus .shadow-table tbody tr.boss-row{border-left:3px solid var(--wk)}
+#tartarus .shadow-table tbody tr.rare-row{border-left:3px solid gold}
+
+#tartarus .aff{display:inline-block;width:28px;text-align:center;font-size:0.7rem;font-weight:700;border-radius:3px;padding:1px 2px}
+#tartarus .aff-wk{background:var(--wk);color:#fff}
+#tartarus .aff-z{background:#d50000;color:#fff}
+#tartarus .aff-rs{background:var(--rs);color:#fff}
+#tartarus .aff-nu{background:var(--nu);color:#fff}
+#tartarus .aff-rp{background:var(--rp);color:#fff}
+#tartarus .aff-dr{background:var(--dr);color:#fff}
+#tartarus .aff-n{color:var(--text-dim);font-size:0.75rem}
+
+#tartarus .type-badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.03em}
+#tartarus .type-regular{background:rgba(100,140,180,0.2);color:#8ab4d8}
+#tartarus .type-gatekeeper{background:rgba(255,23,68,0.15);color:#ff6b8a}
+#tartarus .type-fullmoon{background:rgba(255,215,0,0.15);color:#ffd700}
+#tartarus .type-monad-door{background:rgba(123,31,162,0.15);color:#ce93d8}
+#tartarus .type-monad-passage{background:rgba(255,111,0,0.15);color:#ffab40}
+#tartarus .type-other{background:rgba(100,100,100,0.2);color:#999}
+
+#tartarus .detail-row td{padding:0!important;border:none!important}
+#tartarus .detail-card{padding:1rem;background:rgba(8,12,26,0.5);border-top:1px solid var(--cyan-dim);border-bottom:1px solid var(--cyan-dim)}
+#tartarus .detail-card h3{font-family:'Cinzel',serif;color:var(--cyan);margin-bottom:0.5rem;font-size:1.1rem}
+#tartarus .detail-section{margin-bottom:0.75rem}
+#tartarus .detail-section .label{color:var(--text-dim);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em}
+#tartarus .detail-section .value{color:var(--text);font-size:0.9rem;margin-top:0.15rem}
+#tartarus .skill-tag{display:inline-block;padding:2px 8px;margin:2px;border-radius:3px;background:rgba(0,229,255,0.08);border:1px solid var(--cyan-dim);font-size:0.8rem;color:var(--text)}
+#tartarus .drop-item{display:inline-flex;align-items:center;gap:0.3rem;margin:2px 6px 2px 0;font-size:0.85rem}
+#tartarus .drop-chance{color:var(--cyan);font-size:0.75rem}
+#tartarus .strategy-box{padding:0.75rem;border-radius:4px;margin-top:0.5rem;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim)}
+#tartarus .strategy-box .strat-title{color:var(--cyan);font-weight:600;font-size:0.9rem;margin-bottom:0.3rem}
+#tartarus .strategy-box p{font-size:0.85rem;line-height:1.4;color:var(--text)}
+#tartarus .stat-bar{display:flex;gap:0.75rem;flex-wrap:wrap}
+#tartarus .stat-item{text-align:center}
+#tartarus .stat-item .stat-label{font-size:0.7rem;color:var(--text-dim);text-transform:uppercase}
+#tartarus .stat-item .stat-val{font-size:1rem;font-weight:600;color:var(--text-bright)}
+
+#tartarus .floor-scout{background:var(--glass);border:1px solid var(--glass-border);border-radius:6px;padding:1rem;position:sticky;top:4rem}
+#tartarus .floor-scout h2{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--cyan);margin-bottom:0.75rem;letter-spacing:0.1em}
+#tartarus .floor-input{width:100%;padding:0.5rem;border-radius:4px;background:rgba(8,12,26,0.6);border:1px solid var(--glass-border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:1rem;outline:none;text-align:center}
+#tartarus .floor-input:focus{border-color:var(--cyan)}
+#tartarus .floor-info{margin-top:0.75rem}
+#tartarus .floor-block-name{font-family:'Cinzel',serif;font-size:1rem;margin-bottom:0.5rem}
+#tartarus .floor-enemies{margin-top:0.5rem}
+#tartarus .floor-enemy{padding:0.4rem 0;border-bottom:1px solid rgba(0,229,255,0.05);font-size:0.85rem}
+#tartarus .floor-enemy-name{font-weight:500}
+#tartarus .floor-enemy-affs{display:flex;flex-wrap:wrap;gap:3px;margin-top:2px}
+#tartarus .floor-aff{font-size:0.7rem;font-weight:600;padding:1px 5px;border-radius:3px;white-space:nowrap}
+#tartarus .floor-aff-wk{background:rgba(255,23,68,0.2);color:#ff1744}
+#tartarus .floor-aff-z{background:rgba(213,0,0,0.25);color:#ff1744}
+#tartarus .floor-aff-rs{background:rgba(21,101,192,0.2);color:#5c9ce6}
+#tartarus .floor-aff-nu{background:rgba(84,110,122,0.2);color:#90a4ae}
+#tartarus .floor-aff-rp{background:rgba(123,31,162,0.2);color:#ce93d8}
+#tartarus .floor-aff-abs{background:rgba(46,125,50,0.2);color:#66bb6a}
+#tartarus .floor-tip{margin-top:0.75rem;padding:0.5rem;border-radius:4px;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);font-size:0.8rem;color:var(--text)}
+#tartarus .floor-tip strong{color:var(--cyan)}
+
+#tartarus .fullmoon-section{max-width:1400px;margin:0 auto;padding:0 1rem 2rem;display:none}
+#tartarus .fullmoon-section.active{display:block}
+#tartarus .timeline{display:flex;flex-direction:column;gap:1rem}
+#tartarus .moon-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:6px;padding:1rem;transition:all 0.3s;cursor:pointer}
+#tartarus .moon-card:hover{border-color:var(--cyan);box-shadow:0 0 15px rgba(0,229,255,0.1)}
+#tartarus .moon-card.expanded{border-color:var(--cyan)}
+#tartarus .moon-header{display:flex;align-items:center;gap:1rem}
+#tartarus .moon-icon{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffd700,#ff8f00);box-shadow:0 0 15px rgba(255,215,0,0.3);flex-shrink:0}
+#tartarus .moon-date{font-weight:600;color:var(--text-bright);font-size:1rem}
+#tartarus .moon-boss{color:var(--text-dim);font-size:0.9rem}
+#tartarus .moon-details{margin-top:0.75rem;display:none}
+#tartarus .moon-card.expanded .moon-details{display:block}
+#tartarus .moon-aff-row{display:flex;gap:0.3rem;margin:0.5rem 0;flex-wrap:wrap}
+
+#tartarus .result-count{color:var(--text-dim);font-size:0.85rem;padding:0.5rem 0}
+
+/* Loadout Advisor */
+#tartarus .loadout-section{margin-top:0.75rem;padding:0.75rem;border-radius:4px;background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.15)}
+#tartarus .loadout-title{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--cyan);margin-bottom:0.5rem;letter-spacing:0.05em}
+#tartarus .loadout-persona{padding:0.35rem 0;border-bottom:1px solid rgba(0,229,255,0.06)}
+#tartarus .loadout-persona:last-child{border-bottom:none}
+#tartarus .loadout-name{font-weight:600;font-size:0.85rem;color:var(--text-bright)}
+#tartarus .loadout-lvl{font-size:0.75rem;color:var(--cyan);font-weight:400}
+#tartarus .loadout-arcana{font-size:0.7rem;color:var(--text-dim);font-weight:400;padding:0 4px;background:rgba(0,229,255,0.08);border-radius:3px}
+#tartarus .loadout-reason{font-size:0.75rem;color:var(--text-dim);margin-top:2px}
+
+/* Skill tooltips */
+#tartarus .skill-tag[data-tooltip]{position:relative;cursor:help}
+#tartarus .skill-tag[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:rgba(8,12,26,0.95);border:1px solid var(--cyan-dim);color:var(--text);padding:4px 8px;border-radius:4px;font-size:0.72rem;white-space:nowrap;z-index:50;pointer-events:none}
+
+/* Floor EXP summary */
+#tartarus .floor-exp-summary{margin-top:0.6rem;padding:0.4rem 0.5rem;border-radius:4px;background:rgba(255,213,79,0.06);border:1px solid rgba(255,213,79,0.15);font-size:0.82rem;color:var(--text)}
+#tartarus .floor-exp-ind{font-weight:600;margin-left:0.3rem;color:var(--cyan)}
+
+/* Boss guide components */
+#tartarus .strat-row{margin:0.4rem 0;font-size:0.85rem;display:flex;flex-wrap:wrap;gap:0.3rem;align-items:center}
+#tartarus .strat-label{color:var(--text-dim);font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.04em;min-width:90px}
+#tartarus .strat-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:0.8rem;font-weight:600}
+#tartarus .strat-party{background:rgba(0,229,255,0.12);color:var(--cyan);border:1px solid rgba(0,229,255,0.25)}
+#tartarus .strat-persona{background:rgba(255,213,79,0.12);color:#ffd54f;border:1px solid rgba(255,213,79,0.25)}
+#tartarus .strat-item{background:rgba(76,175,80,0.12);color:#66bb6a;border:1px solid rgba(76,175,80,0.25)}
+#tartarus .strat-lvl{background:rgba(255,23,68,0.12);color:#ff6b8a;border:1px solid rgba(255,23,68,0.25)}
+#tartarus .strat-phase{margin:0.5rem 0;padding:0.5rem 0.7rem;border-radius:4px;background:rgba(0,0,0,0.15);border-left:3px solid var(--cyan-dim)}
+#tartarus .strat-phase-name{font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;color:var(--cyan);margin-bottom:0.2rem}
+#tartarus .strat-phase p{font-size:0.82rem;line-height:1.4;color:var(--text);margin:0}
+#tartarus .strat-quick{font-style:italic;color:var(--text-dim);font-size:0.82rem;margin:0 0 0.3rem}
+#tartarus .moon-quick-tip{font-size:0.78rem;color:var(--text-dim);font-style:italic;margin-top:0.2rem}
+#tartarus .moon-shadows-label{font-size:0.8rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.8rem;padding-top:0.5rem;border-top:1px solid rgba(0,229,255,0.08)}
+#tartarus .moon-phases{margin:0.5rem 0}
+
+/* Grinding guide */
+#tartarus .grind-spot{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0;border-bottom:1px solid rgba(0,229,255,0.06)}
+#tartarus .grind-spot:last-child{border-bottom:none}
+#tartarus .grind-rank{font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:700;color:var(--cyan);min-width:28px}
+#tartarus .grind-info{flex:1;min-width:0}
+#tartarus .grind-block{font-weight:600;font-size:0.85rem}
+#tartarus .grind-meta{font-size:0.75rem;color:var(--text-dim)}
+
+/* Loot finder */
+#tartarus .loot-item-group{padding:0.5rem 0;border-bottom:1px solid rgba(0,229,255,0.08)}
+#tartarus .loot-item-group:last-child{border-bottom:none}
+#tartarus .loot-item-name{font-weight:600;font-size:0.9rem;color:var(--text-bright);margin-bottom:0.2rem}
+#tartarus .loot-source{font-size:0.8rem;display:flex;gap:0.4rem;align-items:baseline;padding:1px 0}
+#tartarus .loot-chance{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--cyan);min-width:30px}
+#tartarus .loot-enemy{color:var(--text)}
+#tartarus .loot-area{color:var(--text-dim);font-size:0.72rem}
+
+@media(max-width:900px){#tartarus .main{flex-direction:column}#tartarus .sidebar{width:100%;order:-1}#tartarus .floor-scout{position:static}}
+@media(max-width:768px){#tartarus .header h1{font-size:2rem;letter-spacing:0.15em}#tartarus .controls{padding:0.5rem}#tartarus .shadow-table{font-size:0.8rem}#tartarus .shadow-table th,#tartarus .shadow-table td{padding:0.3rem}}

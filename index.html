@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P3R Companion — Tartarus &amp; Velvet Room &amp; Social Links</title>
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/tartarus.css">
+<link rel="stylesheet" href="css/velvet.css">
+<link rel="stylesheet" href="css/social-links.css">
+</head>
+<body>
+
+<!-- ===== TOP-LEVEL NAVIGATION ===== -->
+<nav class="app-nav">
+  <div class="app-title">P3R <span>Companion</span></div>
+  <div class="app-nav-tabs">
+    <button class="app-nav-tab" data-section="tartarus">Tartarus</button>
+    <button class="app-nav-tab" data-section="velvet">Velvet Room</button>
+    <button class="app-nav-tab" data-section="social-links">Social Links</button>
+  </div>
+  <button class="save-gear-btn" id="save-gear-btn" title="Save / Load Progress">&#9881;</button>
+</nav>
+
+<!-- ===== SAVE/LOAD MODAL ===== -->
+<div class="save-modal-overlay" id="save-modal-overlay">
+  <div class="save-modal">
+    <div class="save-modal-header">
+      <h2>Save &amp; Load</h2>
+      <button class="save-modal-close" id="save-modal-close">&times;</button>
+    </div>
+    <div class="save-modal-body">
+      <div class="save-section">
+        <h3>Export Progress</h3>
+        <p class="save-hint">Download your roster and social link progress, or copy a share code.</p>
+        <div class="save-btn-row">
+          <button class="btn btn-cyan" id="save-download">Download .json</button>
+          <button class="btn btn-gold" id="save-copy-code">Copy Share Code</button>
+        </div>
+        <div class="save-feedback" id="save-export-feedback"></div>
+      </div>
+      <div class="save-divider"></div>
+      <div class="save-section">
+        <h3>Import Progress</h3>
+        <p class="save-hint">Upload a .json file or paste a share code to restore your data.</p>
+        <div class="save-btn-row">
+          <label class="btn btn-cyan save-file-label">
+            Upload .json
+            <input type="file" id="save-file-input" accept=".json" style="display:none">
+          </label>
+        </div>
+        <textarea class="save-code-input" id="save-code-input" placeholder="Paste share code here..." rows="3"></textarea>
+        <button class="btn btn-gold" id="save-import-code" style="margin-top:0.5rem">Import Share Code</button>
+        <div class="save-feedback" id="save-import-feedback"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TARTARUS SECTION ===== -->
+<div id="tartarus" class="app-section">
+  <div class="header">
+    <h1>Tartarus</h1>
+    <div class="subtitle">P3 Reload &mdash; Shadow Database</div>
+  </div>
+
+  <div class="nav-tabs" id="navTabs">
+    <div class="nav-tab active" data-view="database">All Shadows</div>
+    <div class="nav-tab" data-block="thebel" style="border-left:3px solid #4a6fa5">Thebel</div>
+    <div class="nav-tab" data-block="arqa" style="border-left:3px solid #7b4fa0">Arqa</div>
+    <div class="nav-tab" data-block="yabbashah" style="border-left:3px solid #8b6914">Yabbashah</div>
+    <div class="nav-tab" data-block="tziah" style="border-left:3px solid #b8860b">Tziah</div>
+    <div class="nav-tab" data-block="harabah" style="border-left:3px solid #c04040">Harabah</div>
+    <div class="nav-tab" data-block="adamah" style="border-left:3px solid #2e8b57">Adamah</div>
+    <div class="nav-tab" data-view="fullmoon" style="border-left:3px solid #ffd700">Full Moon</div>
+  </div>
+
+  <div class="controls" id="controls">
+    <input class="search-box" id="searchBox" type="text" placeholder="Search shadows, skills, drops...">
+    <div class="filter-group">
+      <span class="filter-label">Type:</span>
+      <button class="filter-btn" data-type="regular">Regular</button>
+      <button class="filter-btn" data-type="gatekeeper">Gatekeeper</button>
+      <button class="filter-btn" data-type="fullmoon">Full Moon</button>
+      <button class="filter-btn" data-type="monad-door">Monad Door</button>
+      <button class="filter-btn" data-type="monad-passage">Monad Pass</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Weak to:</span>
+      <select class="filter-select" id="weakFilter">
+        <option value="">Any</option>
+        <option value="sla">Slash</option>
+        <option value="str">Strike</option>
+        <option value="pie">Pierce</option>
+        <option value="fir">Fire</option>
+        <option value="ice">Ice</option>
+        <option value="ele">Elec</option>
+        <option value="win">Wind</option>
+        <option value="lig">Light</option>
+        <option value="dar">Dark</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Lv:</span>
+      <input type="number" class="filter-select" id="lvlMin" placeholder="Min" min="1" max="99" style="width:55px">
+      <span style="color:var(--text-dim)">&ndash;</span>
+      <input type="number" class="filter-select" id="lvlMax" placeholder="Max" min="1" max="99" style="width:55px">
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Vuln to:</span>
+      <select class="filter-select" id="ailmentFilter">
+        <option value="">Any ailment</option>
+        <option value="0">Burn</option>
+        <option value="1">Freeze</option>
+        <option value="2">Shock</option>
+        <option value="3">Poison</option>
+        <option value="4">Charm</option>
+        <option value="5">Distress</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="main" id="mainView">
+    <div class="table-wrap">
+      <div class="result-count" id="resultCount"></div>
+      <table class="shadow-table">
+        <thead id="tableHead">
+          <tr>
+            <th data-col="name">Name</th>
+            <th data-col="lvl">Lv</th>
+            <th data-col="race">Arcana</th>
+            <th data-col="area">Area</th>
+            <th data-col="type">Type</th>
+            <th data-col="sla" title="Slash">Sla</th>
+            <th data-col="str" title="Strike">Str</th>
+            <th data-col="pie" title="Pierce">Pie</th>
+            <th data-col="fir" title="Fire">Fir</th>
+            <th data-col="ice" title="Ice">Ice</th>
+            <th data-col="ele" title="Elec">Ele</th>
+            <th data-col="win" title="Wind">Win</th>
+            <th data-col="lig" title="Light">Lig</th>
+            <th data-col="dar" title="Dark">Dar</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="sidebar">
+      <div class="floor-scout">
+        <h2>Floor Scout</h2>
+        <input class="floor-input" id="floorInput" type="number" placeholder="Enter floor #" min="2" max="264">
+        <div class="floor-info" id="floorInfo"></div>
+      </div>
+      <div class="floor-scout" style="margin-top:1rem">
+        <h2>Grinding Guide</h2>
+        <input class="floor-input" id="grindInput" type="number" placeholder="Your level" min="1" max="99">
+        <div class="floor-info" id="grindInfo"></div>
+      </div>
+      <div class="floor-scout" style="margin-top:1rem">
+        <h2>Loot Finder</h2>
+        <input class="floor-input" id="lootSearch" type="text" placeholder="Search item name..." style="width:100%">
+        <div class="floor-info" id="lootInfo"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fullmoon-section" id="fullmoonSection">
+    <div class="timeline" id="timeline"></div>
+  </div>
+</div>
+
+<!-- ===== VELVET ROOM SECTION ===== -->
+<div id="velvet" class="app-section">
+  <header class="header">
+    <h1>Velvet Room <span>P3R</span></h1>
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="roster">Roster</button>
+      <button class="tab-btn" data-tab="fusion">Fusion Lab</button>
+      <button class="tab-btn" data-tab="compendium">Compendium</button>
+    </nav>
+    <div class="global-search">
+      <input type="text" id="globalSearch" placeholder="Search...">
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- ROSTER TAB -->
+    <div class="tab-content active" id="tab-roster">
+      <div class="card">
+        <h2>My Roster</h2>
+        <div class="autocomplete-wrap" id="roster-ac-wrap">
+          <input type="text" id="roster-search" placeholder="Type persona name to add..." autocomplete="off">
+          <div class="ac-dropdown" id="roster-ac-dd"></div>
+        </div>
+        <div class="roster-bar" style="margin-top:0.8rem">
+          <span class="roster-count" id="roster-count">0/194</span>
+          <button class="btn btn-danger" onclick="clearRoster()">Clear All</button>
+        </div>
+        <div class="roster-grid" id="roster-grid"></div>
+      </div>
+      <div class="card" id="roster-analysis-card" style="display:none">
+        <h2>Roster Analysis</h2>
+        <div id="roster-analysis" class="analysis-dashboard"></div>
+      </div>
+    </div>
+
+    <!-- FUSION LAB TAB -->
+    <div class="tab-content" id="tab-fusion">
+      <div class="card" id="rec-fusions-card" style="display:none">
+        <h2>Recommended Fusions</h2>
+        <div id="rec-fusions" class="rec-fusions"></div>
+      </div>
+      <div class="card" id="chain-planner-card" style="display:none">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.8rem;flex-wrap:wrap">
+          <h2 style="margin:0">Fusion Chain</h2>
+          <span id="chain-target-name" style="font-family:'Cinzel',serif;color:var(--accent-gold);font-size:1rem"></span>
+          <button class="btn btn-sm" onclick="closeChainPlanner()">Close</button>
+        </div>
+        <div id="chain-result"></div>
+      </div>
+      <div class="card" style="position:relative;z-index:2">
+        <h2>Fusion Calculator</h2>
+        <div class="fusion-inputs">
+          <div class="autocomplete-wrap" id="fuse-a-wrap">
+            <input type="text" id="fuse-a" placeholder="Persona A (from roster)" autocomplete="off">
+            <div class="ac-dropdown" id="fuse-a-dd"></div>
+          </div>
+          <span class="fusion-plus">+</span>
+          <div class="autocomplete-wrap" id="fuse-b-wrap">
+            <input type="text" id="fuse-b" placeholder="Persona B (from roster)" autocomplete="off">
+            <div class="ac-dropdown" id="fuse-b-dd"></div>
+          </div>
+          <span class="fusion-equals">=</span>
+          <button class="btn btn-danger" onclick="resetFusion()">Reset</button>
+        </div>
+        <div id="fusion-result"></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.8rem;flex-wrap:wrap">
+          <h3 style="margin:0">All Roster Fusions</h3>
+          <button class="btn btn-gold" onclick="computeAllFusions()">Calculate</button>
+          <div class="filters-bar" style="margin:0;flex:1">
+            <label><input type="checkbox" id="filter-new-only"> Only new</label>
+            <select id="filter-arcana-fusion"><option value="">All Arcana</option></select>
+            <span id="all-fusions-count" class="roster-count"></span>
+          </div>
+        </div>
+        <div class="fusion-table-wrap" id="all-fusions-wrap" style="display:none">
+          <table class="fusion-table">
+            <thead><tr>
+              <th data-sort="a">Persona A <span class="sort-arrow"></span></th>
+              <th data-sort="b">Persona B <span class="sort-arrow"></span></th>
+              <th data-sort="result">Result <span class="sort-arrow"></span></th>
+              <th data-sort="arcana">Arcana <span class="sort-arrow"></span></th>
+              <th data-sort="level">Level <span class="sort-arrow"></span></th>
+              <th data-sort="score">Score <span class="sort-arrow"></span></th>
+            </tr></thead>
+            <tbody id="all-fusions-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Special Fusions</h3>
+        <div class="special-list" id="special-list"></div>
+      </div>
+    </div>
+
+    <!-- COMPENDIUM TAB -->
+    <div class="tab-content" id="tab-compendium">
+      <div class="card">
+        <h2>Persona Compendium</h2>
+        <div class="filters-bar">
+          <select id="comp-arcana"><option value="">All Arcana</option></select>
+          <input type="number" id="comp-lvl-min" placeholder="Min Lv" min="1" max="99">
+          <input type="number" id="comp-lvl-max" placeholder="Max Lv" min="1" max="99">
+          <input type="text" id="comp-search" placeholder="Name or skill..." style="width:180px">
+          <select id="comp-elem-filter"><option value="">All Elements</option></select>
+          <select id="comp-resist-type">
+            <option value="">Any resist type</option>
+            <option value="w">Weak</option>
+            <option value="s">Resist</option>
+            <option value="n">Null</option>
+            <option value="r">Repel</option>
+            <option value="d">Drain</option>
+            <option value="no-weak">No weakness</option>
+          </select>
+        </div>
+        <div class="comp-table-wrap" style="max-height:600px;overflow-y:auto">
+          <table class="comp-table">
+            <thead><tr>
+              <th data-sort="name">Name</th>
+              <th data-sort="race">Arcana</th>
+              <th data-sort="lvl">Lv</th>
+              <th data-sort="st">St</th>
+              <th data-sort="ma">Ma</th>
+              <th data-sort="en">En</th>
+              <th data-sort="ag">Ag</th>
+              <th data-sort="lu">Lu</th>
+              <th>Sla</th><th>Str</th><th>Pie</th>
+              <th>Fir</th><th>Ice</th><th>Ele</th>
+              <th>Win</th><th>Lig</th><th>Dar</th>
+            </tr></thead>
+            <tbody id="comp-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="comp-detail"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SOCIAL LINKS SECTION ===== -->
+<div id="social-links" class="app-section">
+  <header class="header">
+    <h1>Social Links <span>P3R</span></h1>
+    <nav class="sl-tab-nav">
+      <button class="sl-tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="sl-tab-btn" data-tab="my-links">My Links</button>
+      <button class="sl-tab-btn" data-tab="calendar">Calendar</button>
+    </nav>
+  </header>
+
+  <div class="main">
+    <!-- DASHBOARD TAB -->
+    <div class="sl-tab-content active" id="sl-tab-dashboard">
+      <div class="card" id="sl-status-card">
+        <h2>Current Status</h2>
+        <div class="sl-status-bar">
+          <div class="sl-status-group">
+            <label>Month</label>
+            <select id="sl-month"></select>
+          </div>
+          <div class="sl-status-group">
+            <label>Day</label>
+            <select id="sl-day"></select>
+          </div>
+          <div class="sl-status-group">
+            <label>Academics</label>
+            <select id="sl-academics"></select>
+          </div>
+          <div class="sl-status-group">
+            <label>Charm</label>
+            <select id="sl-charm"></select>
+          </div>
+          <div class="sl-status-group">
+            <label>Courage</label>
+            <select id="sl-courage"></select>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="sl-progress-card">
+        <h2>Progress Overview</h2>
+        <div id="sl-progress-grid" class="sl-progress-grid"></div>
+      </div>
+      <div class="card" id="sl-recommendations-card">
+        <h2>Today's Recommendations</h2>
+        <div class="sl-time-toggle">
+          <button class="sl-time-btn active" data-slot="day">Daytime</button>
+          <button class="sl-time-btn" data-slot="evening">Evening</button>
+        </div>
+        <div id="sl-recommendations" class="sl-recommendations"></div>
+        <p class="sl-note">Scores reflect fusion value, rank potential, availability urgency, and stat access. Carry a persona of the matching arcana for bonus points.</p>
+      </div>
+    </div>
+
+    <!-- MY LINKS TAB -->
+    <div class="sl-tab-content" id="sl-tab-my-links">
+      <div class="card">
+        <h2>All Social Links</h2>
+        <div class="sl-filters">
+          <select id="sl-filter-status">
+            <option value="">All Links</option>
+            <option value="active">In Progress</option>
+            <option value="maxed">Maxed</option>
+            <option value="locked">Not Started</option>
+            <option value="unavailable">Unavailable</option>
+          </select>
+          <select id="sl-filter-time">
+            <option value="">Any Time</option>
+            <option value="day">Daytime</option>
+            <option value="evening">Evening</option>
+          </select>
+        </div>
+        <div id="sl-links-grid" class="sl-links-grid"></div>
+      </div>
+    </div>
+
+    <!-- CALENDAR TAB -->
+    <div class="sl-tab-content" id="sl-tab-calendar">
+      <div class="card">
+        <div class="sl-cal-header">
+          <button class="btn" id="sl-cal-prev">&larr; Prev Week</button>
+          <h2 id="sl-cal-title">Week of ...</h2>
+          <button class="btn" id="sl-cal-next">Next Week &rarr;</button>
+        </div>
+        <div id="sl-calendar-grid" class="sl-calendar-grid"></div>
+        <div class="sl-cal-legend">
+          <span class="sl-legend-day">&#9679; Daytime</span>
+          <span class="sl-legend-evening">&#9679; Evening</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<!-- Data -->
+<script src="data/enemies.js"></script>
+<script src="data/personas.js"></script>
+<script src="data/social-links.js"></script>
+<!-- Logic -->
+<script src="js/tartarus.js"></script>
+<script src="js/velvet.js"></script>
+<script src="js/social-links.js"></script>
+<!-- App controller (must be last) -->
+<script src="js/app.js"></script>
+</body>
+</html>
