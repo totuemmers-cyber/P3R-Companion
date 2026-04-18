@@ -31,17 +31,18 @@
   flex-wrap: wrap;
 }
 #velvet .header h1 {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-size: 1.3rem;
+  font-weight: 800;
   color: var(--accent-primary);
   white-space: nowrap;
-  letter-spacing: 1px;
+  letter-spacing: 0.05em;
 }
 #velvet .header h1 span { color: var(--accent-secondary); font-size: 0.75em; }
 
 #velvet .tab-nav { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 #velvet .tab-btn {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-app);
   font-size: 0.95rem;
   font-weight: 700;
   min-height: 42px;
@@ -69,7 +70,7 @@
   position: relative;
 }
 #velvet .global-search input {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-app);
   font-size: 0.9rem;
   padding: 0.4rem 0.8rem 0.4rem 2rem;
   background: rgba(255,255,255,0.06);
@@ -107,10 +108,11 @@
   box-shadow: 0 18px 34px rgba(0,0,0,0.18);
 }
 #velvet .card h2, #velvet .card h3 {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   color: var(--accent-primary);
   margin-bottom: 0.8rem;
   font-size: 1.1rem;
+  font-weight: 700;
 }
 
 #velvet .comp-summary {
@@ -135,9 +137,10 @@
   letter-spacing: 0.05em;
 }
 #velvet .comp-summary-value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   color: var(--accent-cyan);
   font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Autocomplete */
@@ -147,7 +150,7 @@
   width: 100%;
 }
 #velvet .autocomplete-wrap input {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-app);
   font-size: 1rem;
   font-weight: 500;
   width: 100%;
@@ -187,11 +190,11 @@
 }
 #velvet .ac-item:hover, #velvet .ac-item.highlighted { background: rgba(68,216,255,0.12); }
 #velvet .ac-item .ac-arcana { color: var(--text-muted); font-size: 0.8rem; }
-#velvet .ac-item .ac-lvl { color: var(--accent-cyan); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; }
+#velvet .ac-item .ac-lvl { color: var(--accent-cyan); font-size: 0.8rem; font-family: var(--font-app); font-variant-numeric: tabular-nums; }
 
 /* Buttons */
 #velvet .btn {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-app);
   font-weight: 600;
   padding: 0.4rem 1rem;
   border: 1px solid var(--border);
@@ -222,9 +225,10 @@
   margin-bottom: 1rem;
 }
 #velvet .roster-count {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   color: var(--accent-cyan);
   font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
 }
 #velvet .roster-grid {
   display: grid;
@@ -266,10 +270,11 @@
 #velvet .roster-card .r-lvl {
   grid-column: 1;
   grid-row: 1 / span 2;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   font-size: 0.75rem;
   color: var(--text-muted);
   align-self: center;
+  font-variant-numeric: tabular-nums;
 }
 #velvet .roster-card .r-remove {
   grid-column: 4;
@@ -348,7 +353,7 @@
 }
 #velvet .fusion-inputs .autocomplete-wrap { flex: 1; min-width: 200px; }
 #velvet .fusion-plus {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-size: 2rem;
   color: var(--accent-gold);
   animation: plusPulse 2s ease-in-out infinite;
@@ -359,7 +364,7 @@
   50% { opacity: 1; transform: scale(1.15); }
 }
 #velvet .fusion-equals {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-size: 1.8rem;
   color: var(--accent-cyan);
 }
@@ -383,7 +388,7 @@
   gap: 1rem;
   margin-bottom: 1rem;
 }
-#velvet .result-card .r-name { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--accent-gold); }
+#velvet .result-card .r-name { font-family: var(--font-app); font-size: 1.4rem; font-weight: 700; color: var(--accent-gold); }
 #velvet .result-card .r-arcana-badge {
   padding: 0.2rem 0.7rem;
   background: rgba(0,229,255,0.12);
@@ -393,8 +398,9 @@
   font-size: 0.85rem;
 }
 #velvet .result-card .r-lvl-badge {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Stats */
@@ -418,7 +424,7 @@
   border-radius: 3px;
   transition: width 0.5s ease;
 }
-#velvet .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+#velvet .stat-val { font-family: var(--font-app); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
 
 /* Resists */
 #velvet .resists-row {
@@ -428,7 +434,7 @@
   margin-bottom: 1rem;
 }
 #velvet .resist-badge {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   font-size: 0.7rem;
   font-weight: 700;
   padding: 0.15rem 0.5rem;
@@ -436,6 +442,7 @@
   text-transform: uppercase;
   min-width: 44px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 #velvet .resist-badge .r-elem { font-size: 0.6rem; display: block; opacity: 0.7; font-weight: 400; }
 #velvet .resist-w { background: rgba(255,23,68,0.2); color: #ff5252; border: 1px solid rgba(255,23,68,0.3); }
@@ -458,7 +465,7 @@
   align-items: center;
 }
 #velvet .skill-tag .s-name { color: var(--text-primary); }
-#velvet .skill-tag .s-lvl { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-muted); }
+#velvet .skill-tag .s-lvl { font-family: var(--font-app); font-size: 0.7rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 #velvet .skill-tag .s-innate { color: var(--accent-gold); font-size: 0.65rem; }
 #velvet .skill-tag .s-elem {
   width: 8px; height: 8px; border-radius: 50%; display: inline-block;
@@ -480,17 +487,17 @@
   white-space: nowrap;
   z-index: 60;
   pointer-events: none;
-  font-family: 'JetBrains Mono', monospace;
-}
+  font-family: var(--font-app);
+  }
 
 /* Roster Analysis Dashboard */
 #velvet .analysis-dashboard { display: flex; flex-direction: column; gap: 1rem; }
-#velvet .analysis-section h4 { font-family: 'Cinzel', serif; color: var(--accent-gold); font-size: 0.9rem; margin-bottom: 0.5rem; }
+#velvet .analysis-section h4 { font-family: var(--font-app); color: var(--accent-gold); font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; }
 #velvet .elem-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 #velvet .elem-badge {
   display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
   padding: 0.3rem 0.5rem; border-radius: 6px; min-width: 52px;
-  font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; text-align: center;
+  font-size: 0.75rem; font-family: var(--font-app); text-align: center; font-variant-numeric: tabular-nums;
   border: 1px solid var(--border); background: rgba(255,255,255,0.04);
 }
 #velvet .elem-badge .eb-label { font-size: 0.65rem; color: var(--text-muted); }
@@ -505,7 +512,7 @@
 
 /* Fusion Score */
 #velvet .score-cell {
-  font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.85rem;
+  font-family: var(--font-app); font-weight: 700; font-size: 0.85rem; font-variant-numeric: tabular-nums;
   padding: 0.1rem 0.5rem; border-radius: 4px; text-align: center; min-width: 38px; display: inline-block;
 }
 
@@ -517,20 +524,21 @@
   border-radius: 8px; cursor: pointer; transition: all 0.2s; flex-wrap: wrap;
 }
 #velvet .rec-item:hover { border-color: var(--accent-gold); background: var(--bg-card-hover); }
-#velvet .rec-score { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1rem; min-width: 32px; }
+#velvet .rec-score { font-family: var(--font-app); font-weight: 700; font-size: 1rem; min-width: 32px; font-variant-numeric: tabular-nums; }
 #velvet .rec-name { font-weight: 600; color: var(--accent-gold); min-width: 100px; }
 #velvet .rec-from { font-size: 0.8rem; color: var(--text-muted); }
 #velvet .rec-reason { font-size: 0.8rem; color: var(--accent-cyan); flex: 1; }
 
 /* Fusion Comparison */
 #velvet .comparison-panel { margin-top: 1rem; animation: resultAppear 0.3s ease-out; }
-#velvet .comparison-panel h4 { font-family: 'Cinzel', serif; color: var(--accent-gold); font-size: 0.9rem; margin-bottom: 0.5rem; }
+#velvet .comparison-panel h4 { font-family: var(--font-app); color: var(--accent-gold); font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; }
 #velvet .comp-section { margin-bottom: 0.8rem; }
 #velvet .comp-section h5 { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 1px; }
 #velvet .delta-row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 #velvet .delta-badge {
   font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
+  font-variant-numeric: tabular-nums;
 }
 #velvet .delta-pos { background: rgba(0,230,118,0.15); color: var(--success); border: 1px solid rgba(0,230,118,0.25); }
 #velvet .delta-neg { background: rgba(255,23,68,0.15); color: var(--danger); border: 1px solid rgba(255,23,68,0.25); }
@@ -562,10 +570,11 @@
   padding: 0.1rem 0.4rem;
   background: rgba(255,23,68,0.15);
   border-radius: 4px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   font-weight: 600;
   font-size: 0.8rem;
   margin: 0 0.15rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Elem colors */
@@ -605,7 +614,7 @@
   padding: 0.6rem 0.8rem;
   text-align: left;
   color: var(--accent-gold);
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-weight: 400;
   font-size: 0.8rem;
   border-bottom: 1px solid var(--border);
@@ -638,7 +647,7 @@
   margin-bottom: 1rem;
 }
 #velvet .filters-bar select, #velvet .filters-bar input {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-app);
   font-size: 0.85rem;
   padding: 0.35rem 0.6rem;
   background: rgba(255,255,255,0.06);
@@ -674,10 +683,11 @@
 #velvet .special-item.complete { border-color: rgba(0,230,118,0.3); }
 #velvet .special-item.partial { border-color: rgba(156,236,255,0.25); }
 #velvet .special-item .sp-name {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   color: var(--accent-gold);
   font-size: 0.95rem;
   min-width: 130px;
+  font-weight: 700;
 }
 #velvet .special-item .sp-ingredients { display: flex; gap: 0.3rem; flex-wrap: wrap; flex: 1; }
 #velvet .special-item .sp-ing {
@@ -734,7 +744,7 @@
   padding: 0.5rem 0.5rem;
   text-align: left;
   color: var(--accent-gold);
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-weight: 400;
   font-size: 0.75rem;
   border-bottom: 1px solid var(--border);
@@ -763,7 +773,7 @@
   padding: 1.5rem;
   animation: resultAppear 0.3s ease-out;
 }
-#velvet .detail-panel h3 { font-family: 'Cinzel', serif; color: var(--accent-gold); margin-bottom: 0.5rem; }
+#velvet .detail-panel h3 { font-family: var(--font-app); color: var(--accent-gold); margin-bottom: 0.5rem; font-weight: 700; }
 #velvet .comp-detail-empty {
   min-height: 240px;
   display: flex;
@@ -774,8 +784,9 @@
 }
 #velvet .comp-detail-empty h3 {
   margin: 0;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   color: var(--accent-gold);
+  font-weight: 700;
 }
 #velvet .comp-detail-empty p {
   margin: 0;
@@ -816,8 +827,9 @@
 }
 #velvet .comp-detail-drawer-header h3 {
   margin: 0;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   color: var(--accent-gold);
+  font-weight: 700;
 }
 #velvet .comp-detail-drawer-body {
   padding: 1rem;
@@ -897,7 +909,7 @@
 #velvet .chain-step:nth-child(3){animation-delay:0.25s}
 #velvet .chain-step:nth-child(4){animation-delay:0.35s}
 #velvet .chain-step:nth-child(5){animation-delay:0.45s}
-#velvet .chain-num{font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--accent-secondary);background:rgba(156,236,255,0.12);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#velvet .chain-num{font-family:var(--font-app);font-size:0.75rem;font-weight:700;color:var(--accent-secondary);background:rgba(156,236,255,0.12);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-variant-numeric:tabular-nums}
 #velvet .chain-ings{display:flex;align-items:center;gap:0.3rem;flex-wrap:wrap;font-size:0.85rem}
 #velvet .chain-ing{padding:0.1rem 0.5rem;border-radius:4px;font-size:0.85rem}
 #velvet .chain-ing.have{color:var(--success);background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25)}
@@ -905,20 +917,20 @@
 #velvet .chain-arrow{color:var(--accent-secondary);font-size:1.1rem;flex-shrink:0}
 #velvet .chain-result{font-weight:700;font-size:0.9rem;color:var(--text-primary)}
 #velvet .chain-target{color:var(--accent-secondary);font-size:1rem}
-#velvet .chain-meta{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted)}
+#velvet .chain-meta{font-family:var(--font-app);font-size:0.7rem;color:var(--text-muted);font-variant-numeric:tabular-nums}
 #velvet .chain-badge-special{font-size:0.65rem;padding:0.05rem 0.4rem;border-radius:3px;background:rgba(156,236,255,0.15);color:var(--accent-secondary);font-weight:600}
 #velvet .planner-shell{display:flex;flex-direction:column;gap:1rem}
 #velvet .planner-summary{padding:0.9rem 1rem;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.03)}
 #velvet .planner-summary-owned{border-color:rgba(0,230,118,0.25);background:rgba(0,230,118,0.06)}
 #velvet .planner-summary-blocked{border-color:rgba(255,23,68,0.28);background:rgba(255,23,68,0.08)}
 #velvet .planner-summary-main{display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;margin-bottom:0.35rem}
-#velvet .planner-status{font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:700;padding:0.16rem 0.5rem;border-radius:999px;text-transform:uppercase;letter-spacing:0.08em}
+#velvet .planner-status{font-family:var(--font-app);font-size:0.72rem;font-weight:700;padding:0.16rem 0.5rem;border-radius:999px;text-transform:uppercase;letter-spacing:0.08em;font-variant-numeric:tabular-nums}
 #velvet .planner-status-owned{color:var(--success);background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.25)}
 #velvet .planner-status-solvable{color:var(--accent-cyan);background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.2)}
 #velvet .planner-status-blocked{color:var(--danger);background:rgba(255,23,68,0.14);border:1px solid rgba(255,23,68,0.25)}
-#velvet .planner-target{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--accent-secondary)}
+#velvet .planner-target{font-family:var(--font-app);font-size:1.1rem;font-weight:700;color:var(--accent-secondary)}
 #velvet .planner-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
-#velvet .planner-section h4{font-family:'Cinzel',serif;color:var(--accent-primary);font-size:0.92rem;margin-bottom:0.5rem}
+#velvet .planner-section h4{font-family:var(--font-app);color:var(--accent-primary);font-size:0.92rem;font-weight:700;margin-bottom:0.5rem}
 #velvet .planner-action-list{display:flex;flex-direction:column;gap:0.55rem}
 #velvet .planner-action-card{display:flex;align-items:center;justify-content:space-between;gap:0.8rem;padding:0.65rem 0.8rem;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;flex-wrap:wrap}
 #velvet .planner-action-name{font-weight:700;color:var(--text-primary)}
@@ -944,7 +956,7 @@
   background:rgba(156,39,176,0.05);border:1px solid rgba(156,39,176,0.15);
 }
 .inherit-panel h4 {
-  font-family:'Cinzel',serif;font-size:0.9rem;color:#ce93d8;margin-bottom:0.5rem;
+  font-family:var(--font-app);font-size:0.9rem;font-weight:700;color:#ce93d8;margin-bottom:0.5rem;
 }
 .inherit-section { margin-bottom:0.4rem; }
 .inherit-label-ok { color:#66bb6a;font-size:0.78rem;font-weight:600;margin-right:0.3rem; }

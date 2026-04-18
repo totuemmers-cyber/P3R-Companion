@@ -12,10 +12,10 @@
   margin-bottom:1rem;
 }
 #profile .profile-header h1{
-  font-family:'Cinzel',serif;
+  font-family:var(--font-app);
   font-size:2rem;
-  font-weight:900;
-  letter-spacing:0.08em;
+  font-weight:800;
+  letter-spacing:0.06em;
   color:var(--profile-accent);
   text-shadow:0 0 26px var(--accent-glow);
   margin-bottom:0.35rem;
@@ -48,11 +48,11 @@
   box-shadow:0 18px 34px rgba(0,0,0,0.18);
 }
 #profile .profile-card h2{
-  font-family:'Cinzel',serif;
+  font-family:var(--font-app);
   font-size:1.1rem;
   color:var(--profile-accent);
   margin-bottom:0.8rem;
-  letter-spacing:0.05em;
+  letter-spacing:0.03em;
 }
 #profile .profile-grid{
   display:grid;
@@ -83,8 +83,9 @@
   border:1px solid rgba(255,255,255,0.1);
   background:rgba(0,0,0,0.28);
   color:var(--text);
-  font-family:'Rajdhani',sans-serif;
+  font-family:var(--font-app);
   font-size:0.95rem;
+  font-variant-numeric:tabular-nums;
   outline:none;
   transition:border-color 0.2s, box-shadow 0.2s;
 }

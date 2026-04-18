@@ -11,10 +11,10 @@
   margin-bottom:1rem;
 }
 #planner .planner-header h1{
-  font-family:'Cinzel',serif;
+  font-family:var(--font-app);
   font-size:2rem;
-  font-weight:900;
-  letter-spacing:0.08em;
+  font-weight:800;
+  letter-spacing:0.06em;
   color:var(--planner-accent);
   text-shadow:0 0 24px var(--accent-glow);
   margin-bottom:0.35rem;
@@ -66,6 +66,7 @@
   font-size:1.05rem;
   font-weight:700;
   color:var(--text-bright);
+  font-variant-numeric:tabular-nums;
 }
 
 #planner .planner-hero-grid{
@@ -83,11 +84,11 @@
   padding:1.15rem 1.25rem;
 }
 #planner .planner-card h2{
-  font-family:'Cinzel',serif;
+  font-family:var(--font-app);
   font-size:1.05rem;
   color:var(--planner-accent);
   margin-bottom:0.75rem;
-  letter-spacing:0.05em;
+  letter-spacing:0.03em;
 }
 #planner .planner-card-primary{
   border-color:rgba(68,216,255,0.28);
@@ -113,7 +114,7 @@
   margin-bottom:0.45rem;
 }
 #planner .planner-primary-title{
-  font-family:'Cinzel',serif;
+  font-family:var(--font-app);
   font-size:1.4rem;
   color:var(--text-bright);
   margin-bottom:0.4rem;
@@ -161,7 +162,7 @@
   border:1px solid rgba(68,216,255,0.3);
   background:var(--planner-accent-dim);
   color:var(--planner-accent);
-  font-family:'Rajdhani',sans-serif;
+  font-family:var(--font-app);
   font-size:0.95rem;
   font-weight:700;
   cursor:pointer;
@@ -202,7 +203,7 @@
   color:var(--planner-accent);
 }
 #planner .planner-slot-main{
-  font-family:'Cinzel',serif;
+  font-family:var(--font-app);
   font-size:1rem;
   color:var(--text-bright);
   margin-bottom:0.25rem;

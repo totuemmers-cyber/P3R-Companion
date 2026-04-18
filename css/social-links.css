@@ -25,10 +25,10 @@
   margin-bottom: 1rem;
 }
 #social-links .header h1 {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-size: 2rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   color: var(--accent);
   text-shadow: 0 0 30px var(--accent-glow);
   margin-bottom: 0.5rem;
@@ -48,7 +48,7 @@
   flex-wrap: wrap;
 }
 #social-links .sl-tab-btn {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-app);
   font-weight: 700;
   font-size: 0.95rem;
   min-height: 42px;
@@ -99,15 +99,15 @@
   border-color: rgba(68,216,255,0.35);
 }
 #social-links .card h2 {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--accent);
   margin-bottom: 0.8rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 #social-links .card h3 {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-bright);
@@ -135,7 +135,7 @@
 }
 .sl-status-bar select,
 .sl-status-bar input[type="number"] {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   font-size: 0.85rem;
   padding: 0.35rem 0.5rem;
   border-radius: 5px;
@@ -145,6 +145,7 @@
   min-width: 70px;
   outline: none;
   transition: border-color 0.2s;
+  font-variant-numeric: tabular-nums;
 }
 .sl-status-bar select:focus,
 .sl-status-bar input:focus {
@@ -181,10 +182,11 @@
 }
 
 .sl-status-pill-value {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-app);
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-bright);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ===== DASHBOARD: Progress grid ===== */
@@ -221,16 +223,17 @@
   align-items: center;
 }
 .sl-progress-arcana {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-bright);
 }
 .sl-progress-rank {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   font-size: 0.75rem;
   color: var(--accent);
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 .sl-progress-item.maxed .sl-progress-rank {
   color: var(--rank-maxed);
@@ -265,7 +268,7 @@
   margin-bottom: 0.8rem;
 }
 .sl-time-btn {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-app);
   font-weight: 600;
   font-size: 0.85rem;
   padding: 0.3rem 1rem;
@@ -306,12 +309,13 @@
   opacity: 0.45;
 }
 .sl-rec-score {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--accent);
   min-width: 36px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 .sl-rec-item.locked .sl-rec-score {
   color: var(--locked-text);
@@ -321,7 +325,7 @@
   min-width: 0;
 }
 .sl-rec-name {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-bright);
@@ -343,13 +347,14 @@
   line-height: 1.4;
 }
 .sl-rec-rank-badge {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   font-size: 0.7rem;
   padding: 0.15rem 0.5rem;
   border-radius: 3px;
   background: rgba(255,255,255,0.08);
   color: var(--text-dim);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .sl-rec-empty {
@@ -367,7 +372,7 @@
   flex-wrap: wrap;
 }
 .sl-filters select {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-app);
   font-size: 0.85rem;
   padding: 0.35rem 0.5rem;
   border-radius: 5px;
@@ -414,18 +419,19 @@
   margin-bottom: 0.5rem;
 }
 .sl-link-card-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-bright);
 }
 .sl-link-card-arcana {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   font-size: 0.7rem;
   padding: 0.15rem 0.5rem;
   border-radius: 3px;
   background: var(--accent-dim);
   color: var(--accent);
+  font-variant-numeric: tabular-nums;
 }
 .sl-link-card-desc {
   font-size: 0.78rem;
@@ -523,10 +529,11 @@
   align-items: center;
   justify-content: center;
   font-size: 0.55rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   font-weight: 700;
   color: transparent;
   padding: 0;
+  font-variant-numeric: tabular-nums;
 }
 .sl-rank-dot:hover {
   border-color: var(--accent);
@@ -559,7 +566,7 @@
 }
 
 #social-links .btn {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-app);
   font-weight: 600;
   font-size: 0.85rem;
   padding: 0.35rem 1rem;
@@ -604,7 +611,7 @@
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 .sl-cal-day-name {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-app);
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-dim);
@@ -612,9 +619,10 @@
   letter-spacing: 0.1em;
 }
 .sl-cal-day-date {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   font-size: 0.7rem;
   color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
 }
 .sl-cal-day.today .sl-cal-day-name,
 .sl-cal-day.today .sl-cal-day-date {
@@ -664,9 +672,10 @@
   text-overflow: ellipsis;
 }
 .sl-cal-link-rank {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-app);
   font-size: 0.6rem;
   color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Calendar legend */
@@ -704,7 +713,7 @@
 /* ===== ANSWER GUIDE (expandable) ===== */
 .sl-link-card .sl-expand-btn {
   display:inline-flex;align-items:center;gap:0.3rem;
-  font-family:'Rajdhani',sans-serif;font-weight:600;font-size:0.78rem;
+  font-family:var(--font-app);font-weight:600;font-size:0.78rem;
   color:var(--accent);background:transparent;border:none;cursor:pointer;
   padding:0.2rem 0;margin-top:0.4rem;transition:color 0.2s;
 }
@@ -741,12 +750,12 @@
   margin-bottom:0.3rem;
 }
 .sl-answer-rank-header{
-  font-family:'Cinzel',serif;font-size:0.82rem;font-weight:700;
+  font-family:var(--font-app);font-size:0.82rem;font-weight:700;
   color:var(--text-bright);margin-bottom:0.35rem;
   display:flex;align-items:center;gap:0.5rem;
 }
 .sl-answer-rank-header .sl-next-badge{
-  font-family:'Rajdhani',sans-serif;font-size:0.65rem;
+  font-family:var(--font-app);font-size:0.65rem;
   padding:0.1rem 0.4rem;border-radius:3px;
   background:var(--accent-dim);color:var(--accent);
   font-weight:700;text-transform:uppercase;letter-spacing:0.05em;
@@ -768,9 +777,10 @@
   font-size:0.78rem;padding:0.2rem 0.4rem;border-radius:4px;
 }
 .sl-answer-option .sl-pts{
-  font-family:'JetBrains Mono',monospace;font-size:0.7rem;font-weight:700;
+  font-family:var(--font-app);font-size:0.7rem;font-weight:700;
   min-width:28px;text-align:center;
   padding:0.1rem 0.3rem;border-radius:3px;
+  font-variant-numeric:tabular-nums;
 }
 .sl-answer-best .sl-pts{background:rgba(76,175,80,0.2);color:#66bb6a}
 .sl-answer-good .sl-pts{background:rgba(156,236,255,0.18);color:var(--accent-secondary)}
@@ -829,9 +839,10 @@
 }
 .sl-focus-name,.sl-stat-focus-name{font-weight:700;color:var(--text-bright)}
 .sl-focus-arcana,.sl-stat-focus-gap,.sl-stat-focus-clear{
-  font-family:'JetBrains Mono',monospace;
+  font-family:var(--font-app);
   font-size:0.72rem;
   color:var(--accent);
+  font-variant-numeric:tabular-nums;
 }
 .sl-focus-meta,.sl-focus-note,.sl-stat-guide{
   font-size:0.78rem;
@@ -881,11 +892,12 @@
 }
 .sl-action-slot,
 .sl-risk-arcana{
-  font-family:'JetBrains Mono',monospace;
+  font-family:var(--font-app);
   font-size:0.7rem;
   color:var(--accent);
   text-transform:uppercase;
   letter-spacing:0.08em;
+  font-variant-numeric:tabular-nums;
 }
 .sl-action-state{
   font-size:0.68rem;

@@ -8,26 +8,26 @@
 }
 
 #tartarus .header{text-align:center;padding:1.7rem 1rem 0.8rem}
-#tartarus .header h1{font-family:'Cinzel',serif;font-size:3.3rem;font-weight:900;letter-spacing:0.24em;color:var(--cyan);animation:glowPulse 4s ease-in-out infinite;text-transform:uppercase}
+#tartarus .header h1{font-family:var(--font-app);font-size:3.3rem;font-weight:800;letter-spacing:0.16em;color:var(--cyan);animation:glowPulse 4s ease-in-out infinite;text-transform:uppercase}
 #tartarus .header .subtitle{font-size:1rem;color:var(--text-dim);letter-spacing:0.2em;margin-top:0.25rem}
 
 #tartarus .nav-tabs{display:flex;justify-content:center;gap:0.45rem;padding:0.9rem 1rem 1rem;flex-wrap:wrap}
-#tartarus .nav-tab{padding:var(--tab-padding-y) var(--tab-padding-x);min-height:42px;border-radius:var(--tab-radius);cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.95rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:var(--text-dim);transition:all 0.25s;letter-spacing:0.05em;display:inline-flex;align-items:center;justify-content:center}
+#tartarus .nav-tab{padding:var(--tab-padding-y) var(--tab-padding-x);min-height:42px;border-radius:var(--tab-radius);cursor:pointer;font-family:var(--font-app);font-weight:700;font-size:0.95rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:var(--text-dim);transition:all 0.25s;letter-spacing:0.05em;display:inline-flex;align-items:center;justify-content:center}
 #tartarus .nav-tab:hover,#tartarus .nav-tab.active{color:var(--text-bright);border-color:var(--cyan);box-shadow:0 0 12px rgba(0,229,255,0.2);transform:translateY(-1px)}
 #tartarus .nav-tab.active{background:rgba(0,229,255,0.1)}
 
 #tartarus .controls{max-width:1400px;margin:0 auto;padding:0.75rem 1rem;display:grid;gap:0.75rem}
 #tartarus .controls > .input-clear-wrap{flex:1;min-width:200px}
 #tartarus .controls > .input-clear-wrap > .search-box{width:100%}
-#tartarus .search-box{flex:1;min-width:200px;padding:0.6rem 1rem;border-radius:4px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:1rem;outline:none;transition:border-color 0.3s}
+#tartarus .search-box{flex:1;min-width:200px;padding:0.6rem 1rem;border-radius:4px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:var(--font-app);font-size:1rem;outline:none;transition:border-color 0.3s}
 #tartarus .search-box:focus{border-color:var(--cyan)}
 #tartarus .search-box::placeholder{color:var(--text-dim)}
-#tartarus .filter-btn{padding:0.48rem 0.82rem;border-radius:8px;cursor:pointer;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--text-dim);font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:700;transition:all 0.2s}
+#tartarus .filter-btn{padding:0.48rem 0.82rem;border-radius:8px;cursor:pointer;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--text-dim);font-family:var(--font-app);font-size:0.85rem;font-weight:700;transition:all 0.2s}
 #tartarus .filter-btn:hover{border-color:var(--cyan-dim);color:var(--text);background:rgba(255,255,255,0.06)}
 #tartarus .filter-btn.active{background:rgba(0,229,255,0.1);border-color:var(--cyan);color:var(--cyan)}
 #tartarus .filter-group{display:flex;gap:0.35rem;align-items:center;flex-wrap:wrap;padding:0.2rem 0}
 #tartarus .filter-label{color:var(--text-dim);font-size:0.76rem;margin-right:0.2rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:700}
-#tartarus select.filter-select{padding:0.45rem 0.7rem;border-radius:8px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.85rem;outline:none;cursor:pointer}
+#tartarus select.filter-select{padding:0.45rem 0.7rem;border-radius:8px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:var(--font-app);font-size:0.85rem;outline:none;cursor:pointer}
 #tartarus select.filter-select option{background:#0d1229;color:var(--text)}
 
 #tartarus .main{max-width:1400px;margin:0 auto;padding:0 1rem 2rem;position:relative}
@@ -39,7 +39,7 @@
 #tartarus .floor-dashboard-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.85rem}
 #tartarus .floor-dashboard-note{font-size:0.82rem;color:var(--text-dim);letter-spacing:0.03em}
 #tartarus .shadow-intel-panel{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:1.1rem;box-shadow:0 16px 36px rgba(0,0,0,0.2)}
-#tartarus .shadow-intel-panel h2{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--cyan);margin:0;letter-spacing:0.08em}
+#tartarus .shadow-intel-panel h2{font-family:var(--font-app);font-size:1.1rem;font-weight:700;color:var(--cyan);margin:0;letter-spacing:0.05em}
 #tartarus .shadow-intel-note{font-size:0.8rem;color:var(--text-dim);margin-top:0.2rem}
 #tartarus .shadow-intel-controls{max-width:none;padding:1rem 0 0.9rem;border-bottom:1px solid rgba(0,229,255,0.08);background:linear-gradient(180deg,rgba(0,229,255,0.05),rgba(0,0,0,0))}
 #tartarus .shadow-intel-controls-primary,
@@ -82,7 +82,7 @@
 
 #tartarus .detail-row td{padding:0!important;border:none!important}
 #tartarus .detail-card{padding:1rem;background:rgba(8,12,26,0.5);border-top:1px solid var(--cyan-dim);border-bottom:1px solid var(--cyan-dim)}
-#tartarus .detail-card h3{font-family:'Cinzel',serif;color:var(--cyan);margin-bottom:0.5rem;font-size:1.1rem}
+#tartarus .detail-card h3{font-family:var(--font-app);font-weight:700;color:var(--cyan);margin-bottom:0.5rem;font-size:1.1rem}
 #tartarus .detail-section{margin-bottom:0.75rem}
 #tartarus .detail-section .label{color:var(--text-dim);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em}
 #tartarus .detail-section .value{color:var(--text);font-size:0.9rem;margin-top:0.15rem}
@@ -98,9 +98,9 @@
 #tartarus .stat-item .stat-val{font-size:1rem;font-weight:600;color:var(--text-bright)}
 
 #tartarus .floor-scout{background:var(--glass);border:1px solid var(--glass-border);border-radius:6px;padding:1rem;position:sticky;top:4rem}
-#tartarus .floor-scout h2{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--cyan);margin-bottom:0.75rem;letter-spacing:0.1em}
+#tartarus .floor-scout h2{font-family:var(--font-app);font-size:1.1rem;font-weight:700;color:var(--cyan);margin-bottom:0.75rem;letter-spacing:0.06em}
 #tartarus .floor-scout .input-clear-wrap{display:flex;width:100%}
-#tartarus .floor-input{width:100%;padding:0.5rem;border-radius:4px;background:rgba(8,12,26,0.6);border:1px solid var(--glass-border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:1rem;outline:none;text-align:center}
+#tartarus .floor-input{width:100%;padding:0.5rem;border-radius:4px;background:rgba(8,12,26,0.6);border:1px solid var(--glass-border);color:var(--text);font-family:var(--font-app);font-size:1rem;outline:none;text-align:center;font-variant-numeric:tabular-nums}
 #tartarus .floor-input:focus{border-color:var(--cyan)}
 #tartarus .floor-info{margin-top:0.75rem}
 #tartarus .floor-ops-support-grid{
@@ -117,10 +117,11 @@
 }
 #tartarus .floor-ops-support-card h3{
   margin:0 0 0.55rem;
-  font-family:'Cinzel',serif;
+  font-family:var(--font-app);
   font-size:0.95rem;
+  font-weight:700;
   color:var(--cyan);
-  letter-spacing:0.06em;
+  letter-spacing:0.04em;
 }
 #tartarus .floor-ops-empty{
   font-size:0.8rem;
@@ -157,10 +158,11 @@
 }
 #tartarus .major-check-name{font-weight:700;color:var(--text-bright)}
 #tartarus .major-check-meta{
-  font-family:'JetBrains Mono',monospace;
+  font-family:var(--font-app);
   font-size:0.72rem;
   color:var(--cyan);
   white-space:nowrap;
+  font-variant-numeric:tabular-nums;
 }
 #tartarus .major-check-copy{
   margin-top:0.3rem;
@@ -186,7 +188,7 @@
   color:var(--text-bright);
 }
 #tartarus .result-count{margin-bottom:0.65rem;font-size:0.78rem;color:var(--text-dim);letter-spacing:0.05em;text-transform:uppercase}
-#tartarus .floor-block-name{font-family:'Cinzel',serif;font-size:1rem;margin-bottom:0.5rem}
+#tartarus .floor-block-name{font-family:var(--font-app);font-size:1rem;font-weight:700;margin-bottom:0.5rem}
 #tartarus .floor-block-focus{
   margin-top:0.45rem;
   padding:0.55rem 0.7rem;
@@ -289,9 +291,10 @@
 }
 #tartarus .objective-status{
   font-size:0.68rem;
-  font-family:'JetBrains Mono',monospace;
+  font-family:var(--font-app);
   padding:0.12rem 0.4rem;
   border-radius:999px;
+  font-variant-numeric:tabular-nums;
 }
 #tartarus .objective-status.status-critical{background:rgba(255,82,82,0.15);color:#ff8a80}
 #tartarus .objective-status.status-warning{background:rgba(255,213,79,0.15);color:#ffd54f}
@@ -347,7 +350,7 @@
 
 /* Loadout Advisor */
 #tartarus .loadout-section{margin-top:0.75rem;padding:0.75rem;border-radius:4px;background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.15)}
-#tartarus .loadout-title{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--cyan);margin-bottom:0.5rem;letter-spacing:0.05em}
+#tartarus .loadout-title{font-family:var(--font-app);font-size:0.85rem;font-weight:700;color:var(--cyan);margin-bottom:0.5rem;letter-spacing:0.04em}
 #tartarus .loadout-persona{padding:0.35rem 0;border-bottom:1px solid rgba(0,229,255,0.06)}
 #tartarus .loadout-persona:last-child{border-bottom:none}
 #tartarus .loadout-name{font-weight:600;font-size:0.85rem;color:var(--text-bright)}
@@ -372,7 +375,7 @@
 #tartarus .strat-item{background:rgba(76,175,80,0.12);color:#66bb6a;border:1px solid rgba(76,175,80,0.25)}
 #tartarus .strat-lvl{background:rgba(255,23,68,0.12);color:#ff6b8a;border:1px solid rgba(255,23,68,0.25)}
 #tartarus .strat-phase{margin:0.5rem 0;padding:0.5rem 0.7rem;border-radius:4px;background:rgba(0,0,0,0.15);border-left:3px solid var(--cyan-dim)}
-#tartarus .strat-phase-name{font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;color:var(--cyan);margin-bottom:0.2rem}
+#tartarus .strat-phase-name{font-family:var(--font-app);font-size:0.85rem;font-weight:700;color:var(--cyan);margin-bottom:0.2rem}
 #tartarus .strat-phase p{font-size:0.82rem;line-height:1.4;color:var(--text);margin:0}
 #tartarus .strat-quick{font-style:italic;color:var(--text-dim);font-size:0.82rem;margin:0 0 0.3rem}
 #tartarus .moon-quick-tip{font-size:0.78rem;color:var(--text-dim);font-style:italic;margin-top:0.2rem}
@@ -382,7 +385,7 @@
 /* Grinding guide */
 #tartarus .grind-spot{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0;border-bottom:1px solid rgba(0,229,255,0.06)}
 #tartarus .grind-spot:last-child{border-bottom:none}
-#tartarus .grind-rank{font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:700;color:var(--cyan);min-width:28px}
+#tartarus .grind-rank{font-family:var(--font-app);font-size:0.85rem;font-weight:700;color:var(--cyan);min-width:28px;font-variant-numeric:tabular-nums}
 #tartarus .grind-info{flex:1;min-width:0}
 #tartarus .grind-block{font-weight:600;font-size:0.85rem}
 #tartarus .grind-meta{font-size:0.75rem;color:var(--text-dim)}
@@ -392,7 +395,7 @@
 #tartarus .loot-item-group:last-child{border-bottom:none}
 #tartarus .loot-item-name{font-weight:600;font-size:0.9rem;color:var(--text-bright);margin-bottom:0.2rem}
 #tartarus .loot-source{font-size:0.8rem;display:flex;gap:0.4rem;align-items:baseline;padding:1px 0}
-#tartarus .loot-chance{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--cyan);min-width:30px}
+#tartarus .loot-chance{font-family:var(--font-app);font-weight:700;color:var(--cyan);min-width:30px;font-variant-numeric:tabular-nums}
 #tartarus .loot-enemy{color:var(--text)}
 #tartarus .loot-area{color:var(--text-dim);font-size:0.72rem}
 

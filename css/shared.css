@@ -1,5 +1,5 @@
 /* P3R Companion — Shared Styles */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;500;600;700;800&display=swap');
 
 *{margin:0;padding:0;box-sizing:border-box}
 
@@ -28,11 +28,12 @@
   --ui-border-soft:rgba(255,255,255,0.08);
   --success:#00e676;
   --danger:#ff5252;
+  --font-app:'Oxanium',sans-serif;
 }
 
 html{font-size:14px}
 body{
-  font-family:'Rajdhani',sans-serif;
+  font-family:var(--font-app);
   color:var(--text);
   min-height:100vh;
   overflow-x:hidden;
@@ -56,8 +57,8 @@ body::before{
   border-bottom:1px solid rgba(0,229,255,0.12);
 }
 .app-nav .app-title{
-  font-family:'Cinzel',serif;font-size:1.4rem;font-weight:900;
-  letter-spacing:0.15em;
+  font-family:var(--font-app);font-size:1.35rem;font-weight:800;
+  letter-spacing:0.12em;
   background:linear-gradient(135deg,var(--accent-primary),var(--accent-secondary));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
   background-clip:text;
@@ -69,7 +70,7 @@ body::before{
 }
 .app-nav-tabs{display:flex;gap:0.4rem;flex:1;flex-wrap:wrap}
 .app-nav-tab{
-  font-family:'Rajdhani',sans-serif;font-weight:600;font-size:1rem;
+  font-family:var(--font-app);font-weight:600;font-size:1rem;
   padding:var(--tab-padding-y) var(--tab-padding-x);border-radius:var(--tab-radius);
   background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);
   color:var(--text-dim);cursor:pointer;transition:all 0.25s;
@@ -119,7 +120,7 @@ body::before{
   box-shadow:0 8px 32px rgba(0,0,0,0.5);
 }
 .save-modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
-.save-modal-header h2{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--text-bright)}
+.save-modal-header h2{font-family:var(--font-app);font-size:1.15rem;font-weight:700;color:var(--text-bright);letter-spacing:0.04em}
 .save-modal-close{
   background:transparent;border:none;color:var(--text-dim);font-size:1.5rem;
   cursor:pointer;line-height:1;padding:0 0.3rem;transition:color 0.2s;
@@ -132,7 +133,7 @@ body::before{
   padding:0.55rem 1rem;
   border-radius:9px;
   cursor:pointer;
-  font-family:'Rajdhani',sans-serif;
+  font-family:var(--font-app);
   font-weight:700;
   letter-spacing:0.03em;
   transition:all 0.2s ease;
@@ -149,7 +150,8 @@ body::before{
 .save-divider{height:1px;background:var(--glass-border);margin:1rem 0}
 .save-code-input{
   width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);
-  color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.8rem;
+  color:var(--text);font-family:var(--font-app);font-size:0.8rem;
+  font-variant-numeric:tabular-nums;
   border-radius:6px;padding:0.5rem;resize:vertical;
 }
 .save-code-input::placeholder{color:var(--text-dim)}
