@@ -491,9 +491,10 @@ function renderPlannerPath(path, targetName) {
 function renderPlanner(plan) {
   const target = PERSONAS[plan.target];
   const targetMeta = `<span class="r-arcana-badge">${target?.race || ''}</span><span class="r-lvl-badge">Lv ${target?.lvl || '?'}</span>`;
+  const targetInsight = target ? `<div class="planner-target-insight">${renderPersonaInsightMarkup(plan.target)}</div>` : '';
 
   if (plan.status === 'owned') {
-    return `<div class="planner-shell"><div class="planner-summary planner-summary-owned"><div class="planner-summary-main"><span class="planner-status planner-status-owned">Owned</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>This persona is already in your roster.</p></div></div>`;
+    return `<div class="planner-shell"><div class="planner-summary planner-summary-owned"><div class="planner-summary-main"><span class="planner-status planner-status-owned">Owned</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>This persona is already in your roster.</p></div>${targetInsight}</div>`;
   }
 
   if (plan.status === 'blocked') {
@@ -503,7 +504,7 @@ function renderPlanner(plan) {
     const closestRecipe = plan.hintIngredients?.length
       ? `<div class="planner-section"><h4>Closest Recipe</h4><div class="planner-pill-row">${plan.hintIngredients.map((name) => `<span class="planner-pill">${name}</span>`).join('')}<span class="chain-arrow">&rarr;</span><span class="planner-pill planner-pill-target">${plan.target}</span></div></div>`
       : '';
-    return `<div class="planner-shell"><div class="planner-summary planner-summary-blocked"><div class="planner-summary-main"><span class="planner-status planner-status-blocked">Blocked</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>No full fusion path could be derived from your current roster.</p></div><div class="planner-section"><h4>Blocked By</h4><div class="planner-pill-row">${blockers}</div></div>${closestRecipe}</div>`;
+    return `<div class="planner-shell"><div class="planner-summary planner-summary-blocked"><div class="planner-summary-main"><span class="planner-status planner-status-blocked">Blocked</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>No full fusion path could be derived from your current roster.</p></div>${targetInsight}<div class="planner-section"><h4>Blocked By</h4><div class="planner-pill-row">${blockers}</div></div>${closestRecipe}</div>`;
   }
 
   const nextActions = plan.nextActions.length
@@ -518,7 +519,7 @@ function renderPlanner(plan) {
     ? plan.neededFirst.map((name) => `<span class="planner-pill">${name}</span>`).join('')
     : `<span class="planner-empty">No intermediate personas needed.</span>`;
 
-  return `<div class="planner-shell"><div class="planner-summary"><div class="planner-summary-main"><span class="planner-status planner-status-solvable">Solvable</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>Best path found with ${plan.stepCount} step${plan.stepCount === 1 ? '' : 's'}.</p></div><div class="planner-grid"><div class="planner-section"><h4>Next Action</h4><div class="planner-action-list">${nextActions}</div></div><div class="planner-section"><h4>Needed First</h4><div class="planner-pill-row">${neededFirst}</div></div></div><div class="planner-section"><h4>Best Path</h4>${renderPlannerPath(plan.path, plan.target)}</div></div>`;
+  return `<div class="planner-shell"><div class="planner-summary"><div class="planner-summary-main"><span class="planner-status planner-status-solvable">Solvable</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>Best path found with ${plan.stepCount} step${plan.stepCount === 1 ? '' : 's'}.</p></div>${targetInsight}<div class="planner-grid"><div class="planner-section"><h4>Next Action</h4><div class="planner-action-list">${nextActions}</div></div><div class="planner-section"><h4>Needed First</h4><div class="planner-pill-row">${neededFirst}</div></div></div><div class="planner-section"><h4>Best Path</h4>${renderPlannerPath(plan.path, plan.target)}</div></div>`;
 }
 
 function addToRoster(name) {
@@ -704,6 +705,119 @@ function renderPersonaCard(name) {
   )}</div><div class="resists-row">${renderResists(persona.resists)}</div><div class="skills-list">${renderSkills(
     persona.skills
   )}</div></div>`;
+}
+
+function getPersonaExtra(name) {
+  if (typeof PERSONA_EXTRAS === 'undefined') {
+    return null;
+  }
+  return PERSONA_EXTRAS[name] || null;
+}
+
+function derivePersonaSource(name) {
+  const extra = getPersonaExtra(name);
+  if (extra?.source) {
+    return extra.source;
+  }
+  if (SPECIAL_RECIPES[name]) {
+    return `Special fusion (${SPECIAL_RECIPES[name].length} ingredients)`;
+  }
+  return 'Standard fusion';
+}
+
+function derivePersonaRole(persona, name) {
+  const extra = getPersonaExtra(name);
+  if (extra?.role) {
+    return extra.role;
+  }
+  const skillNames = Object.keys(persona.skills || {});
+  const elems = skillNames.map((skillName) => SKILLS[skillName]?.elem).filter(Boolean);
+  const attackElems = elems.filter((elem) => ATTACK_ELEMS.includes(elem));
+  const physicalCount = attackElems.filter((elem) => ['sla', 'str', 'pie'].includes(elem)).length;
+  const magicCount = attackElems.filter((elem) => ['fir', 'ice', 'ele', 'win', 'lig', 'dar', 'alm'].includes(elem)).length;
+  const supportCount = elems.filter((elem) => elem === 'sup').length;
+  const recoveryCount = elems.filter((elem) => elem === 'rec').length;
+  const ailmentCount = elems.filter((elem) => elem === 'ail').length;
+  if (recoveryCount >= 2) {
+    return 'Recovery support';
+  }
+  if (supportCount >= 2) {
+    return 'Buff / utility support';
+  }
+  if (physicalCount >= 2 && persona.stats[0] >= persona.stats[1]) {
+    return 'Physical attacker';
+  }
+  if (magicCount >= 2 && persona.stats[1] >= persona.stats[0]) {
+    return 'Magic attacker';
+  }
+  if (ailmentCount >= 2) {
+    return 'Ailment specialist';
+  }
+  return 'Flexible coverage piece';
+}
+
+function derivePersonaHighlights(persona, name) {
+  const highlights = [];
+  const skillNames = Object.keys(persona.skills || {});
+  const highPowerSkills = skillNames.filter((skillName) => (SKILLS[skillName]?.power || 0) >= 300);
+  const supportSkills = skillNames.filter((skillName) => ['sup', 'rec'].includes(SKILLS[skillName]?.elem));
+  const defensiveResists = V_RESIST_ELEMS.filter((_, index) => 'snrd'.includes(persona.resists[index] || '-'));
+
+  if (highPowerSkills.length > 0) {
+    highlights.push(`Power spike skill: ${highPowerSkills[0]}`);
+  }
+  if (supportSkills.length > 0) {
+    highlights.push(`Utility pick: ${supportSkills.slice(0, 2).join(', ')}`);
+  }
+  if (defensiveResists.length >= 3) {
+    highlights.push(`Strong defenses against ${defensiveResists.slice(0, 3).map((elem) => ELEM_NAMES[elem] || elem).join(', ')}`);
+  }
+  const activeLink = getActiveSocialLinks().find((entry) => entry.arcana === persona.race);
+  if (activeLink) {
+    highlights.push(`Supports active ${persona.race} social link (${activeLink.character})`);
+  }
+  const extra = getPersonaExtra(name);
+  (extra?.highlights || []).forEach((note) => {
+    if (!highlights.includes(note)) {
+      highlights.push(note);
+    }
+  });
+  return highlights.slice(0, 4);
+}
+
+function renderPersonaInsightMarkup(name) {
+  const persona = PERSONAS[name];
+  if (!persona) {
+    return '';
+  }
+  const source = derivePersonaSource(name);
+  const role = derivePersonaRole(persona, name);
+  const highlights = derivePersonaHighlights(persona, name);
+  return `<div class="persona-insight-panel"><div class="persona-insight-top"><div class="persona-insight-card"><span class="persona-insight-label">Source</span><span class="persona-insight-value">${escapeHtml(
+    source
+  )}</span></div><div class="persona-insight-card"><span class="persona-insight-label">Role</span><span class="persona-insight-value">${escapeHtml(
+    role
+  )}</span></div></div><div class="persona-insight-notes"><h4>Why it matters</h4>${highlights.length ? highlights
+    .map((note) => `<div class="persona-insight-note">${escapeHtml(note)}</div>`)
+    .join('') : '<div class="persona-insight-note">No special note recorded yet.</div>'}</div></div>`;
+}
+
+function renderCompendiumSummary() {
+  const summary = velvetRoot.querySelector('#comp-summary');
+  if (!summary) {
+    return;
+  }
+  const roster = getRosterSet();
+  const ownedCount = roster.size;
+  const specialReady = Object.values(SPECIAL_RECIPES).filter((ingredients) => ingredients.every((ingredient) => roster.has(ingredient))).length;
+  const activeLinks = getActiveSocialLinks();
+  const missingArcanaCoverage = activeLinks.filter(
+    (entry) => ![...roster].some((name) => PERSONAS[name]?.race === entry.arcana)
+  ).length;
+
+  summary.innerHTML = `<div class="comp-summary-pill"><span class="comp-summary-label">Roster</span><span class="comp-summary-value">${ownedCount}/${personaList.length}</span></div><div class="comp-summary-pill"><span class="comp-summary-label">Special fusions ready</span><span class="comp-summary-value">${specialReady}/${Object.keys(
+    SPECIAL_RECIPES
+  ).length}</span></div><div class="comp-summary-pill"><span class="comp-summary-label">Active arcana gaps</span><span class="comp-summary-value">${missingArcanaCoverage}</span></div>`;
 }
 
 function analyzeAttackCoverage() {
@@ -1123,6 +1237,7 @@ function renderSpecialFusions() {
 }
 
 function renderCompendium() {
+  renderCompendiumSummary();
   const arcana = velvetRoot.querySelector('#comp-arcana').value;
   const lvlMin = Number(velvetRoot.querySelector('#comp-lvl-min').value) || 0;
   const lvlMax = Number(velvetRoot.querySelector('#comp-lvl-max').value) || 99;
@@ -1232,7 +1347,7 @@ function renderCompDetailEmptyState(title = 'Select a Persona', message = 'Pick 
 }
 
 function renderCompDetailMarkup(name) {
-  return `<div class="detail-panel">${renderPersonaCard(name)}<div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap"><button class="btn btn-gold" data-action="add-roster" data-name="${escapeHtml(name)}">Add to Roster</button><button class="btn" data-action="set-target" data-name="${escapeHtml(name)}">Set as Fusion Target</button></div><h3 style="margin-top:1rem;font-size:0.95rem">How to Fuse</h3><div data-role="reverse-results"><p style="color:var(--text-muted);font-size:0.85rem">Computing...</p></div></div>`;
+  return `<div class="detail-panel">${renderPersonaCard(name)}${renderPersonaInsightMarkup(name)}<div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap"><button class="btn btn-gold" data-action="add-roster" data-name="${escapeHtml(name)}">Add to Roster</button><button class="btn" data-action="set-target" data-name="${escapeHtml(name)}">Set as Fusion Target</button></div><h3 style="margin-top:1rem;font-size:0.95rem">How to Fuse</h3><div data-role="reverse-results"><p style="color:var(--text-muted);font-size:0.85rem">Computing...</p></div></div>`;
 }
 
 function openCompDetailDrawer() {

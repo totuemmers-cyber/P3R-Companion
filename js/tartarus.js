@@ -146,7 +146,7 @@ const floorScoutSections = {
   loadout: true
 };
 
-const MONAD_DOOR_BANDS = [
+const MONAD_SECTION_BANDS = [
   { floorMin: 70, floorMax: 94, label: 'Yabbashah 70F-94F', section: 'Yabbashah I' },
   { floorMin: 95, floorMax: 118, label: 'Yabbashah 95F-118F', section: 'Yabbashah II' },
   { floorMin: 119, floorMax: 142, label: 'Tziah 119F-142F', section: 'Tziah I' },
@@ -155,6 +155,11 @@ const MONAD_DOOR_BANDS = [
   { floorMin: 199, floorMax: 224, label: 'Harabah 199F-224F', section: 'Harabah II' },
   { floorMin: 227, floorMax: 251, label: 'Adamah 227F-251F', section: 'Adamah I' }
 ];
+
+const MONAD_VARIANT_LABELS = {
+  'monad-door': 'Monad Door',
+  'monad-passage': 'Monad Passage'
+};
 
 const RESIST_ORDER = {
   z: -2,
@@ -183,18 +188,18 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;');
 }
 
-function getMonadDoorBandForFloor(floor) {
-  return MONAD_DOOR_BANDS.find((band) => floor >= band.floorMin && floor <= band.floorMax) || null;
+function getMonadBandForFloor(floor) {
+  return MONAD_SECTION_BANDS.find((band) => floor >= band.floorMin && floor <= band.floorMax) || null;
 }
 
-function getMonadDoorEnemiesForFloor(floor) {
-  const band = getMonadDoorBandForFloor(floor);
+function getMonadEnemiesForFloor(floor, type) {
+  const band = getMonadBandForFloor(floor);
   if (!band) {
     return { band: null, enemies: [] };
   }
 
   const enemies = ALL_SHADOWS.filter(
-    (shadow) => shadow.type === 'monad-door' && shadow.area && shadow.area.startsWith(band.section)
+    (shadow) => shadow.type === type && shadow.area && shadow.area.startsWith(band.section)
   ).sort((left, right) => left.name.localeCompare(right.name));
 
   return { band, enemies };
@@ -233,6 +238,49 @@ function renderFloorEnemyName(shadow) {
   )}</button> <span class="floor-enemy-level">(Lv ${shadow.lvl})</span>`;
 }
 
+function getBlockExtra(blockId) {
+  if (typeof BLOCK_EXTRAS === 'undefined') {
+    return null;
+  }
+  return BLOCK_EXTRAS[blockId] || null;
+}
+
+function getMonadBandExtra(sectionName) {
+  if (typeof MONAD_DOOR_BAND_EXTRAS === 'undefined') {
+    return null;
+  }
+  return MONAD_DOOR_BAND_EXTRAS[sectionName] || null;
+}
+
+function renderMonadEncounterGroup(type, data) {
+  if (!data.band || data.enemies.length === 0) {
+    return '';
+  }
+
+  let html = `<div class="floor-monad-group"><div class="floor-monad-group-title">${escapeHtml(
+    MONAD_VARIANT_LABELS[type] || type
+  )}</div>`;
+  html += `<div class="floor-monad-note">Possible encounters for ${escapeHtml(data.band.label)}.</div>`;
+  const monadExtra = getMonadBandExtra(data.band.section);
+  if (monadExtra) {
+    html += `<div class="floor-intel-callout"><div class="floor-intel-note"><strong>Why check it:</strong> ${escapeHtml(monadExtra.why)}</div><div class="floor-intel-note"><strong>Prep:</strong> ${escapeHtml(monadExtra.prep)}</div></div>`;
+  }
+  data.enemies.forEach((shadow) => {
+    html += `<div class="floor-enemy"><div class="floor-enemy-name">${renderFloorEnemyName(
+      shadow
+    )}</div>${renderFloorAffinities(shadow)}</div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function getFullMoonExtra(date) {
+  if (typeof FULL_MOON_EXTRAS === 'undefined') {
+    return null;
+  }
+  return FULL_MOON_EXTRAS[date] || null;
+}
+
 function renderGatekeeperPanel(title, shadow, options = {}) {
   const accentStyle = options.accentStyle || 'background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2)';
   const titleColor = options.titleColor || 'var(--wk)';
@@ -240,6 +288,10 @@ function renderGatekeeperPanel(title, shadow, options = {}) {
   html += `<div style="font-size:0.8rem;color:${titleColor};font-weight:600">${escapeHtml(title)}</div>`;
   html += `<div style="font-size:0.85rem">${renderFloorEnemyName(shadow)}</div>`;
   html += renderFloorAffinities(shadow, 'margin-top:4px');
+  const drops = shadow.dodds ? Object.keys(shadow.dodds).slice(0, 2) : [];
+  if (drops.length) {
+    html += `<div class="floor-intel-note">Possible rewards: ${drops.map((drop) => escapeHtml(drop)).join(', ')}</div>`;
+  }
   html += '</div>';
   return html;
 }
@@ -740,6 +792,10 @@ function renderFloorScout(floor) {
 
   let html = `<div class="floor-block-name" style="color:${block.color}">${block.name} - ${block.floors}</div>`;
   html += `<div style="font-size:0.8rem;color:var(--text-dim)">Rec. Level: ${block.recLvl} | Unlocked: ${block.unlock}</div>`;
+  const blockExtra = getBlockExtra(block.id);
+  if (blockExtra) {
+    html += `<div class="floor-block-focus"><strong>Section focus:</strong> ${escapeHtml(blockExtra.focus)}${blockExtra.prep ? ` <span>${escapeHtml(blockExtra.prep)}</span>` : ''}</div>`;
+  }
   const shadows = ALL_SHADOWS.filter(
     (shadow) =>
       shadow.block === block.id &&
@@ -801,18 +857,27 @@ function renderFloorScout(floor) {
     });
   }
 
-  const monadDoorData = getMonadDoorEnemiesForFloor(floor);
-  if (monadDoorData.band && monadDoorData.enemies.length > 0) {
-    let monadBody = `<div class="floor-monad-note">Possible encounters for ${escapeHtml(monadDoorData.band.label)}.</div>`;
-    monadDoorData.enemies.forEach((shadow) => {
-      monadBody += `<div class="floor-enemy"><div class="floor-enemy-name">${renderFloorEnemyName(
-        shadow
-      )}</div>${renderFloorAffinities(shadow)}</div>`;
-    });
+  const monadDoorData = getMonadEnemiesForFloor(floor, 'monad-door');
+  const monadPassageData = getMonadEnemiesForFloor(floor, 'monad-passage');
+  if (
+    (monadDoorData.band && monadDoorData.enemies.length > 0) ||
+    (monadPassageData.band && monadPassageData.enemies.length > 0)
+  ) {
+    let monadBody = '';
+    const monadSummary = [];
+    if (monadDoorData.enemies.length > 0) {
+      monadSummary.push('Door');
+      monadBody += renderMonadEncounterGroup('monad-door', monadDoorData);
+    }
+    if (monadPassageData.enemies.length > 0) {
+      monadSummary.push('Passage');
+      monadBody += renderMonadEncounterGroup('monad-passage', monadPassageData);
+    }
+    const bandLabel = (monadDoorData.band || monadPassageData.band || {}).label || '';
     html += renderFloorScoutSection({
       key: 'monad',
-      title: 'Possible Monad Door minibosses',
-      summary: monadDoorData.band.label,
+      title: 'Possible Monad encounters',
+      summary: `${monadSummary.join(' + ')}${bandLabel ? ` · ${bandLabel}` : ''}`,
       tone: 'monad',
       bodyHtml: monadBody
     });
@@ -916,11 +981,19 @@ function renderFullMoon() {
   let html = '';
   FULL_MOON_DATES.forEach((fullMoon, index) => {
     const primaryStrategy = fullMoon.names.length > 0 ? BOSS_STRATS[fullMoon.names[0]] : null;
+    const extra = getFullMoonExtra(fullMoon.date);
     html += `<div class="moon-card" data-idx="${index}"><div class="moon-header"><div class="moon-icon"></div><div><div class="moon-date">${fullMoon.date}</div><div class="moon-boss">${escapeHtml(fullMoon.boss)}</div>`;
     if (primaryStrategy && primaryStrategy.quickTip) {
       html += `<div class="moon-quick-tip">${primaryStrategy.quickTip}</div>`;
     }
     html += '</div></div><div class="moon-details">';
+    if (extra) {
+      html += `<div class="moon-outcome-grid"><div class="moon-outcome-card"><span class="moon-outcome-label">Reward / Impact</span><span class="moon-outcome-text">${escapeHtml(
+        extra.reward
+      )}</span></div><div class="moon-outcome-card"><span class="moon-outcome-label">Follow-up</span><span class="moon-outcome-text">${escapeHtml(
+        extra.followUp
+      )}</span></div></div>`;
+    }
     if (primaryStrategy) {
       if (primaryStrategy.party) {
         html += `<div class="strat-row"><span class="strat-label">Ideal Party:</span> ${primaryStrategy.party

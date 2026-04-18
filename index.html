@@ -284,9 +284,10 @@
     <!-- COMPENDIUM TAB -->
     <div class="tab-content" id="tab-compendium">
       <div class="compendium-layout">
-        <div class="card compendium-list-panel">
-          <h2>Persona Compendium</h2>
-          <div class="filters-bar">
+      <div class="card compendium-list-panel">
+        <h2>Persona Compendium</h2>
+        <div id="comp-summary" class="comp-summary"></div>
+        <div class="filters-bar">
             <select id="comp-arcana"><option value="">All Arcana</option></select>
             <input type="number" id="comp-lvl-min" placeholder="Min Lv" min="1" max="99">
             <input type="number" id="comp-lvl-max" placeholder="Max Lv" min="1" max="99">
@@ -389,6 +390,10 @@
         <div id="sl-recommendations" class="sl-recommendations"></div>
         <p class="sl-note">Scores reflect fusion value, rank potential, availability urgency, and stat access. Carry a persona of the matching arcana for bonus points.</p>
       </div>
+      <div class="card" id="sl-planning-card">
+        <h2>Planning Focus</h2>
+        <div id="sl-planning-insights" class="sl-planning-insights"></div>
+      </div>
     </div>
 
     <!-- MY LINKS TAB -->
@@ -435,6 +440,9 @@
 <script src="data/enemies.js"></script>
 <script src="data/personas.js"></script>
 <script src="data/social-links.js"></script>
+<script src="data/tartarus-extra.js"></script>
+<script src="data/personas-extra.js"></script>
+<script src="data/social-links-extra.js"></script>
 <script src="js/store.js"></script>
 <script src="js/tartarus.js"></script>
 <script src="js/velvet.js"></script>

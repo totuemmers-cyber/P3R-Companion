@@ -107,6 +107,33 @@
   font-size: 1.1rem;
 }
 
+#velvet .comp-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+#velvet .comp-summary-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,213,79,0.12);
+}
+#velvet .comp-summary-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+#velvet .comp-summary-value {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent-cyan);
+  font-size: 0.8rem;
+}
+
 /* Autocomplete */
 #velvet .autocomplete-wrap {
   position: relative;
@@ -235,6 +262,57 @@
   line-height: 1;
 }
 #velvet .roster-card .r-remove:hover { opacity: 1; }
+
+#velvet .persona-insight-panel {
+  margin-top: 0.9rem;
+  padding: 0.85rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,213,79,0.12);
+}
+#velvet .persona-insight-top {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+#velvet .persona-insight-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+#velvet .persona-insight-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+#velvet .persona-insight-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+#velvet .persona-insight-notes h4 {
+  margin: 0 0 0.45rem;
+  color: var(--accent-cyan);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+#velvet .persona-insight-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+#velvet .persona-insight-note + .persona-insight-note {
+  margin-top: 0.28rem;
+}
+#velvet .planner-target-insight {
+  margin-top: 0.9rem;
+}
 
 /* Fusion Lab */
 #velvet .fusion-inputs {
@@ -873,4 +951,5 @@
   #velvet .roster-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   #velvet .stats-grid { grid-template-columns: repeat(5, 1fr); gap: 0.3rem; }
   #velvet .planner-step-action { margin-left: 0; width: 100%; }
+  #velvet .persona-insight-top { grid-template-columns: 1fr; }
 }

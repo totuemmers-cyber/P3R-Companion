@@ -261,6 +261,158 @@ function slGetRecommendations(timeSlot) {
   return available;
 }
 
+function slGetLinkExtra(arcana) {
+  if (typeof SOCIAL_LINK_EXTRAS === 'undefined') {
+    return null;
+  }
+  return SOCIAL_LINK_EXTRAS[arcana] || null;
+}
+
+function slGetStatGuide(stat) {
+  if (typeof SOCIAL_STAT_ACTIVITY_GUIDES === 'undefined') {
+    return [];
+  }
+  return SOCIAL_STAT_ACTIVITY_GUIDES[stat] || [];
+}
+
+function slGetDeadlineLabel(link) {
+  if (!link?.endDate) {
+    return '';
+  }
+  const daysLeft = slDaysBetween(slState.gameDate, link.endDate);
+  if (daysLeft < 0) {
+    return 'expired';
+  }
+  if (daysLeft === 0) {
+    return 'last day';
+  }
+  return `${daysLeft}d left`;
+}
+
+function slGetHighPressureLinks() {
+  const items = [];
+  ARCANA_LIST.forEach((arcana) => {
+    const link = SOCIAL_LINKS[arcana];
+    if (!link || link.automatic || (slState.ranks[arcana] || 0) >= 10) {
+      return;
+    }
+    const extra = slGetLinkExtra(arcana);
+    let pressure = 0;
+    const reasons = [];
+    if (link.endDate) {
+      const daysLeft = slDaysBetween(slState.gameDate, link.endDate);
+      if (daysLeft >= 0) {
+        pressure += Math.max(0, 50 - Math.min(daysLeft, 50));
+        reasons.push(slGetDeadlineLabel(link));
+      }
+    }
+    if (extra?.deadline) {
+      pressure += 8;
+      reasons.push('deadline-sensitive');
+    }
+    if (!slStatsMet(arcana)) {
+      pressure += 6;
+      reasons.push('stat-gated');
+    }
+    if ((slState.ranks[arcana] || 0) === 0) {
+      pressure += 4;
+      reasons.push('not started');
+    }
+    if (pressure > 0) {
+      items.push({
+        arcana,
+        character: link.character,
+        pressure,
+        reasons: [...new Set(reasons)].filter(Boolean),
+        extra,
+        rank: slState.ranks[arcana] || 0
+      });
+    }
+  });
+  return items.sort((left, right) => right.pressure - left.pressure).slice(0, 4);
+}
+
+function slGetStatBottlenecks() {
+  const bottlenecks = {
+    academics: [],
+    charm: [],
+    courage: []
+  };
+
+  ARCANA_LIST.forEach((arcana) => {
+    const link = SOCIAL_LINKS[arcana];
+    if (!link || link.automatic || (slState.ranks[arcana] || 0) >= 10) {
+      return;
+    }
+    Object.entries(link.statRequirements).forEach(([stat, requirement]) => {
+      const current = slState.stats[stat] || 1;
+      if (current >= requirement) {
+        return;
+      }
+      bottlenecks[stat].push({
+        arcana,
+        character: link.character,
+        current,
+        requirement,
+        delta: requirement - current
+      });
+    });
+  });
+
+  Object.values(bottlenecks).forEach((entries) => {
+    entries.sort((left, right) => left.delta - right.delta || left.requirement - right.requirement);
+  });
+
+  return bottlenecks;
+}
+
+function slRenderPlanningInsights() {
+  const container = slRoot.querySelector('#sl-planning-insights');
+  if (!container) {
+    return;
+  }
+
+  const highPressure = slGetHighPressureLinks();
+  const bottlenecks = slGetStatBottlenecks();
+
+  let html = '<div class="sl-planning-grid">';
+
+  html += '<section class="sl-planning-panel"><h3>High-Pressure Routes</h3>';
+  if (!highPressure.length) {
+    html += '<div class="sl-rec-empty">No urgent route pressure detected from your current state.</div>';
+  } else {
+    html += highPressure
+      .map((item) => {
+        const extraLine = item.extra?.deadline || item.extra?.priority || '';
+        return `<div class="sl-focus-item"><div class="sl-focus-top"><span class="sl-focus-name">${item.character}</span><span class="sl-focus-arcana">${item.arcana}</span></div><div class="sl-focus-meta">Rank ${item.rank}/10${item.reasons.length ? ` - ${item.reasons.join(', ')}` : ''}</div>${extraLine ? `<div class="sl-focus-note">${extraLine}</div>` : ''}</div>`;
+      })
+      .join('');
+  }
+  html += '</section>';
+
+  html += '<section class="sl-planning-panel"><h3>Stat Bottlenecks</h3>';
+  html += ['academics', 'charm', 'courage']
+    .map((stat) => {
+      const entries = bottlenecks[stat];
+      const guide = slGetStatGuide(stat);
+      if (!entries.length) {
+        return `<div class="sl-stat-focus"><div class="sl-stat-focus-top"><span class="sl-stat-focus-name">${stat}</span><span class="sl-stat-focus-clear">clear</span></div><div class="sl-focus-note">No current social link is blocked by this stat.</div></div>`;
+      }
+      const targets = entries
+        .map((entry) => `<span class="sl-stat-target">${entry.character} (${entry.current} -> ${entry.requirement})</span>`)
+        .join('');
+      const guideHtml = guide
+        .slice(0, 2)
+        .map((entry) => `<div class="sl-stat-guide">${entry.name}: ${entry.note}</div>`)
+        .join('');
+      return `<div class="sl-stat-focus"><div class="sl-stat-focus-top"><span class="sl-stat-focus-name">${stat}</span><span class="sl-stat-focus-gap">+${entries[0].delta} next gate</span></div><div class="sl-stat-targets">${targets}</div>${guideHtml}</div>`;
+    })
+    .join('');
+  html += '</section></div>';
+
+  container.innerHTML = html;
+}
+
 function slUpdateDaySelect() {
   const daySelect = slRoot.querySelector('#sl-day');
   if (!daySelect) {
@@ -372,12 +524,13 @@ function slRenderRecommendations() {
       } else if (roster.size > 0) {
         matchBadge = `<span class="sl-rec-match sl-rec-match-gap">No ${item.arcana} persona</span>`;
       }
+      const extra = slGetLinkExtra(item.arcana);
+      const planningLine = extra?.deadline || extra?.priority || '';
+      const factorText = item.factors.slice(0, 3).join(' | ');
       return `<div class="sl-rec-item${isLocked ? ' locked' : ''}"><div class="sl-rec-score">${Math.max(
         0,
         item.score
-      )}</div><div class="sl-rec-info"><div><span class="sl-rec-name">${item.link.character}</span><span class="sl-rec-arcana">${item.arcana}</span>${matchBadge}</div><div class="sl-rec-detail">${item.factors
-        .slice(0, 3)
-        .join(' • ')}</div>${preview}</div><div class="sl-rec-rank-badge">Rk ${item.rank}/10</div></div>`;
+      )}</div><div class="sl-rec-info"><div><span class="sl-rec-name">${item.link.character}</span><span class="sl-rec-arcana">${item.arcana}</span>${matchBadge}</div><div class="sl-rec-detail">${factorText}</div>${planningLine ? `<div class="sl-rec-planning">${planningLine}</div>` : ''}${preview}</div><div class="sl-rec-rank-badge">Rk ${item.rank}/10</div></div>`;
     })
     .join('');
 }
@@ -386,6 +539,7 @@ function slRenderDashboard() {
   slRenderStatusBar();
   slRenderProgressGrid();
   slRenderRecommendations();
+  slRenderPlanningInsights();
 }
 
 function slRenderMyLinks() {
@@ -494,8 +648,29 @@ function slRenderMyLinks() {
       });
       answerHtml += '</div>';
     }
+    const extra = slGetLinkExtra(arcana);
+    let extraHtml = '';
+    if (extra) {
+      const badgeBits = [];
+      if (extra.priority) {
+        badgeBits.push(`<span class="sl-extra-chip">${extra.priority}</span>`);
+      }
+      if (extra.deadline) {
+        badgeBits.push(`<span class="sl-extra-chip deadline">Deadline: ${extra.deadline}</span>`);
+      }
+      if (extra.routeNote) {
+        badgeBits.push(`<span class="sl-extra-chip route">${extra.routeNote}</span>`);
+      }
+      const listBits = (extra.notes || [])
+        .slice(0, 3)
+        .map((note) => `<div class="sl-extra-note">${note}</div>`)
+        .join('');
+      if (badgeBits.length || listBits) {
+        extraHtml = `<div class="sl-extra-block">${badgeBits.length ? `<div class="sl-extra-chip-row">${badgeBits.join('')}</div>` : ''}${listBits}</div>`;
+      }
+    }
 
-    html += `<div class="${cssClass}"><div class="sl-link-card-header"><span class="sl-link-card-title">${link.character}</span><span class="sl-link-card-arcana">${arcana}</span></div><div class="sl-link-card-desc">${link.description}</div><div class="sl-link-card-meta">${metaHtml}</div><div class="sl-days-row">${daysHtml}</div>${rankHtml}${answerHtml}</div>`;
+    html += `<div class="${cssClass}"><div class="sl-link-card-header"><span class="sl-link-card-title">${link.character}</span><span class="sl-link-card-arcana">${arcana}</span></div><div class="sl-link-card-desc">${link.description}</div><div class="sl-link-card-meta">${metaHtml}</div>${extraHtml}<div class="sl-days-row">${daysHtml}</div>${rankHtml}${answerHtml}</div>`;
   });
 
   grid.innerHTML = html || '<div class="sl-rec-empty">No links match the current filters.</div>';
