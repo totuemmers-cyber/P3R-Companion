@@ -35,11 +35,55 @@
 #tartarus .floor-dashboard-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.85rem}
 #tartarus .floor-dashboard-note{font-size:0.82rem;color:var(--text-dim);letter-spacing:0.03em}
 #tartarus .floor-dashboard-intel-btn{flex-shrink:0}
+#tartarus #openShadowIntel,
+#tartarus #closeShadowIntel{
+  appearance:none;
+  background:linear-gradient(180deg,rgba(0,229,255,0.14),rgba(0,229,255,0.06));
+  border:1px solid rgba(0,229,255,0.28);
+  color:var(--cyan);
+  border-radius:10px;
+  padding:0.5rem 0.95rem;
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.88rem;
+  font-weight:700;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:background 0.2s ease,border-color 0.2s ease,box-shadow 0.2s ease,color 0.2s ease,transform 0.2s ease;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 0 0 rgba(0,229,255,0);
+}
+#tartarus #openShadowIntel:hover,
+#tartarus #closeShadowIntel:hover{
+  background:linear-gradient(180deg,rgba(0,229,255,0.2),rgba(0,229,255,0.09));
+  border-color:rgba(0,229,255,0.45);
+  color:var(--text-bright);
+  box-shadow:0 0 18px rgba(0,229,255,0.18);
+}
+#tartarus #openShadowIntel:focus-visible,
+#tartarus #closeShadowIntel:focus-visible{
+  outline:none;
+  border-color:rgba(0,229,255,0.65);
+  box-shadow:0 0 0 3px rgba(0,229,255,0.16),0 0 20px rgba(0,229,255,0.2);
+}
+#tartarus #openShadowIntel:active,
+#tartarus #closeShadowIntel:active{
+  transform:translateY(1px);
+  box-shadow:0 0 10px rgba(0,229,255,0.12);
+}
+#tartarus #openShadowIntel{
+  background:linear-gradient(180deg,rgba(0,229,255,0.18),rgba(0,229,255,0.08));
+  border-color:rgba(0,229,255,0.34);
+}
+#tartarus #closeShadowIntel{
+  background:linear-gradient(180deg,rgba(0,229,255,0.1),rgba(0,229,255,0.04));
+  border-color:rgba(0,229,255,0.18);
+  color:var(--text);
+}
 #tartarus .shadow-intel-overlay{position:fixed;inset:0;background:rgba(3,6,18,0.72);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity 0.25s ease;z-index:80}
 #tartarus .shadow-intel-overlay.open{opacity:1;pointer-events:auto}
-#tartarus .shadow-intel-drawer{position:fixed;top:2.25rem;left:50%;transform:translate(-50%,1.75rem) scale(0.98);width:min(1320px,96vw);height:min(88vh,960px);background:rgba(7,11,24,0.98);border:1px solid rgba(0,229,255,0.14);border-radius:18px;box-shadow:0 28px 64px rgba(0,0,0,0.42);opacity:0;pointer-events:none;transition:transform 0.25s ease,opacity 0.25s ease;z-index:81;display:flex;flex-direction:column;overflow:hidden}
+#tartarus .shadow-intel-drawer{position:fixed;top:4.9rem;left:50%;transform:translate(-50%,1.75rem) scale(0.98);width:min(1320px,calc(100vw - 2.5rem));height:min(calc(100vh - 6.5rem),920px);background:rgba(7,11,24,0.98);border:1px solid rgba(0,229,255,0.14);border-radius:18px;box-shadow:0 28px 64px rgba(0,0,0,0.42);opacity:0;pointer-events:none;transition:transform 0.25s ease,opacity 0.25s ease;z-index:81;display:flex;flex-direction:column;overflow:hidden}
 #tartarus .shadow-intel-drawer.open{transform:translate(-50%,0) scale(1);opacity:1;pointer-events:auto}
-#tartarus .shadow-intel-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1rem 1rem 0.75rem;border-bottom:1px solid rgba(0,229,255,0.08)}
+#tartarus .shadow-intel-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1.1rem 1.1rem 0.85rem;border-bottom:1px solid rgba(0,229,255,0.08)}
 #tartarus .shadow-intel-header h2{font-family:'Cinzel',serif;font-size:1.05rem;color:var(--cyan);margin:0}
 #tartarus .shadow-intel-note{font-size:0.8rem;color:var(--text-dim);margin-top:0.2rem}
 #tartarus .shadow-intel-controls{max-width:none;padding:0.85rem 1rem 0.7rem;border-bottom:1px solid rgba(0,229,255,0.08);background:linear-gradient(180deg,rgba(0,229,255,0.04),rgba(0,0,0,0))}
