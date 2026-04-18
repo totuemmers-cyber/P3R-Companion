@@ -176,7 +176,7 @@ function getMonadDoorEnemiesForFloor(floor) {
 
   const enemies = ALL_SHADOWS.filter(
     (shadow) => shadow.type === 'monad-door' && shadow.area && shadow.area.startsWith(band.section)
-  ).sort((left, right) => left.lvl - right.lvl);
+  ).sort((left, right) => left.name.localeCompare(right.name));
 
   return { band, enemies };
 }
@@ -603,7 +603,7 @@ function renderFloorScout(floor) {
   let regularBody = '';
 
   if (shadows.length > 0) {
-    shadows.sort((left, right) => left.lvl - right.lvl);
+    shadows.sort((left, right) => left.name.localeCompare(right.name));
     regularBody += '<div class="floor-enemies">';
     shadows.forEach((shadow) => {
       regularBody += `<div class="floor-enemy"><div class="floor-enemy-name">${escapeHtml(
@@ -671,8 +671,10 @@ function renderFloorScout(floor) {
 
   const gatekeepers = ALL_SHADOWS.filter(
     (shadow) => shadow.block === block.id && shadow.type === 'gatekeeper' && shadow.floorMin
-  ).sort((left, right) => left.floorMin - right.floorMin || left.lvl - right.lvl);
-  const currentGatekeepers = gatekeepers.filter((shadow) => shadow.floorMin === floor);
+  ).sort((left, right) => left.floorMin - right.floorMin || left.name.localeCompare(right.name));
+  const currentGatekeepers = gatekeepers
+    .filter((shadow) => shadow.floorMin === floor)
+    .sort((left, right) => left.name.localeCompare(right.name));
   const upcomingGatekeeper = gatekeepers.find((shadow) => shadow.floorMin > floor) || null;
 
   let gatekeeperBody = '';
