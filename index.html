@@ -194,7 +194,7 @@
         </div>
         <div class="roster-bar" style="margin-top:0.8rem">
           <span class="roster-count" id="roster-count">0/194</span>
-          <button class="btn btn-danger" onclick="clearRoster()">Clear All</button>
+          <button class="btn btn-danger" id="roster-clear-btn">Clear All</button>
         </div>
         <div class="roster-grid" id="roster-grid"></div>
       </div>
@@ -212,9 +212,9 @@
       </div>
       <div class="card" id="chain-planner-card" style="display:none">
         <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.8rem;flex-wrap:wrap">
-          <h2 style="margin:0">Fusion Chain</h2>
+          <h2 style="margin:0">Fusion Planner</h2>
           <span id="chain-target-name" style="font-family:'Cinzel',serif;color:var(--accent-gold);font-size:1rem"></span>
-          <button class="btn btn-sm" onclick="closeChainPlanner()">Close</button>
+          <button class="btn btn-sm" id="chain-planner-close">Close</button>
         </div>
         <div id="chain-result"></div>
       </div>
@@ -231,7 +231,7 @@
             <div class="ac-dropdown" id="fuse-b-dd"></div>
           </div>
           <span class="fusion-equals">=</span>
-          <button class="btn btn-danger" onclick="resetFusion()">Reset</button>
+          <button class="btn btn-danger" id="fusion-reset-btn">Reset</button>
         </div>
         <div id="fusion-result"></div>
       </div>
@@ -239,7 +239,7 @@
       <div class="card">
         <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.8rem;flex-wrap:wrap">
           <h3 style="margin:0">All Roster Fusions</h3>
-          <button class="btn btn-gold" onclick="computeAllFusions()">Calculate</button>
+          <button class="btn btn-gold" id="fusion-calc-btn">Calculate</button>
           <div class="filters-bar" style="margin:0;flex:1">
             <label><input type="checkbox" id="filter-new-only"> Only new</label>
             <select id="filter-arcana-fusion"><option value="">All Arcana</option></select>
@@ -406,15 +406,13 @@
 </div>
 
 <!-- ===== SCRIPTS ===== -->
-<!-- Data -->
 <script src="data/enemies.js"></script>
 <script src="data/personas.js"></script>
 <script src="data/social-links.js"></script>
-<!-- Logic -->
+<script src="js/store.js"></script>
 <script src="js/tartarus.js"></script>
 <script src="js/velvet.js"></script>
 <script src="js/social-links.js"></script>
-<!-- App controller (must be last) -->
 <script src="js/app.js"></script>
 </body>
 </html>
