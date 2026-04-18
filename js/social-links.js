@@ -4,10 +4,21 @@ let slStore;
 let slState = null;
 let slCalWeekStart = null;
 let slFusionCache = null;
+let slLastDateKey = '';
 let initialized = false;
 
 function syncState() {
-  slState = slStore.getState().socialLinks;
+  const snapshot = slStore.getState();
+  const dateKey = `${snapshot.profile.gameDate.month}-${snapshot.profile.gameDate.day}`;
+  if (slLastDateKey && slLastDateKey !== dateKey) {
+    slCalWeekStart = null;
+  }
+  slLastDateKey = dateKey;
+  slState = {
+    ranks: snapshot.socialLinks.ranks,
+    gameDate: snapshot.profile.gameDate,
+    stats: snapshot.profile.stats
+  };
 }
 
 function getRosterSet() {
@@ -534,46 +545,15 @@ function slRenderRiskBoard() {
     .join('');
 }
 
-function slUpdateDaySelect() {
-  const daySelect = slRoot.querySelector('#sl-day');
-  if (!daySelect) {
-    return;
-  }
-  const maxDay = DAYS_IN_MONTH[slState.gameDate.month];
-  daySelect.innerHTML = '';
-  for (let day = 1; day <= maxDay; day += 1) {
-    const option = document.createElement('option');
-    option.value = String(day);
-    option.textContent = String(day);
-    daySelect.appendChild(option);
-  }
-  daySelect.value = String(Math.min(slState.gameDate.day, maxDay));
-}
-
 function slRenderStatusBar() {
-  const monthSelect = slRoot.querySelector('#sl-month');
-  if (monthSelect && !monthSelect.dataset.init) {
-    monthSelect.dataset.init = '1';
-    monthSelect.innerHTML = [4, 5, 6, 7, 8, 9, 10, 11, 12, 1]
-      .map((month) => `<option value="${month}">${MONTH_NAMES[month]}</option>`)
-      .join('');
+  const dateNode = slRoot.querySelector('#sl-status-date');
+  if (dateNode) {
+    dateNode.textContent = slFormatDate(slState.gameDate);
   }
-  if (monthSelect) {
-    monthSelect.value = String(slState.gameDate.month);
-  }
-
-  slUpdateDaySelect();
-
   ['academics', 'charm', 'courage'].forEach((stat) => {
-    const select = slRoot.querySelector(`#sl-${stat}`);
-    if (select && !select.dataset.init) {
-      select.dataset.init = '1';
-      select.innerHTML = SOCIAL_STATS[stat]
-        .map((label, index) => `<option value="${index + 1}">${index + 1} - ${label}</option>`)
-        .join('');
-    }
-    if (select) {
-      select.value = String(slState.stats[stat]);
+    const valueNode = slRoot.querySelector(`#sl-status-${stat}`);
+    if (valueNode) {
+      valueNode.textContent = `${slState.stats[stat]} - ${SOCIAL_STATS[stat][slState.stats[stat] - 1]}`;
     }
   });
 }
@@ -910,29 +890,6 @@ function slSwitchTab(tabName) {
   }
 }
 
-function slOnDateChange() {
-  const monthSelect = slRoot.querySelector('#sl-month');
-  const daySelect = slRoot.querySelector('#sl-day');
-  slStore.dispatch({
-    type: 'SOCIALLINKS_SET_DATE',
-    payload: {
-      month: Number(monthSelect.value),
-      day: Number(daySelect.value)
-    }
-  });
-  slCalWeekStart = null;
-}
-
-function slOnStatChange() {
-  ['academics', 'charm', 'courage'].forEach((stat) => {
-    const select = slRoot.querySelector(`#sl-${stat}`);
-    slStore.dispatch({
-      type: 'SOCIALLINKS_SET_STAT',
-      payload: { stat, value: Number(select.value) }
-    });
-  });
-}
-
 function slOnRankClick(event) {
   const button = event.target.closest('.sl-rank-dot');
   if (!button) {
@@ -969,12 +926,6 @@ function initSocialLinks({ root, store }) {
 
   slRoot.querySelectorAll('.sl-tab-btn').forEach((button) => {
     button.addEventListener('click', () => slSwitchTab(button.dataset.tab));
-  });
-
-  slRoot.querySelector('#sl-month')?.addEventListener('change', slOnDateChange);
-  slRoot.querySelector('#sl-day')?.addEventListener('change', slOnDateChange);
-  ['academics', 'charm', 'courage'].forEach((stat) => {
-    slRoot.querySelector(`#sl-${stat}`)?.addEventListener('change', slOnStatChange);
   });
 
   slRoot.querySelectorAll('.sl-time-btn').forEach((button) => {

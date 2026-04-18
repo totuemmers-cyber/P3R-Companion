@@ -6,9 +6,15 @@ function createDefaultSocialLinksState() {
   });
 
   return {
-    gameDate: { month: 4, day: 7 },
-    stats: { academics: 1, charm: 1, courage: 1 },
     ranks
+  };
+}
+
+function createDefaultProfileState() {
+  return {
+    gameDate: { month: 4, day: 7 },
+    playerLevel: 1,
+    stats: { academics: 1, charm: 1, courage: 1 }
   };
 }
 
@@ -97,7 +103,8 @@ function bootstrap() {
   const store = createStore({
     validPersonaNames: new Set(Object.keys(PERSONAS)),
     arcanaOrder: ARCANA_LIST,
-    createDefaultSocialLinksState
+    createDefaultSocialLinksState,
+    createDefaultProfileState
   });
 
   const tabs = [...document.querySelectorAll('.app-nav-tab')];
@@ -118,6 +125,8 @@ function bootstrap() {
 
     if (sectionName === 'tartarus') {
       initTartarus({ root, store });
+    } else if (sectionName === 'profile') {
+      initProfile({ root, store });
     } else if (sectionName === 'velvet') {
       initVelvet({ root, store });
     } else if (sectionName === 'social-links') {
@@ -142,7 +151,7 @@ function bootstrap() {
   });
 
   initClearableInputs();
-  switchSection('tartarus');
+  switchSection('profile');
 
   const overlay = document.getElementById('save-modal-overlay');
   const gearButton = document.getElementById('save-gear-btn');

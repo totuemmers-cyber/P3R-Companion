@@ -1,0 +1,133 @@
+/* P3R Companion — Profile */
+
+#profile{
+  --profile-accent:#7dd3fc;
+  --profile-accent-dim:rgba(125,211,252,0.12);
+  --profile-accent-border:rgba(125,211,252,0.22);
+}
+
+#profile .profile-header{
+  padding:1.6rem 2rem 0.75rem;
+  border-bottom:1px solid rgba(125,211,252,0.14);
+  margin-bottom:1rem;
+}
+#profile .profile-header h1{
+  font-family:'Cinzel',serif;
+  font-size:2rem;
+  font-weight:900;
+  letter-spacing:0.08em;
+  color:var(--profile-accent);
+  text-shadow:0 0 26px rgba(125,211,252,0.28);
+  margin-bottom:0.35rem;
+}
+#profile .profile-header h1 span{
+  font-size:0.5em;
+  color:var(--text-dim);
+  letter-spacing:0.05em;
+  margin-left:0.45rem;
+}
+#profile .profile-subtitle{
+  font-size:0.9rem;
+  color:var(--text-dim);
+  line-height:1.45;
+}
+
+#profile .profile-main{
+  padding:0 2rem 2rem;
+  display:grid;
+  gap:1rem;
+}
+#profile .profile-card{
+  background:rgba(20,28,48,0.72);
+  backdrop-filter:blur(16px);
+  border:1px solid var(--profile-accent-border);
+  border-radius:12px;
+  padding:1.2rem 1.4rem;
+}
+#profile .profile-card h2{
+  font-family:'Cinzel',serif;
+  font-size:1.1rem;
+  color:var(--profile-accent);
+  margin-bottom:0.8rem;
+  letter-spacing:0.05em;
+}
+#profile .profile-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0.85rem;
+}
+#profile .profile-grid-stats{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+#profile .profile-field{
+  display:flex;
+  flex-direction:column;
+  gap:0.3rem;
+}
+#profile .profile-label{
+  font-size:0.75rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  color:var(--text-dim);
+}
+#profile .profile-field select,
+#profile .profile-field input{
+  width:100%;
+  min-width:0;
+  padding:0.55rem 0.75rem;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(0,0,0,0.28);
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.95rem;
+  outline:none;
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+#profile .profile-field select:focus,
+#profile .profile-field input:focus{
+  border-color:var(--profile-accent);
+  box-shadow:0 0 0 1px rgba(125,211,252,0.15);
+}
+#profile .profile-field select option{
+  background:#10182d;
+  color:var(--text);
+}
+#profile .profile-note{
+  margin-top:0.75rem;
+  font-size:0.8rem;
+  color:var(--text-dim);
+  line-height:1.45;
+}
+
+#profile .profile-use-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0.75rem;
+}
+#profile .profile-use-item{
+  padding:0.8rem 0.9rem;
+  border-radius:10px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.06);
+}
+#profile .profile-use-title{
+  display:block;
+  font-weight:700;
+  color:var(--text-bright);
+  margin-bottom:0.25rem;
+}
+#profile .profile-use-copy{
+  display:block;
+  font-size:0.8rem;
+  color:var(--text-dim);
+  line-height:1.45;
+}
+
+@media (max-width: 900px){
+  #profile .profile-main{padding:0 1rem 1.5rem}
+  #profile .profile-grid,
+  #profile .profile-grid-stats,
+  #profile .profile-use-grid{grid-template-columns:1fr}
+}

@@ -86,9 +86,20 @@ function sanitizeSocialLinks(rawSocialLinks, createDefaultSocialLinksState, arca
   }
 
   return {
-    gameDate: sanitizeDate(rawSocialLinks.gameDate, defaults.gameDate),
-    stats: sanitizeStats(rawSocialLinks.stats, defaults.stats),
     ranks: sanitizeRanks(rawSocialLinks.ranks, arcanaOrder)
+  };
+}
+
+function sanitizeProfile(rawProfile, createDefaultProfileState) {
+  const defaults = createDefaultProfileState();
+  if (!isPlainObject(rawProfile)) {
+    return defaults;
+  }
+
+  return {
+    gameDate: sanitizeDate(rawProfile.gameDate, defaults.gameDate),
+    playerLevel: clampInt(rawProfile.playerLevel, 1, 99, defaults.playerLevel),
+    stats: sanitizeStats(rawProfile.stats, defaults.stats)
   };
 }
 
@@ -110,6 +121,7 @@ function sanitizeState(rawState, options) {
   const baseState = {
     version: 1,
     roster: [],
+    profile: options.createDefaultProfileState(),
     socialLinks: options.createDefaultSocialLinksState(),
     objectives: {}
   };
@@ -118,11 +130,22 @@ function sanitizeState(rawState, options) {
     return baseState;
   }
 
+  const legacySocialLinks = isPlainObject(rawState.socialLinks) ? rawState.socialLinks : {};
+
   return {
     version: 1,
     roster: sanitizeRoster(rawState.roster, options.validPersonaNames),
+    profile: sanitizeProfile(
+      isPlainObject(rawState.profile)
+        ? rawState.profile
+        : {
+            gameDate: legacySocialLinks.gameDate,
+            stats: legacySocialLinks.stats
+          },
+      options.createDefaultProfileState
+    ),
     socialLinks: sanitizeSocialLinks(
-      rawState.socialLinks,
+      legacySocialLinks,
       options.createDefaultSocialLinksState,
       options.arcanaOrder
     ),
@@ -175,6 +198,9 @@ function validateImportedPayload(rawData) {
   }
   if (!Array.isArray(rawData.roster)) {
     throw new Error('Invalid save data: roster must be an array.');
+  }
+  if (rawData.profile !== undefined && !isPlainObject(rawData.profile)) {
+    throw new Error('Invalid save data: profile must be an object.');
   }
   if (!isPlainObject(rawData.socialLinks)) {
     throw new Error('Invalid save data: socialLinks must be an object.');
@@ -234,28 +260,61 @@ function createStore(options) {
         }
         return { ...currentState, roster: [] };
       case 'SOCIALLINKS_SET_DATE': {
-        const currentSocial = currentState.socialLinks;
-        const nextDate = sanitizeDate(action.payload, currentSocial.gameDate);
+        const nextDate = sanitizeDate(action.payload, currentState.profile.gameDate);
         return {
           ...currentState,
-          socialLinks: {
-            ...currentSocial,
+          profile: {
+            ...currentState.profile,
             gameDate: nextDate
           }
         };
       }
       case 'SOCIALLINKS_SET_STAT': {
         const { stat, value } = action.payload;
-        if (!Object.prototype.hasOwnProperty.call(currentState.socialLinks.stats, stat)) {
+        if (!Object.prototype.hasOwnProperty.call(currentState.profile.stats, stat)) {
           return currentState;
         }
         return {
           ...currentState,
-          socialLinks: {
-            ...currentState.socialLinks,
+          profile: {
+            ...currentState.profile,
             stats: {
-              ...currentState.socialLinks.stats,
-              [stat]: clampInt(value, 1, 6, currentState.socialLinks.stats[stat])
+              ...currentState.profile.stats,
+              [stat]: clampInt(value, 1, 6, currentState.profile.stats[stat])
+            }
+          }
+        };
+      }
+      case 'PROFILE_SET_DATE': {
+        const nextDate = sanitizeDate(action.payload, currentState.profile.gameDate);
+        return {
+          ...currentState,
+          profile: {
+            ...currentState.profile,
+            gameDate: nextDate
+          }
+        };
+      }
+      case 'PROFILE_SET_LEVEL':
+        return {
+          ...currentState,
+          profile: {
+            ...currentState.profile,
+            playerLevel: clampInt(action.payload, 1, 99, currentState.profile.playerLevel)
+          }
+        };
+      case 'PROFILE_SET_STAT': {
+        const { stat, value } = action.payload;
+        if (!Object.prototype.hasOwnProperty.call(currentState.profile.stats, stat)) {
+          return currentState;
+        }
+        return {
+          ...currentState,
+          profile: {
+            ...currentState.profile,
+            stats: {
+              ...currentState.profile.stats,
+              [stat]: clampInt(value, 1, 6, currentState.profile.stats[stat])
             }
           }
         };
@@ -333,6 +392,7 @@ function createStore(options) {
     return {
       version: snapshot.version,
       roster: snapshot.roster,
+      profile: snapshot.profile,
       socialLinks: snapshot.socialLinks,
       objectives: snapshot.objectives,
       exportedAt: new Date().toISOString()
@@ -346,6 +406,7 @@ function createStore(options) {
       payload: {
         version: rawData.version,
         roster: rawData.roster,
+        profile: rawData.profile,
         socialLinks: rawData.socialLinks,
         objectives: rawData.objectives
       }

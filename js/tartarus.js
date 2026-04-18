@@ -213,8 +213,40 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;');
 }
 
+function getCurrentProfile() {
+  return (
+    tartStore?.getState()?.profile || {
+      gameDate: { month: 4, day: 7 },
+      playerLevel: 1,
+      stats: { academics: 1, charm: 1, courage: 1 }
+    }
+  );
+}
+
 function getCurrentGameDate() {
-  return tartStore?.getState()?.socialLinks?.gameDate || { month: 4, day: 7 };
+  return getCurrentProfile().gameDate || { month: 4, day: 7 };
+}
+
+function getCurrentPlayerLevel() {
+  return getCurrentProfile().playerLevel || 1;
+}
+
+function getLevelReadiness(currentLevel, recommendedLevel) {
+  if (!recommendedLevel || !currentLevel) {
+    return null;
+  }
+
+  const diff = currentLevel - recommendedLevel;
+  if (diff <= -5) {
+    return `Current Lv ${currentLevel} - well below the comfort point (target around Lv ${recommendedLevel}).`;
+  }
+  if (diff < 0) {
+    return `Current Lv ${currentLevel} - slightly below the comfort point (target around Lv ${recommendedLevel}).`;
+  }
+  if (diff <= 3) {
+    return `Current Lv ${currentLevel} - on pace for a safe attempt.`;
+  }
+  return `Current Lv ${currentLevel} - ahead of the recommended pace.`;
 }
 
 function tartDateToNum(date) {
@@ -982,10 +1014,12 @@ function renderMajorChecks(floor, block, upcomingGatekeeper) {
   }
 
   const nextFullMoon = getNextFullMoon();
+  const currentLevel = getCurrentPlayerLevel();
   let html = '<h3>Upcoming Major Checks</h3>';
 
   if (upcomingGatekeeper) {
     const distance = upcomingGatekeeper.floorMin - floor;
+    const gatekeeperReadiness = getLevelReadiness(currentLevel, upcomingGatekeeper.lvl);
     html += renderMajorCheckCard(
       'Next Gatekeeper',
       'gatekeeper',
@@ -993,7 +1027,9 @@ function renderMajorChecks(floor, block, upcomingGatekeeper) {
         upcomingGatekeeper.name
       )}</span><span class="major-check-meta">${upcomingGatekeeper.floorMin}F • Lv ${upcomingGatekeeper.lvl}</span></div><div class="major-check-copy">${distance === 0 ? 'You are on the checkpoint floor now.' : `${distance} floor${distance === 1 ? '' : 's'} away in ${escapeHtml(
         block.name
-      )}.`}</div><div class="major-check-list">${buildGatekeeperPrep(upcomingGatekeeper)
+      )}.`}</div>${gatekeeperReadiness ? `<div class="major-check-copy"><strong>Readiness:</strong> ${escapeHtml(
+        gatekeeperReadiness
+      )}</div>` : ''}<div class="major-check-list">${buildGatekeeperPrep(upcomingGatekeeper)
         .map((entry) => `<div class="major-check-line">${escapeHtml(entry)}</div>`)
         .join('')}</div>`
     );
@@ -1008,6 +1044,7 @@ function renderMajorChecks(floor, block, upcomingGatekeeper) {
   if (nextFullMoon && nextFullMoon.parsedDate) {
     const daysLeft = daysBetweenDates(getCurrentGameDate(), nextFullMoon.parsedDate);
     const strategy = nextFullMoon.primaryStrategy;
+    const fullMoonReadiness = getLevelReadiness(currentLevel, strategy?.recLevel || 0);
     const recommendedParty = strategy?.party
       ? `<div class="major-check-tags">${strategy.party
           .slice(0, 3)
@@ -1026,7 +1063,9 @@ function renderMajorChecks(floor, block, upcomingGatekeeper) {
         daysLeft === 1 ? '' : 's'
       }</span></div>${strategy?.quickTip ? `<div class="major-check-copy">${escapeHtml(strategy.quickTip)}</div>` : ''}${
         strategy?.recLevel ? `<div class="major-check-copy"><strong>Comfort level:</strong> around Lv ${strategy.recLevel}.</div>` : ''
-      }${recommendedParty}${itemPrompt}`
+      }${fullMoonReadiness ? `<div class="major-check-copy"><strong>Readiness:</strong> ${escapeHtml(
+        fullMoonReadiness
+      )}</div>` : ''}${recommendedParty}${itemPrompt}`
     );
   }
 

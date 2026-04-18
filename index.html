@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>P3R Companion — Tartarus &amp; Velvet Room &amp; Social Links</title>
 <link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/profile.css">
 <link rel="stylesheet" href="css/tartarus.css">
 <link rel="stylesheet" href="css/velvet.css">
 <link rel="stylesheet" href="css/social-links.css">
@@ -15,6 +16,7 @@
 <nav class="app-nav">
   <div class="app-title">P3R <span>Companion</span></div>
   <div class="app-nav-tabs">
+    <button class="app-nav-tab" data-section="profile">Profile</button>
     <button class="app-nav-tab" data-section="tartarus">Tartarus</button>
     <button class="app-nav-tab" data-section="velvet">Velvet Room</button>
     <button class="app-nav-tab" data-section="social-links">Social Links</button>
@@ -54,6 +56,72 @@
         <div class="save-feedback" id="save-import-feedback"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ===== PROFILE SECTION ===== -->
+<div id="profile" class="app-section">
+  <header class="profile-header">
+    <h1>Profile <span>P3R</span></h1>
+    <div class="profile-subtitle">Central run state for Tartarus, Social Links, and future app-wide guidance.</div>
+  </header>
+
+  <div class="profile-main">
+    <section class="profile-card">
+      <h2>Run State</h2>
+      <div class="profile-grid">
+        <label class="profile-field">
+          <span class="profile-label">Month</span>
+          <select id="profile-month"></select>
+        </label>
+        <label class="profile-field">
+          <span class="profile-label">Day</span>
+          <select id="profile-day"></select>
+        </label>
+        <label class="profile-field">
+          <span class="profile-label">Player Level</span>
+          <input id="profile-level" type="number" min="1" max="99" placeholder="Lv">
+        </label>
+      </div>
+      <p class="profile-note">Used by Tartarus readiness checks, deadline pressure, and Full Moon timing.</p>
+    </section>
+
+    <section class="profile-card">
+      <h2>Social Stats</h2>
+      <div class="profile-grid profile-grid-stats">
+        <label class="profile-field">
+          <span class="profile-label">Academics</span>
+          <select id="profile-academics"></select>
+        </label>
+        <label class="profile-field">
+          <span class="profile-label">Charm</span>
+          <select id="profile-charm"></select>
+        </label>
+        <label class="profile-field">
+          <span class="profile-label">Courage</span>
+          <select id="profile-courage"></select>
+        </label>
+      </div>
+      <p class="profile-note">These values feed Social Link unlock checks and route-priority recommendations.</p>
+    </section>
+
+    <section class="profile-card profile-card-summary">
+      <h2>Used Across The App</h2>
+      <div class="profile-use-grid">
+        <div class="profile-use-item">
+          <span class="profile-use-title">Tartarus</span>
+          <span class="profile-use-copy">Next Full Moon, objective urgency, and major-check readiness all read from this profile.</span>
+        </div>
+        <div class="profile-use-item">
+          <span class="profile-use-title">Social Links</span>
+          <span class="profile-use-copy">The Dashboard, Calendar, and risk boards use this shared date and your current stat tiers.</span>
+        </div>
+        <div class="profile-use-item">
+          <span class="profile-use-title">Save Data</span>
+          <span class="profile-use-copy">Your run state is exported once and stays consistent across every section.</span>
+        </div>
+      </div>
+    </section>
   </div>
 </div>
 
@@ -364,28 +432,25 @@
     <div class="sl-tab-content active" id="sl-tab-dashboard">
       <div class="card" id="sl-status-card">
         <h2>Current Status</h2>
-        <div class="sl-status-bar">
-          <div class="sl-status-group">
-            <label>Month</label>
-            <select id="sl-month"></select>
+        <div class="sl-status-summary" id="sl-status-summary">
+          <div class="sl-status-pill">
+            <span class="sl-status-pill-label">Date</span>
+            <span class="sl-status-pill-value" id="sl-status-date">April 7</span>
           </div>
-          <div class="sl-status-group">
-            <label>Day</label>
-            <select id="sl-day"></select>
+          <div class="sl-status-pill">
+            <span class="sl-status-pill-label">Academics</span>
+            <span class="sl-status-pill-value" id="sl-status-academics">1</span>
           </div>
-          <div class="sl-status-group">
-            <label>Academics</label>
-            <select id="sl-academics"></select>
+          <div class="sl-status-pill">
+            <span class="sl-status-pill-label">Charm</span>
+            <span class="sl-status-pill-value" id="sl-status-charm">1</span>
           </div>
-          <div class="sl-status-group">
-            <label>Charm</label>
-            <select id="sl-charm"></select>
-          </div>
-          <div class="sl-status-group">
-            <label>Courage</label>
-            <select id="sl-courage"></select>
+          <div class="sl-status-pill">
+            <span class="sl-status-pill-label">Courage</span>
+            <span class="sl-status-pill-value" id="sl-status-courage">1</span>
           </div>
         </div>
+        <p class="sl-note">Edit date, player level, and social stats in the Profile tab.</p>
       </div>
       <div class="card" id="sl-progress-card">
         <h2>Progress Overview</h2>
@@ -465,6 +530,7 @@
 <script src="data/social-links-extra.js"></script>
 <script src="data/requests-extra.js"></script>
 <script src="js/store.js"></script>
+<script src="js/profile.js"></script>
 <script src="js/tartarus.js"></script>
 <script src="js/velvet.js"></script>
 <script src="js/social-links.js"></script>
