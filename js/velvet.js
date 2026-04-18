@@ -5,6 +5,7 @@ const RESIST_CLASS = { w: 'resist-w', s: 'resist-s', n: 'resist-n', r: 'resist-r
 const STAT_NAMES = ['St', 'Ma', 'En', 'Ag', 'Lu'];
 const STAT_COLORS = ['#ff5722', '#7c4dff', '#2196f3', '#4caf50', '#ffc107'];
 const MAX_PLANNER_DEPTH = 6;
+const MAX_PLANNER_RECIPES = 12;
 const ELEM_NAMES = {
   fir: 'Fire',
   ice: 'Ice',
@@ -247,8 +248,8 @@ function compareBlockedPlans(left, right) {
   return left.recipeKey.localeCompare(right.recipeKey);
 }
 
-function getRecipeCandidates(targetName) {
-  return reverseLookup(targetName).map((entry) => {
+function getRecipeCandidates(targetName, roster) {
+  const recipes = reverseLookup(targetName).map((entry) => {
     if (entry.type === 'special') {
       return {
         type: 'special',
@@ -260,9 +261,28 @@ function getRecipeCandidates(targetName) {
       ingredients: [entry.p1, entry.p2]
     };
   });
+  return recipes
+    .map((recipe) => ({
+      ...recipe,
+      directOwnedCount: recipe.ingredients.filter((ingredient) => roster.has(ingredient)).length,
+      ingredientLevelSum: recipe.ingredients.reduce(
+        (sum, ingredient) => sum + (PERSONAS[ingredient]?.lvl || 99),
+        0
+      )
+    }))
+    .sort((left, right) => {
+      if (left.directOwnedCount !== right.directOwnedCount) {
+        return right.directOwnedCount - left.directOwnedCount;
+      }
+      if (left.ingredientLevelSum !== right.ingredientLevelSum) {
+        return left.ingredientLevelSum - right.ingredientLevelSum;
+      }
+      return left.ingredients.join('|').localeCompare(right.ingredients.join('|'));
+    })
+    .slice(0, MAX_PLANNER_RECIPES);
 }
 
-function buildPlanNode(targetName, roster, depth = 0, trail = new Set()) {
+function buildPlanNode(targetName, roster, memo, depth = 0, trail = new Set()) {
   if (!PERSONAS[targetName]) {
     return {
       status: 'blocked',
@@ -299,9 +319,14 @@ function buildPlanNode(targetName, roster, depth = 0, trail = new Set()) {
     };
   }
 
-  const recipes = getRecipeCandidates(targetName);
+  const memoKey = `${targetName}|${depth}`;
+  if (memo.has(memoKey)) {
+    return memo.get(memoKey);
+  }
+
+  const recipes = getRecipeCandidates(targetName, roster);
   if (!recipes.length) {
-    return {
+    const noRecipeNode = {
       status: 'blocked',
       name: targetName,
       blockers: [targetName],
@@ -310,6 +335,8 @@ function buildPlanNode(targetName, roster, depth = 0, trail = new Set()) {
       ingredientLevelSum: 999,
       recipeKey: targetName
     };
+    memo.set(memoKey, noRecipeNode);
+    return noRecipeNode;
   }
 
   const nextTrail = new Set(trail);
@@ -319,7 +346,7 @@ function buildPlanNode(targetName, roster, depth = 0, trail = new Set()) {
 
   recipes.forEach((recipe) => {
     const childNodes = recipe.ingredients.map((ingredient) =>
-      buildPlanNode(ingredient, roster, depth + 1, nextTrail)
+      buildPlanNode(ingredient, roster, memo, depth + 1, nextTrail)
     );
     const directOwnedCount = childNodes.filter((child) => child.status === 'owned').length;
     const ingredientLevelSum = recipe.ingredients.reduce(
@@ -374,13 +401,18 @@ function buildPlanNode(targetName, roster, depth = 0, trail = new Set()) {
   });
 
   if (solvableCandidates.length) {
-    return solvableCandidates.sort(compareSolvablePlans)[0];
+    const bestSolvable = solvableCandidates.sort(compareSolvablePlans)[0];
+    memo.set(memoKey, bestSolvable);
+    return bestSolvable;
   }
-  return blockedCandidates.sort(compareBlockedPlans)[0];
+  const bestBlocked = blockedCandidates.sort(compareBlockedPlans)[0];
+  memo.set(memoKey, bestBlocked);
+  return bestBlocked;
 }
 
 function buildFusionPlanner(targetName) {
   const roster = getRosterSet();
+  const memo = new Map();
   if (roster.has(targetName)) {
     return {
       status: 'owned',
@@ -392,7 +424,7 @@ function buildFusionPlanner(targetName) {
     };
   }
 
-  const node = buildPlanNode(targetName, roster);
+  const node = buildPlanNode(targetName, roster, memo);
   if (node.status === 'blocked') {
     return {
       status: 'blocked',
