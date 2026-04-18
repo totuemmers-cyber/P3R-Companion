@@ -28,12 +28,22 @@
 #tartarus select.filter-select{padding:0.4rem 0.6rem;border-radius:3px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:0.85rem;outline:none;cursor:pointer}
 #tartarus select.filter-select option{background:#0d1229;color:var(--text)}
 
-#tartarus .main{max-width:1400px;margin:0 auto;padding:0 1rem 2rem;display:flex;gap:1rem}
-#tartarus .content-column{flex:1;min-width:0;display:flex;flex-direction:column;gap:1rem}
-#tartarus .table-wrap{flex:1;overflow-x:auto}
-#tartarus .sidebar{width:300px;flex-shrink:0}
-#tartarus .aux-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
-#tartarus .aux-panel{position:static;top:auto}
+#tartarus .main{max-width:1400px;margin:0 auto;padding:0 1rem 2rem;position:relative}
+#tartarus .dashboard-shell{min-width:0}
+#tartarus .table-wrap{overflow-x:auto}
+#tartarus .floor-dashboard{position:static;top:auto;max-width:980px;margin:0 auto}
+#tartarus .floor-dashboard-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.85rem}
+#tartarus .floor-dashboard-note{font-size:0.82rem;color:var(--text-dim);letter-spacing:0.03em}
+#tartarus .floor-dashboard-intel-btn{flex-shrink:0}
+#tartarus .shadow-intel-overlay{position:fixed;inset:0;background:rgba(3,6,18,0.65);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity 0.25s ease;z-index:80}
+#tartarus .shadow-intel-overlay.open{opacity:1;pointer-events:auto}
+#tartarus .shadow-intel-drawer{position:fixed;top:0;right:0;height:100vh;width:min(1080px,92vw);background:rgba(7,11,24,0.98);border-left:1px solid var(--glass-border);box-shadow:-12px 0 32px rgba(0,0,0,0.35);transform:translateX(100%);transition:transform 0.25s ease;z-index:81;display:flex;flex-direction:column}
+#tartarus .shadow-intel-drawer.open{transform:translateX(0)}
+#tartarus .shadow-intel-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1rem 1rem 0.75rem;border-bottom:1px solid rgba(0,229,255,0.08)}
+#tartarus .shadow-intel-header h2{font-family:'Cinzel',serif;font-size:1.05rem;color:var(--cyan);margin:0}
+#tartarus .shadow-intel-note{font-size:0.8rem;color:var(--text-dim);margin-top:0.2rem}
+#tartarus .shadow-intel-controls{max-width:none;padding:0.85rem 1rem 0.7rem;border-bottom:1px solid rgba(0,229,255,0.08)}
+#tartarus .shadow-intel-table-wrap{padding:0 1rem 1rem;overflow:auto;flex:1;min-height:0}
 
 #tartarus .shadow-table{width:100%;border-collapse:collapse;background:var(--glass);border:1px solid var(--glass-border);border-radius:6px;overflow:hidden}
 #tartarus .shadow-table thead{position:sticky;top:0;z-index:10}
@@ -87,16 +97,24 @@
 #tartarus .floor-input:focus{border-color:var(--cyan)}
 #tartarus .floor-info{margin-top:0.75rem}
 #tartarus .floor-block-name{font-family:'Cinzel',serif;font-size:1rem;margin-bottom:0.5rem}
+#tartarus .floor-shadow-link{appearance:none;background:none;border:none;padding:0;color:var(--text-bright);font:inherit;font-weight:600;cursor:pointer}
+#tartarus .floor-shadow-link:hover{color:var(--cyan)}
+#tartarus .floor-enemy-level{color:var(--text-dim);font-size:0.82rem}
 #tartarus .floor-scout-section{margin-top:0.75rem;border-radius:8px;border:1px solid rgba(0,229,255,0.12);overflow:hidden}
 #tartarus .floor-scout-section-regular{background:linear-gradient(180deg,rgba(0,229,255,0.08),rgba(0,229,255,0.03))}
 #tartarus .floor-scout-section-monad{background:linear-gradient(180deg,rgba(123,31,162,0.12),rgba(123,31,162,0.04));border-color:rgba(123,31,162,0.24)}
 #tartarus .floor-scout-section-gatekeeper{background:linear-gradient(180deg,rgba(255,23,68,0.1),rgba(255,23,68,0.03));border-color:rgba(255,23,68,0.24)}
+#tartarus .floor-scout-section-loot{background:linear-gradient(180deg,rgba(76,175,80,0.1),rgba(76,175,80,0.03));border-color:rgba(76,175,80,0.22)}
+#tartarus .floor-scout-section-grind{background:linear-gradient(180deg,rgba(255,213,79,0.12),rgba(255,213,79,0.03));border-color:rgba(255,213,79,0.22)}
+#tartarus .floor-scout-section-support{background:linear-gradient(180deg,rgba(0,229,255,0.08),rgba(255,255,255,0.02))}
 #tartarus .floor-scout-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:0.8rem;padding:0.75rem 0.85rem;background:transparent;border:none;color:var(--text);text-align:left;cursor:pointer}
 #tartarus .floor-scout-toggle:hover{background:rgba(255,255,255,0.03)}
 #tartarus .floor-scout-toggle-copy{display:flex;flex-direction:column;gap:0.15rem;min-width:0}
 #tartarus .floor-scout-toggle-title{font-size:0.9rem;font-weight:700;color:var(--text-bright)}
 #tartarus .floor-scout-section-monad .floor-scout-toggle-title{color:#e1b7f0}
 #tartarus .floor-scout-section-gatekeeper .floor-scout-toggle-title{color:#ff8ca3}
+#tartarus .floor-scout-section-loot .floor-scout-toggle-title{color:#8de39c}
+#tartarus .floor-scout-section-grind .floor-scout-toggle-title{color:#ffe082}
 #tartarus .floor-scout-toggle-summary{font-size:0.74rem;color:var(--text-dim);letter-spacing:0.03em}
 #tartarus .floor-scout-toggle-chevron{flex-shrink:0;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:rgba(255,255,255,0.06);font-size:1rem;font-weight:700;color:var(--text-bright)}
 #tartarus .floor-scout-section-body{padding:0 0.85rem 0.75rem}
@@ -115,6 +133,7 @@
 #tartarus .floor-tip{margin-top:0.75rem;padding:0.5rem;border-radius:4px;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);font-size:0.8rem;color:var(--text)}
 #tartarus .floor-tip strong{color:var(--cyan)}
 #tartarus .floor-monad-note{margin:0 0 0.45rem;color:var(--text-dim);font-size:0.78rem}
+#tartarus .floor-support-note{margin:0 0 0.55rem;color:var(--text-dim);font-size:0.78rem}
 #tartarus .floor-gatekeeper-panel{padding:0.5rem;border-radius:4px}
 #tartarus .floor-gatekeeper-panel + .floor-gatekeeper-panel{margin-top:0.5rem}
 
@@ -185,5 +204,5 @@
 #tartarus .loot-enemy{color:var(--text)}
 #tartarus .loot-area{color:var(--text-dim);font-size:0.72rem}
 
-@media(max-width:900px){#tartarus .main{flex-direction:column}#tartarus .sidebar{width:100%;order:-1}#tartarus .aux-panels{grid-template-columns:1fr}#tartarus .floor-scout{position:static}}
+@media(max-width:900px){#tartarus .floor-dashboard-header{flex-direction:column;align-items:stretch}#tartarus .floor-dashboard-intel-btn{width:100%}#tartarus .floor-scout{position:static}#tartarus .shadow-intel-drawer{width:100vw}}
 @media(max-width:768px){#tartarus .header h1{font-size:2rem;letter-spacing:0.15em}#tartarus .controls{padding:0.5rem}#tartarus .shadow-table{font-size:0.8rem}#tartarus .shadow-table th,#tartarus .shadow-table td{padding:0.3rem}}

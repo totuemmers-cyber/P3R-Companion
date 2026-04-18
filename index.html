@@ -61,11 +61,11 @@
 <div id="tartarus" class="app-section">
   <div class="header">
     <h1>Tartarus</h1>
-    <div class="subtitle">P3 Reload &mdash; Shadow Database</div>
+    <div class="subtitle">P3 Reload &mdash; Floor Operations</div>
   </div>
 
   <div class="nav-tabs" id="navTabs">
-    <div class="nav-tab active" data-view="database">All Shadows</div>
+    <div class="nav-tab active" data-view="database">Floor Ops</div>
     <div class="nav-tab" data-block="thebel" style="border-left:3px solid #4a6fa5">Thebel</div>
     <div class="nav-tab" data-block="arqa" style="border-left:3px solid #7b4fa0">Arqa</div>
     <div class="nav-tab" data-block="yabbashah" style="border-left:3px solid #8b6914">Yabbashah</div>
@@ -75,54 +75,74 @@
     <div class="nav-tab" data-view="fullmoon" style="border-left:3px solid #ffd700">Full Moon</div>
   </div>
 
-  <div class="controls" id="controls">
-    <input class="search-box" id="searchBox" type="text" placeholder="Search shadows, skills, drops...">
-    <div class="filter-group">
-      <span class="filter-label">Type:</span>
-      <button class="filter-btn" data-type="regular">Regular</button>
-      <button class="filter-btn" data-type="gatekeeper">Gatekeeper</button>
-      <button class="filter-btn" data-type="fullmoon">Full Moon</button>
-      <button class="filter-btn" data-type="monad-door">Monad Door</button>
-      <button class="filter-btn" data-type="monad-passage">Monad Pass</button>
-    </div>
-    <div class="filter-group">
-      <span class="filter-label">Weak to:</span>
-      <select class="filter-select" id="weakFilter">
-        <option value="">Any</option>
-        <option value="sla">Slash</option>
-        <option value="str">Strike</option>
-        <option value="pie">Pierce</option>
-        <option value="fir">Fire</option>
-        <option value="ice">Ice</option>
-        <option value="ele">Elec</option>
-        <option value="win">Wind</option>
-        <option value="lig">Light</option>
-        <option value="dar">Dark</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <span class="filter-label">Lv:</span>
-      <input type="number" class="filter-select" id="lvlMin" placeholder="Min" min="1" max="99" style="width:55px">
-      <span style="color:var(--text-dim)">&ndash;</span>
-      <input type="number" class="filter-select" id="lvlMax" placeholder="Max" min="1" max="99" style="width:55px">
-    </div>
-    <div class="filter-group">
-      <span class="filter-label">Vuln to:</span>
-      <select class="filter-select" id="ailmentFilter">
-        <option value="">Any ailment</option>
-        <option value="0">Burn</option>
-        <option value="1">Freeze</option>
-        <option value="2">Shock</option>
-        <option value="3">Poison</option>
-        <option value="4">Charm</option>
-        <option value="5">Distress</option>
-      </select>
-    </div>
-  </div>
-
   <div class="main" id="mainView">
-    <div class="content-column">
-      <div class="table-wrap">
+    <div class="dashboard-shell">
+      <div class="floor-scout floor-dashboard">
+        <div class="floor-dashboard-header">
+          <div>
+            <h2>Floor Scout</h2>
+            <div class="floor-dashboard-note">Current-floor combat prep, loot, grinding, and shadow intel.</div>
+          </div>
+          <button class="btn btn-sm floor-dashboard-intel-btn" id="openShadowIntel" type="button">Open Shadow Intel</button>
+        </div>
+        <input class="floor-input" id="floorInput" type="number" placeholder="Enter floor #" min="2" max="264">
+        <div class="floor-info" id="floorInfo"></div>
+      </div>
+    </div>
+    <div class="shadow-intel-overlay" id="shadowIntelOverlay"></div>
+    <aside class="shadow-intel-drawer" id="shadowIntelDrawer" aria-hidden="true">
+      <div class="shadow-intel-header">
+        <div>
+          <h2>Shadow Intel</h2>
+          <div class="shadow-intel-note">Full searchable shadow database and combat reference.</div>
+        </div>
+        <button class="btn btn-sm" id="closeShadowIntel" type="button">Close</button>
+      </div>
+      <div class="controls shadow-intel-controls" id="controls">
+        <input class="search-box" id="searchBox" type="text" placeholder="Search shadows, skills, drops...">
+        <div class="filter-group">
+          <span class="filter-label">Type:</span>
+          <button class="filter-btn" data-type="regular">Regular</button>
+          <button class="filter-btn" data-type="gatekeeper">Gatekeeper</button>
+          <button class="filter-btn" data-type="fullmoon">Full Moon</button>
+          <button class="filter-btn" data-type="monad-door">Monad Door</button>
+          <button class="filter-btn" data-type="monad-passage">Monad Pass</button>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Weak to:</span>
+          <select class="filter-select" id="weakFilter">
+            <option value="">Any</option>
+            <option value="sla">Slash</option>
+            <option value="str">Strike</option>
+            <option value="pie">Pierce</option>
+            <option value="fir">Fire</option>
+            <option value="ice">Ice</option>
+            <option value="ele">Elec</option>
+            <option value="win">Wind</option>
+            <option value="lig">Light</option>
+            <option value="dar">Dark</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Lv:</span>
+          <input type="number" class="filter-select" id="lvlMin" placeholder="Min" min="1" max="99" style="width:55px">
+          <span style="color:var(--text-dim)">&ndash;</span>
+          <input type="number" class="filter-select" id="lvlMax" placeholder="Max" min="1" max="99" style="width:55px">
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Vuln to:</span>
+          <select class="filter-select" id="ailmentFilter">
+            <option value="">Any ailment</option>
+            <option value="0">Burn</option>
+            <option value="1">Freeze</option>
+            <option value="2">Shock</option>
+            <option value="3">Poison</option>
+            <option value="4">Charm</option>
+            <option value="5">Distress</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap shadow-intel-table-wrap">
         <div class="result-count" id="resultCount"></div>
         <table class="shadow-table">
           <thead id="tableHead">
@@ -146,26 +166,7 @@
           <tbody id="tableBody"></tbody>
         </table>
       </div>
-      <div class="aux-panels">
-        <div class="floor-scout aux-panel">
-          <h2>Grinding Guide</h2>
-          <input class="floor-input" id="grindInput" type="number" placeholder="Your level" min="1" max="99">
-          <div class="floor-info" id="grindInfo"></div>
-        </div>
-        <div class="floor-scout aux-panel">
-          <h2>Loot Finder</h2>
-          <input class="floor-input" id="lootSearch" type="text" placeholder="Search item name..." style="width:100%">
-          <div class="floor-info" id="lootInfo"></div>
-        </div>
-      </div>
-    </div>
-    <div class="sidebar">
-      <div class="floor-scout">
-        <h2>Floor Scout</h2>
-        <input class="floor-input" id="floorInput" type="number" placeholder="Enter floor #" min="2" max="264">
-        <div class="floor-info" id="floorInfo"></div>
-      </div>
-    </div>
+    </aside>
   </div>
 
   <div class="fullmoon-section" id="fullmoonSection">

@@ -126,7 +126,10 @@ const state = {
 const floorScoutSections = {
   regular: true,
   monad: false,
-  gatekeepers: false
+  gatekeepers: false,
+  loot: false,
+  grind: false,
+  loadout: true
 };
 
 const MONAD_DOOR_BANDS = [
@@ -208,12 +211,18 @@ function renderFloorAffinities(shadow, extraStyle = '') {
   return html;
 }
 
+function renderFloorEnemyName(shadow) {
+  return `<button class="floor-shadow-link" type="button" data-shadow-name="${escapeHtml(shadow.name)}">${escapeHtml(
+    shadow.name
+  )}</button> <span class="floor-enemy-level">(Lv ${shadow.lvl})</span>`;
+}
+
 function renderGatekeeperPanel(title, shadow, options = {}) {
   const accentStyle = options.accentStyle || 'background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2)';
   const titleColor = options.titleColor || 'var(--wk)';
   let html = `<div class="floor-gatekeeper-panel" style="${accentStyle}">`;
   html += `<div style="font-size:0.8rem;color:${titleColor};font-weight:600">${escapeHtml(title)}</div>`;
-  html += `<div style="font-size:0.85rem">${escapeHtml(shadow.name)} (Lv ${shadow.lvl})</div>`;
+  html += `<div style="font-size:0.85rem">${renderFloorEnemyName(shadow)}</div>`;
   html += renderFloorAffinities(shadow, 'margin-top:4px');
   html += '</div>';
   return html;
@@ -237,6 +246,70 @@ function renderFloorScoutSection({ key, title, summary = '', tone, bodyHtml }) {
       ${bodyHtml}
     </div>
   </section>`;
+}
+
+function syncIntelControlsFromState() {
+  const searchBox = tartRoot.querySelector('#searchBox');
+  const weakFilter = tartRoot.querySelector('#weakFilter');
+  const lvlMin = tartRoot.querySelector('#lvlMin');
+  const lvlMax = tartRoot.querySelector('#lvlMax');
+  const ailmentFilter = tartRoot.querySelector('#ailmentFilter');
+
+  if (searchBox) {
+    searchBox.value = state.query;
+  }
+  if (weakFilter) {
+    weakFilter.value = state.weakFilter;
+  }
+  if (lvlMin) {
+    lvlMin.value = state.lvlMin || '';
+  }
+  if (lvlMax) {
+    lvlMax.value = state.lvlMax && state.lvlMax < 99 ? state.lvlMax : '';
+  }
+  if (ailmentFilter) {
+    ailmentFilter.value = state.ailmentFilter;
+  }
+
+  tartRoot.querySelectorAll('.filter-btn[data-type]').forEach((button) => {
+    button.classList.toggle('active', state.typeFilters.has(button.dataset.type));
+  });
+}
+
+function openShadowIntelDrawer(focusName = '') {
+  const drawer = tartRoot.querySelector('#shadowIntelDrawer');
+  const overlay = tartRoot.querySelector('#shadowIntelOverlay');
+  if (!drawer || !overlay) {
+    return;
+  }
+
+  if (focusName) {
+    state.query = focusName;
+    state.blockFilter = null;
+    state.typeFilters.clear();
+    state.weakFilter = '';
+    state.ailmentFilter = '';
+    state.lvlMin = 0;
+    state.lvlMax = 99;
+    state.expandedRow = focusName;
+  }
+
+  syncIntelControlsFromState();
+  renderTable();
+  drawer.classList.add('open');
+  overlay.classList.add('open');
+  drawer.setAttribute('aria-hidden', 'false');
+}
+
+function closeShadowIntelDrawer() {
+  const drawer = tartRoot.querySelector('#shadowIntelDrawer');
+  const overlay = tartRoot.querySelector('#shadowIntelOverlay');
+  if (!drawer || !overlay) {
+    return;
+  }
+  drawer.classList.remove('open');
+  overlay.classList.remove('open');
+  drawer.setAttribute('aria-hidden', 'true');
 }
 
 function filterShadows() {
@@ -575,6 +648,76 @@ function renderLoadoutAdvice(shadows, rosterSet) {
   return html;
 }
 
+function getFloorLootEntries(shadows) {
+  const lootMap = {};
+  shadows.forEach((shadow) => {
+    if (!shadow.dodds) {
+      return;
+    }
+    Object.entries(shadow.dodds).forEach(([item, chance]) => {
+      if (!lootMap[item]) {
+        lootMap[item] = [];
+      }
+      lootMap[item].push({
+        enemy: shadow.name,
+        lvl: shadow.lvl,
+        chance
+      });
+    });
+  });
+
+  return Object.entries(lootMap)
+    .map(([item, sources]) => ({
+      item,
+      sources: sources.sort((left, right) => right.chance - left.chance || left.enemy.localeCompare(right.enemy))
+    }))
+    .sort((left, right) => left.item.localeCompare(right.item));
+}
+
+function getNearbyGrindSpots(floor, blockId) {
+  const spots = {};
+  ALL_SHADOWS.forEach((shadow) => {
+    if (shadow.type !== 'regular' || !shadow.floorMin || !shadow.floorMax || !shadow.exp) {
+      return;
+    }
+    const key = `${shadow.block}:${shadow.floorMin}-${shadow.floorMax}`;
+    if (!spots[key]) {
+      spots[key] = {
+        block: shadow.block,
+        fMin: shadow.floorMin,
+        fMax: shadow.floorMax,
+        totalExp: 0,
+        count: 0,
+        avgLvl: 0
+      };
+    }
+    spots[key].totalExp += shadow.exp;
+    spots[key].count += 1;
+    spots[key].avgLvl += shadow.lvl;
+  });
+
+  return Object.values(spots)
+    .map((spot) => {
+      const block = BLOCKS.find((entry) => entry.id === spot.block);
+      const distance = floor < spot.fMin ? spot.fMin - floor : floor > spot.fMax ? floor - spot.fMax : 0;
+      return {
+        ...spot,
+        avgLvl: Math.round(spot.avgLvl / spot.count),
+        distance,
+        blockName: block ? block.name : spot.block,
+        blockColor: block ? block.color : '#fff',
+        sameBlock: spot.block === blockId
+      };
+    })
+    .sort(
+      (left, right) =>
+        Number(right.sameBlock) - Number(left.sameBlock) ||
+        left.distance - right.distance ||
+        right.totalExp - left.totalExp
+    )
+    .slice(0, 3);
+}
+
 function renderFloorScout(floor) {
   const info = tartRoot.querySelector('#floorInfo');
   if (!floor || floor < 2 || floor > 264) {
@@ -606,9 +749,9 @@ function renderFloorScout(floor) {
     shadows.sort((left, right) => left.name.localeCompare(right.name));
     regularBody += '<div class="floor-enemies">';
     shadows.forEach((shadow) => {
-      regularBody += `<div class="floor-enemy"><div class="floor-enemy-name">${escapeHtml(
-        shadow.name
-      )} (Lv ${shadow.lvl})</div>${renderFloorAffinities(shadow)}</div>`;
+      regularBody += `<div class="floor-enemy"><div class="floor-enemy-name">${renderFloorEnemyName(
+        shadow
+      )}</div>${renderFloorAffinities(shadow)}</div>`;
     });
     regularBody += '</div>';
 
@@ -656,9 +799,9 @@ function renderFloorScout(floor) {
   if (monadDoorData.band && monadDoorData.enemies.length > 0) {
     let monadBody = `<div class="floor-monad-note">Possible encounters for ${escapeHtml(monadDoorData.band.label)}.</div>`;
     monadDoorData.enemies.forEach((shadow) => {
-      monadBody += `<div class="floor-enemy"><div class="floor-enemy-name">${escapeHtml(
-        shadow.name
-      )} (Lv ${shadow.lvl})</div>${renderFloorAffinities(shadow)}</div>`;
+      monadBody += `<div class="floor-enemy"><div class="floor-enemy-name">${renderFloorEnemyName(
+        shadow
+      )}</div>${renderFloorAffinities(shadow)}</div>`;
     });
     html += renderFloorScoutSection({
       key: 'monad',
@@ -711,9 +854,52 @@ function renderFloorScout(floor) {
     });
   }
 
+  const lootEntries = getFloorLootEntries(shadows);
+  if (lootEntries.length > 0) {
+    let lootBody = '<div class="floor-support-note">Tracked drops from enemies on this floor.</div>';
+    lootEntries.slice(0, 8).forEach((entry) => {
+      lootBody += `<div class="loot-item-group"><div class="loot-item-name">${escapeHtml(entry.item)}</div>`;
+      entry.sources.slice(0, 3).forEach((source) => {
+        lootBody += `<div class="loot-source"><span class="loot-chance">${source.chance}%</span> <span class="loot-enemy">${escapeHtml(
+          source.enemy
+        )}</span> <span class="loot-area">Lv${source.lvl}</span></div>`;
+      });
+      lootBody += '</div>';
+    });
+    html += renderFloorScoutSection({
+      key: 'loot',
+      title: 'Loot on this floor',
+      summary: `${lootEntries.length} tracked item${lootEntries.length === 1 ? '' : 's'}`,
+      tone: 'loot',
+      bodyHtml: lootBody
+    });
+  }
+
+  const nearbyGrindSpots = getNearbyGrindSpots(floor, block.id);
+  if (nearbyGrindSpots.length > 0) {
+    let grindBody = '<div class="floor-support-note">Nearby ranges with strong EXP value from your current position.</div>';
+    nearbyGrindSpots.forEach((spot, index) => {
+      const distanceLabel = spot.distance === 0 ? 'Current range' : `${spot.distance} floor${spot.distance === 1 ? '' : 's'} away`;
+      grindBody += `<div class="grind-spot"><div class="grind-rank">#${index + 1}</div><div class="grind-info"><div class="grind-block" style="color:${spot.blockColor}">${spot.blockName} F${spot.fMin}-${spot.fMax}</div><div class="grind-meta">${spot.totalExp} EXP · Avg Lv${spot.avgLvl} · ${spot.count} shadows · ${distanceLabel}</div></div></div>`;
+    });
+    html += renderFloorScoutSection({
+      key: 'grind',
+      title: 'Nearby grind spots',
+      summary: nearbyGrindSpots[0].distance === 0 ? 'current range included' : 'nearest ranges',
+      tone: 'grind',
+      bodyHtml: grindBody
+    });
+  }
+
   const rosterSet = getRosterSet();
   if (rosterSet.size > 0 && shadows.length > 0) {
-    html += renderLoadoutAdvice(shadows, rosterSet);
+    html += renderFloorScoutSection({
+      key: 'loadout',
+      title: 'Recommended loadout',
+      summary: 'roster-aware picks',
+      tone: 'support',
+      bodyHtml: renderLoadoutAdvice(shadows, rosterSet)
+    });
   }
 
   info.innerHTML = html;
@@ -951,18 +1137,25 @@ function initTartarus({ root, store }) {
       tab.classList.add('active');
       const { view, block } = tab.dataset;
       if (view === 'fullmoon') {
+        closeShadowIntelDrawer();
         state.view = 'fullmoon';
         tartRoot.querySelector('#mainView').style.display = 'none';
         tartRoot.querySelector('#controls').style.display = 'none';
         tartRoot.querySelector('#fullmoonSection').classList.add('active');
       } else {
         state.view = 'database';
-        tartRoot.querySelector('#mainView').style.display = 'flex';
+        tartRoot.querySelector('#mainView').style.display = 'block';
         tartRoot.querySelector('#controls').style.display = 'flex';
         tartRoot.querySelector('#fullmoonSection').classList.remove('active');
         state.blockFilter = block || null;
         state.expandedRow = null;
+        syncIntelControlsFromState();
         renderTable();
+        if (block) {
+          openShadowIntelDrawer();
+        } else {
+          closeShadowIntelDrawer();
+        }
       }
     });
   });
@@ -1024,6 +1217,11 @@ function initTartarus({ root, store }) {
   });
 
   tartRoot.querySelector('#floorInfo').addEventListener('click', (event) => {
+    const shadowLink = event.target.closest('.floor-shadow-link');
+    if (shadowLink) {
+      openShadowIntelDrawer(shadowLink.dataset.shadowName || '');
+      return;
+    }
     const toggle = event.target.closest('.floor-scout-toggle');
     if (!toggle) {
       return;
@@ -1037,12 +1235,16 @@ function initTartarus({ root, store }) {
     renderFloorScout(Number(floorInput.value));
   });
 
-  tartRoot.querySelector('#grindInput').addEventListener('input', (event) => {
-    renderGrindingGuide(Number(event.target.value));
+  tartRoot.querySelector('#openShadowIntel').addEventListener('click', () => {
+    openShadowIntelDrawer();
   });
 
-  tartRoot.querySelector('#lootSearch').addEventListener('input', (event) => {
-    renderLootGuide(event.target.value.trim());
+  tartRoot.querySelector('#closeShadowIntel').addEventListener('click', () => {
+    closeShadowIntelDrawer();
+  });
+
+  tartRoot.querySelector('#shadowIntelOverlay').addEventListener('click', () => {
+    closeShadowIntelDrawer();
   });
 
   tartStore.subscribe(() => {
