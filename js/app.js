@@ -39,6 +39,60 @@ function setFeedback(element, message, isError = false) {
   element.className = `save-feedback ${isError ? 'error' : 'success'}`;
 }
 
+function dispatchClearableInputEvents(field) {
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+  field.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function initClearableInputs() {
+  const fields = document.querySelectorAll(
+    'input[type="text"], input[type="search"], input[type="number"], textarea'
+  );
+
+  fields.forEach((field) => {
+    if (field.dataset.noClear === 'true' || field.closest('.input-clear-wrap')) {
+      return;
+    }
+
+    const wrapper = document.createElement('span');
+    wrapper.className = 'input-clear-wrap';
+    if (field.tagName === 'TEXTAREA') {
+      wrapper.classList.add('is-textarea');
+    }
+
+    field.parentNode.insertBefore(wrapper, field);
+    wrapper.appendChild(field);
+    field.classList.add('input-clearable');
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'input-clear-btn';
+    button.setAttribute('aria-label', `Clear ${field.getAttribute('placeholder') || 'input'}`);
+    button.textContent = '×';
+    wrapper.appendChild(button);
+
+    const syncVisibility = () => {
+      const hasValue = field.value !== '';
+      wrapper.classList.toggle('has-value', hasValue);
+      button.hidden = !hasValue;
+    };
+
+    button.addEventListener('click', () => {
+      if (field.value === '') {
+        return;
+      }
+      field.value = '';
+      syncVisibility();
+      dispatchClearableInputEvents(field);
+      field.focus();
+    });
+
+    field.addEventListener('input', syncVisibility);
+    field.addEventListener('change', syncVisibility);
+    syncVisibility();
+  });
+}
+
 function bootstrap() {
   const store = createStore({
     validPersonaNames: new Set(Object.keys(PERSONAS)),
@@ -87,6 +141,7 @@ function bootstrap() {
     tab.addEventListener('click', () => switchSection(tab.dataset.section));
   });
 
+  initClearableInputs();
   switchSection('tartarus');
 
   const overlay = document.getElementById('save-modal-overlay');

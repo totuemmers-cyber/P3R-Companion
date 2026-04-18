@@ -135,6 +135,60 @@ input[type="number"]{
   appearance:textfield;
 }
 
+.input-clear-wrap{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  min-width:0;
+  width:auto;
+}
+.input-clear-wrap.is-textarea{
+  display:block;
+  width:100%;
+}
+.input-clearable{
+  padding-right:2rem !important;
+}
+.input-clear-wrap.is-textarea .input-clearable{
+  width:100%;
+}
+.input-clear-btn{
+  position:absolute;
+  right:0.45rem;
+  top:50%;
+  transform:translateY(-50%);
+  width:1.2rem;
+  height:1.2rem;
+  border:none;
+  border-radius:999px;
+  background:rgba(136,153,187,0.14);
+  color:var(--text-dim);
+  font:inherit;
+  font-size:1rem;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:all 0.2s ease;
+}
+.input-clear-btn:hover{
+  background:rgba(0,229,255,0.14);
+  color:var(--text-bright);
+}
+.input-clear-btn:focus-visible{
+  outline:1px solid var(--cyan);
+  outline-offset:1px;
+  color:var(--text-bright);
+}
+.input-clear-btn[hidden]{
+  display:none;
+}
+.input-clear-wrap.is-textarea .input-clear-btn{
+  top:0.75rem;
+  transform:none;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:rgba(0,0,0,0.2)}
