@@ -6,7 +6,7 @@ let initialized = false;
 const requestState = {
   query: '',
   category: '',
-  status: 'open',
+  status: 'all',
   selectedId: null
 };
 
@@ -121,10 +121,7 @@ function getRequestStatus(request, snapshot) {
 }
 
 function getVisibleRequests(snapshot) {
-  return ELIZABETH_REQUESTS.filter((request) => {
-    const availableDate = parseMonthDayLabel(request.available);
-    return !availableDate || compareDates(snapshot.profile.gameDate, availableDate) >= 0;
-  });
+  return ELIZABETH_REQUESTS;
 }
 
 function getUpcomingRequests(snapshot) {
@@ -190,22 +187,22 @@ function ensureSelection(requests) {
 function renderSummary(snapshot) {
   const visible = getVisibleRequests(snapshot);
   const completed = visible.filter((request) => isRequestComplete(snapshot, request.id)).length;
-  const open = visible.length - completed;
+  const openNow = visible.filter((request) => ['open', 'soon', 'expired'].includes(getRequestStatus(request, snapshot).state)).length;
   const upcoming = getUpcomingRequests(snapshot);
   const expired = visible.filter((request) => getRequestStatus(request, snapshot).state === 'expired').length;
 
   requestsRoot.querySelector('#requests-summary').innerHTML = `
     <div class="requests-summary-pill">
-      <span class="requests-summary-label">Visible now</span>
+      <span class="requests-summary-label">Total Requests</span>
       <span class="requests-summary-value">${visible.length}</span>
+      <span class="requests-summary-copy">The full Elizabeth request catalog is always visible.</span>
+    </div>
+    <div class="requests-summary-pill">
+      <span class="requests-summary-label">Open Now</span>
+      <span class="requests-summary-value">${openNow}</span>
       <span class="requests-summary-copy">Requests available as of ${escapeHtml(
         `${snapshot.profile.gameDate.month}/${snapshot.profile.gameDate.day}`
       )}.</span>
-    </div>
-    <div class="requests-summary-pill">
-      <span class="requests-summary-label">Open</span>
-      <span class="requests-summary-value">${open}</span>
-      <span class="requests-summary-copy">Unfinished requests you can work on right now.</span>
     </div>
     <div class="requests-summary-pill">
       <span class="requests-summary-label">Completed</span>
@@ -269,7 +266,7 @@ function renderList(snapshot) {
   if (!filtered.length) {
     container.innerHTML = `
       <div class="requests-empty">
-        No currently visible Elizabeth request matches these filters. Later requests stay hidden until their unlock date.
+        No Elizabeth request matches these filters.
       </div>
     `;
     return;
@@ -418,7 +415,7 @@ function onInputChange(event) {
     return;
   }
   if (event.target.id === 'requests-status') {
-    requestState.status = event.target.value || 'open';
+    requestState.status = event.target.value || 'all';
     renderRequests();
     return;
   }
