@@ -1,14 +1,14 @@
 /* P3R Companion — Profile */
 
 #profile{
-  --profile-accent:#7dd3fc;
-  --profile-accent-dim:rgba(125,211,252,0.12);
-  --profile-accent-border:rgba(125,211,252,0.22);
+  --profile-accent:var(--accent-primary);
+  --profile-accent-dim:var(--accent-dim);
+  --profile-accent-border:var(--accent-border);
 }
 
 #profile .profile-header{
   padding:1.7rem 2rem 0.9rem;
-  border-bottom:1px solid rgba(125,211,252,0.14);
+  border-bottom:1px solid var(--profile-accent-border);
   margin-bottom:1rem;
 }
 #profile .profile-header h1{
@@ -17,7 +17,7 @@
   font-weight:900;
   letter-spacing:0.08em;
   color:var(--profile-accent);
-  text-shadow:0 0 26px rgba(125,211,252,0.28);
+  text-shadow:0 0 26px var(--accent-glow);
   margin-bottom:0.35rem;
 }
 #profile .profile-header h1 span{
@@ -91,7 +91,7 @@
 #profile .profile-field select:focus,
 #profile .profile-field input:focus{
   border-color:var(--profile-accent);
-  box-shadow:0 0 0 1px rgba(125,211,252,0.15);
+  box-shadow:0 0 0 1px rgba(68,216,255,0.15);
 }
 #profile .profile-field select option{
   background:#10182d;
@@ -106,7 +106,7 @@
 
 #profile .profile-card:first-child{
   grid-column:1 / -1;
-  background:linear-gradient(180deg,rgba(125,211,252,0.09),rgba(20,28,48,0.74));
+  background:linear-gradient(180deg,rgba(68,216,255,0.1),rgba(20,28,48,0.74));
 }
 
 #profile .profile-card-summary{
