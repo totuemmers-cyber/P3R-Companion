@@ -124,6 +124,17 @@ body::before{
 .save-feedback.success{color:#4caf50}
 .save-feedback.error{color:#ff5252}
 
+/* Hide native number spinners; the app uses direct typing instead. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+input[type="number"]{
+  -moz-appearance:textfield;
+  appearance:textfield;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:rgba(0,0,0,0.2)}
