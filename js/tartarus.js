@@ -27,6 +27,14 @@ function setActiveTartarusView(view) {
   });
 }
 
+function showTartarusView(view) {
+  tartRoot.querySelector('#floorOpsView').classList.toggle('active', view === 'database');
+  tartRoot.querySelector('#shadowIntelView').classList.toggle('active', view === 'shadowintel');
+  tartRoot.querySelector('#fullmoonSection').classList.toggle('active', view === 'fullmoon');
+  state.view = view;
+  setActiveTartarusView(view);
+}
+
 function getRosterSet() {
   if (!tartStore) {
     return new Set();
@@ -286,10 +294,9 @@ function syncIntelControlsFromState() {
   });
 }
 
-function openShadowIntelDrawer(focusName = '') {
-  const drawer = tartRoot.querySelector('#shadowIntelDrawer');
-  const overlay = tartRoot.querySelector('#shadowIntelOverlay');
-  if (!drawer || !overlay) {
+function openShadowIntelView(focusName = '') {
+  const intelView = tartRoot.querySelector('#shadowIntelView');
+  if (!intelView) {
     return;
   }
 
@@ -306,24 +313,7 @@ function openShadowIntelDrawer(focusName = '') {
 
   syncIntelControlsFromState();
   renderTable();
-  setActiveTartarusView('shadowintel');
-  drawer.classList.add('open');
-  overlay.classList.add('open');
-  drawer.setAttribute('aria-hidden', 'false');
-}
-
-function closeShadowIntelDrawer() {
-  const drawer = tartRoot.querySelector('#shadowIntelDrawer');
-  const overlay = tartRoot.querySelector('#shadowIntelOverlay');
-  if (!drawer || !overlay) {
-    return;
-  }
-  drawer.classList.remove('open');
-  overlay.classList.remove('open');
-  drawer.setAttribute('aria-hidden', 'true');
-  if (state.view === 'database') {
-    setActiveTartarusView('database');
-  }
+  showTartarusView('shadowintel');
 }
 
 function filterShadows() {
@@ -1128,6 +1118,7 @@ function initTartarus({ root, store }) {
   renderTable();
   renderFullMoon();
   renderFloorScout(null);
+  showTartarusView('database');
 
   tartRoot.querySelector('#tableBody').addEventListener('click', (event) => {
     const row = event.target.closest('.shadow-row');
@@ -1149,22 +1140,11 @@ function initTartarus({ root, store }) {
     tab.addEventListener('click', () => {
       const { view } = tab.dataset;
       if (view === 'fullmoon') {
-        setActiveTartarusView('fullmoon');
-        closeShadowIntelDrawer();
-        state.view = 'fullmoon';
-        tartRoot.querySelector('#mainView').style.display = 'none';
-        tartRoot.querySelector('#fullmoonSection').classList.add('active');
+        showTartarusView('fullmoon');
       } else if (view === 'shadowintel') {
-        state.view = 'database';
-        tartRoot.querySelector('#mainView').style.display = 'block';
-        tartRoot.querySelector('#fullmoonSection').classList.remove('active');
-        openShadowIntelDrawer();
+        openShadowIntelView();
       } else {
-        setActiveTartarusView('database');
-        state.view = 'database';
-        tartRoot.querySelector('#mainView').style.display = 'block';
-        tartRoot.querySelector('#fullmoonSection').classList.remove('active');
-        closeShadowIntelDrawer();
+        showTartarusView('database');
       }
     });
   });
@@ -1234,7 +1214,7 @@ function initTartarus({ root, store }) {
   tartRoot.querySelector('#floorInfo').addEventListener('click', (event) => {
     const shadowLink = event.target.closest('.floor-shadow-link');
     if (shadowLink) {
-      openShadowIntelDrawer(shadowLink.dataset.shadowName || '');
+      openShadowIntelView(shadowLink.dataset.shadowName || '');
       return;
     }
     const toggle = event.target.closest('.floor-scout-toggle');
@@ -1248,14 +1228,6 @@ function initTartarus({ root, store }) {
     floorScoutSections[section] = !isFloorScoutSectionOpen(section);
     const floorInput = tartRoot.querySelector('#floorInput');
     renderFloorScout(Number(floorInput.value));
-  });
-
-  tartRoot.querySelector('#closeShadowIntel').addEventListener('click', () => {
-    closeShadowIntelDrawer();
-  });
-
-  tartRoot.querySelector('#shadowIntelOverlay').addEventListener('click', () => {
-    closeShadowIntelDrawer();
   });
 
   tartStore.subscribe(() => {
