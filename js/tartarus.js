@@ -146,6 +146,25 @@ const floorScoutSections = {
   loadout: true
 };
 
+const MONTH_NAME_TO_NUM = {
+  April: 4,
+  May: 5,
+  June: 6,
+  July: 7,
+  August: 8,
+  September: 9,
+  October: 10,
+  November: 11,
+  December: 12,
+  January: 1
+};
+
+const OBJECTIVE_TYPE_LABELS = {
+  'old-document': 'Old Document',
+  'progress-report': 'Progress Report',
+  'missing-person': 'Missing Person'
+};
+
 const MONAD_SECTION_BANDS = [
   { floorMin: 70, floorMax: 94, label: 'Yabbashah 70F-94F', section: 'Yabbashah I' },
   { floorMin: 95, floorMax: 118, label: 'Yabbashah 95F-118F', section: 'Yabbashah II' },
@@ -160,6 +179,12 @@ const MONAD_VARIANT_LABELS = {
   'monad-door': 'Monad Door',
   'monad-passage': 'Monad Passage'
 };
+
+const FULL_MOON_SCHEDULE = FULL_MOON_DATES.map((entry) => ({
+  ...entry,
+  parsedDate: parseMonthDayLabel(entry.date),
+  primaryStrategy: entry.names.length > 0 ? BOSS_STRATS[entry.names[0]] : null
+}));
 
 const RESIST_ORDER = {
   z: -2,
@@ -186,6 +211,160 @@ function escapeHtml(value) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function getCurrentGameDate() {
+  return tartStore?.getState()?.socialLinks?.gameDate || { month: 4, day: 7 };
+}
+
+function tartDateToNum(date) {
+  const month = date.month >= 4 ? date.month : date.month + 12;
+  return month * 100 + date.day;
+}
+
+function parseMonthDayLabel(label) {
+  if (!label || typeof label !== 'string') {
+    return null;
+  }
+  const parts = label.replace(',', '').split(/\s+/);
+  if (parts.length < 2) {
+    return null;
+  }
+  const month = MONTH_NAME_TO_NUM[parts[0]];
+  const day = Number(parts[1]);
+  if (!month || !Number.isFinite(day)) {
+    return null;
+  }
+  return { month, day };
+}
+
+function parseObjectiveDate(label) {
+  return parseMonthDayLabel(label || '');
+}
+
+function compareDates(left, right) {
+  return tartDateToNum(left) - tartDateToNum(right);
+}
+
+function daysBetweenDates(left, right) {
+  const leftYear = left.month >= 4 ? 2009 : 2010;
+  const rightYear = right.month >= 4 ? 2009 : 2010;
+  const leftDate = new Date(leftYear, left.month - 1, left.day);
+  const rightDate = new Date(rightYear, right.month - 1, right.day);
+  return Math.round((rightDate - leftDate) / 86400000);
+}
+
+function formatMonthDay(date) {
+  const monthName = Object.keys(MONTH_NAME_TO_NUM).find((entry) => MONTH_NAME_TO_NUM[entry] === date.month);
+  return `${monthName || `M${date.month}`} ${date.day}`;
+}
+
+function getObjectiveList() {
+  return Array.isArray(TARTARUS_OBJECTIVES) ? TARTARUS_OBJECTIVES : [];
+}
+
+function isObjectiveComplete(id) {
+  return Boolean(tartStore?.getState()?.objectives?.[id]);
+}
+
+function getObjectiveState(objective) {
+  const currentDate = getCurrentGameDate();
+  const availableDate = parseObjectiveDate(objective.available);
+  const deadlineDate = parseObjectiveDate(objective.deadline);
+
+  if (isObjectiveComplete(objective.id)) {
+    return { state: 'complete', label: 'Done', daysLeft: null };
+  }
+  if (availableDate && compareDates(currentDate, availableDate) < 0) {
+    return {
+      state: 'upcoming',
+      label: `Opens ${objective.available}`,
+      daysLeft: daysBetweenDates(currentDate, availableDate)
+    };
+  }
+  if (deadlineDate) {
+    const daysLeft = daysBetweenDates(currentDate, deadlineDate);
+    if (daysLeft < 0) {
+      return { state: 'expired', label: `Expired ${objective.deadline}`, daysLeft };
+    }
+    if (daysLeft <= 3) {
+      return { state: 'urgent', label: `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`, daysLeft };
+    }
+    if (daysLeft <= 10) {
+      return { state: 'soon', label: `${daysLeft} days left`, daysLeft };
+    }
+    return { state: 'active', label: `Deadline ${objective.deadline}`, daysLeft };
+  }
+  return { state: 'active', label: objective.available ? `Open since ${objective.available}` : 'Open', daysLeft: null };
+}
+
+function getObjectiveTone(objectiveState) {
+  if (objectiveState.state === 'urgent' || objectiveState.state === 'expired') {
+    return 'critical';
+  }
+  if (objectiveState.state === 'soon') {
+    return 'warning';
+  }
+  if (objectiveState.state === 'complete') {
+    return 'done';
+  }
+  return 'neutral';
+}
+
+function getWeaknessLabels(shadow) {
+  return RESIST_KEYS.slice(0, 9)
+    .filter((key) => {
+      const code = shadow.resists[key];
+      return code === 'w' || code === 'W' || code === 'v' || code === 'V' || code === 'z' || code === 'Z';
+    })
+    .map((key) => RESIST_LABELS[RESIST_KEYS.indexOf(key)]);
+}
+
+function getThreatElements(shadow) {
+  const counts = {};
+  (shadow.skills || []).forEach((skillName) => {
+    const skill = SKILLS[skillName];
+    if (!skill || !skill.elem || !RESIST_KEYS.includes(skill.elem)) {
+      return;
+    }
+    counts[skill.elem] = (counts[skill.elem] || 0) + 1;
+  });
+
+  return Object.entries(counts)
+    .sort((left, right) => right[1] - left[1])
+    .map(([key]) => RESIST_LABELS[RESIST_KEYS.indexOf(key)])
+    .slice(0, 3);
+}
+
+function buildGatekeeperPrep(shadow) {
+  const checklist = [];
+  const weaknesses = getWeaknessLabels(shadow);
+  const threats = getThreatElements(shadow);
+  const drops = shadow.dodds ? Object.keys(shadow.dodds).slice(0, 2) : [];
+
+  if (weaknesses.length > 0) {
+    checklist.push(`Push ${weaknesses.slice(0, 2).join(' / ')} weakness pressure early.`);
+  } else {
+    checklist.push('Expect a longer attrition fight; do not rely on a single weakness loop.');
+  }
+  if (threats.length > 0) {
+    checklist.push(`Bring answers for ${threats.join(', ')} damage or status pressure.`);
+  }
+  checklist.push(`Treat Lv ${shadow.lvl} as the minimum comfort point before forcing the clear.`);
+  if (drops.length > 0) {
+    checklist.push(`Worth clearing for ${drops.join(', ')}.`);
+  }
+
+  return checklist.slice(0, 3);
+}
+
+function getNextFullMoon() {
+  const currentDate = getCurrentGameDate();
+  return (
+    FULL_MOON_SCHEDULE.find((entry) => entry.parsedDate && compareDates(currentDate, entry.parsedDate) <= 0) ||
+    FULL_MOON_SCHEDULE[FULL_MOON_SCHEDULE.length - 1] ||
+    null
+  );
 }
 
 function getMonadBandForFloor(floor) {
@@ -291,6 +470,14 @@ function renderGatekeeperPanel(title, shadow, options = {}) {
   const drops = shadow.dodds ? Object.keys(shadow.dodds).slice(0, 2) : [];
   if (drops.length) {
     html += `<div class="floor-intel-note">Possible rewards: ${drops.map((drop) => escapeHtml(drop)).join(', ')}</div>`;
+  }
+  const prepChecklist = buildGatekeeperPrep(shadow);
+  if (prepChecklist.length > 0) {
+    html += '<div class="floor-gatekeeper-prep">';
+    prepChecklist.forEach((entry) => {
+      html += `<div class="floor-intel-note">• ${escapeHtml(entry)}</div>`;
+    });
+    html += '</div>';
   }
   html += '</div>';
   return html;
@@ -776,17 +963,197 @@ function getNearbyGrindSpots(floor, blockId) {
     .slice(0, 3);
 }
 
+function renderMajorCheckCard(title, tone, bodyHtml) {
+  return `<section class="major-check major-check-${escapeHtml(tone)}"><div class="major-check-title">${escapeHtml(
+    title
+  )}</div>${bodyHtml}</section>`;
+}
+
+function renderMajorChecks(floor, block, upcomingGatekeeper) {
+  const container = tartRoot.querySelector('#tartarus-major-check');
+  if (!container) {
+    return;
+  }
+
+  if (!floor || !block) {
+    container.innerHTML =
+      '<h3>Upcoming Major Checks</h3><div class="floor-ops-empty">Enter a floor to compare your next gatekeeper and next full-moon check.</div>';
+    return;
+  }
+
+  const nextFullMoon = getNextFullMoon();
+  let html = '<h3>Upcoming Major Checks</h3>';
+
+  if (upcomingGatekeeper) {
+    const distance = upcomingGatekeeper.floorMin - floor;
+    html += renderMajorCheckCard(
+      'Next Gatekeeper',
+      'gatekeeper',
+      `<div class="major-check-head"><span class="major-check-name">${escapeHtml(
+        upcomingGatekeeper.name
+      )}</span><span class="major-check-meta">${upcomingGatekeeper.floorMin}F • Lv ${upcomingGatekeeper.lvl}</span></div><div class="major-check-copy">${distance === 0 ? 'You are on the checkpoint floor now.' : `${distance} floor${distance === 1 ? '' : 's'} away in ${escapeHtml(
+        block.name
+      )}.`}</div><div class="major-check-list">${buildGatekeeperPrep(upcomingGatekeeper)
+        .map((entry) => `<div class="major-check-line">${escapeHtml(entry)}</div>`)
+        .join('')}</div>`
+    );
+  } else {
+    html += renderMajorCheckCard(
+      'Next Gatekeeper',
+      'support',
+      '<div class="major-check-copy">No further gatekeeper remains in this Tartarus block.</div>'
+    );
+  }
+
+  if (nextFullMoon && nextFullMoon.parsedDate) {
+    const daysLeft = daysBetweenDates(getCurrentGameDate(), nextFullMoon.parsedDate);
+    const strategy = nextFullMoon.primaryStrategy;
+    const recommendedParty = strategy?.party
+      ? `<div class="major-check-tags">${strategy.party
+          .slice(0, 3)
+          .map((entry) => `<span class="major-check-tag">${escapeHtml(entry)}</span>`)
+          .join('')}</div>`
+      : '';
+    const itemPrompt = strategy?.items?.length
+      ? `<div class="major-check-copy"><strong>Stock:</strong> ${escapeHtml(strategy.items.slice(0, 3).join(', '))}</div>`
+      : '';
+    html += renderMajorCheckCard(
+      'Next Full Moon',
+      'fullmoon',
+      `<div class="major-check-head"><span class="major-check-name">${escapeHtml(
+        nextFullMoon.boss
+      )}</span><span class="major-check-meta">${escapeHtml(nextFullMoon.date)} • ${daysLeft} day${
+        daysLeft === 1 ? '' : 's'
+      }</span></div>${strategy?.quickTip ? `<div class="major-check-copy">${escapeHtml(strategy.quickTip)}</div>` : ''}${
+        strategy?.recLevel ? `<div class="major-check-copy"><strong>Comfort level:</strong> around Lv ${strategy.recLevel}.</div>` : ''
+      }${recommendedParty}${itemPrompt}`
+    );
+  }
+
+  container.innerHTML = html;
+}
+
+function renderObjectiveItem(objective, { floor, exactMatch = false } = {}) {
+  const status = getObjectiveState(objective);
+  const tone = getObjectiveTone(status);
+  const complete = status.state === 'complete';
+  const floorDelta = objective.floor - floor;
+  let floorLine = `${objective.floor}F`;
+  if (!exactMatch && Number.isFinite(floorDelta)) {
+    floorLine += floorDelta > 0 ? ` • +${floorDelta}F` : floorDelta < 0 ? ` • ${floorDelta}F` : '';
+  }
+  return `<label class="objective-item objective-${tone}${complete ? ' complete' : ''}">
+    <input type="checkbox" class="objective-toggle" data-objective-id="${escapeHtml(objective.id)}"${complete ? ' checked' : ''}>
+    <span class="objective-main">
+      <span class="objective-top">
+        <span class="objective-type">${escapeHtml(OBJECTIVE_TYPE_LABELS[objective.type] || objective.type)}</span>
+        <span class="objective-status status-${tone}">${escapeHtml(status.label)}</span>
+      </span>
+      <span class="objective-title">${escapeHtml(objective.title)}</span>
+      <span class="objective-meta">${escapeHtml(floorLine)} • ${escapeHtml(objective.reward)}${
+        objective.socialLink ? ` • protects ${escapeHtml(objective.socialLink)}` : ''
+      }</span>
+      ${objective.note ? `<span class="objective-note">${escapeHtml(objective.note)}</span>` : ''}
+    </span>
+  </label>`;
+}
+
+function renderObjectives(floor, block) {
+  const container = tartRoot.querySelector('#tartarus-objectives');
+  if (!container) {
+    return;
+  }
+
+  if (!floor || !block) {
+    container.innerHTML =
+      '<h3>Priority Objectives</h3><div class="floor-ops-empty">Enter a floor to surface old documents, missing persons, and other Tartarus objectives.</div>';
+    return;
+  }
+
+  const currentDate = getCurrentGameDate();
+  const objectives = getObjectiveList();
+  const floorObjectives = objectives
+    .filter((objective) => objective.floor === floor)
+    .sort((left, right) => left.title.localeCompare(right.title));
+  const blockObjectives = objectives
+    .filter(
+      (objective) =>
+        objective.block === block.id &&
+        objective.floor >= floor &&
+        objective.floor !== floor &&
+        getObjectiveState(objective).state !== 'complete'
+    )
+    .sort((left, right) => left.floor - right.floor || left.title.localeCompare(right.title))
+    .slice(0, 4);
+  const urgentObjectives = objectives
+    .filter((objective) => {
+      const status = getObjectiveState(objective);
+      return (
+        status.state !== 'complete' &&
+        status.state !== 'upcoming' &&
+        objective.deadline &&
+        (status.state === 'urgent' || status.state === 'soon' || status.state === 'expired')
+      );
+    })
+    .sort((left, right) => {
+      const leftDate = parseObjectiveDate(left.deadline) || currentDate;
+      const rightDate = parseObjectiveDate(right.deadline) || currentDate;
+      return compareDates(leftDate, rightDate);
+    })
+    .slice(0, 4);
+
+  let html = '<h3>Priority Objectives</h3>';
+  const summaryBits = [];
+  if (floorObjectives.length > 0) {
+    summaryBits.push(`${floorObjectives.length} on this floor`);
+  }
+  if (urgentObjectives.length > 0) {
+    summaryBits.push(`${urgentObjectives.length} urgent`);
+  }
+  if (summaryBits.length > 0) {
+    html += `<div class="floor-ops-subtitle">${escapeHtml(summaryBits.join(' • '))}</div>`;
+  }
+
+  if (floorObjectives.length > 0) {
+    html += '<div class="objective-group"><div class="objective-group-title">On this floor</div>';
+    html += floorObjectives.map((objective) => renderObjectiveItem(objective, { floor, exactMatch: true })).join('');
+    html += '</div>';
+  }
+
+  if (blockObjectives.length > 0) {
+    html += '<div class="objective-group"><div class="objective-group-title">Coming up in this block</div>';
+    html += blockObjectives.map((objective) => renderObjectiveItem(objective, { floor })).join('');
+    html += '</div>';
+  }
+
+  if (urgentObjectives.length > 0) {
+    html += '<div class="objective-group"><div class="objective-group-title">Deadline pressure</div>';
+    html += urgentObjectives.map((objective) => renderObjectiveItem(objective, { floor })).join('');
+    html += '</div>';
+  }
+
+  if (!floorObjectives.length && !blockObjectives.length && !urgentObjectives.length) {
+    html += '<div class="floor-ops-empty">No high-priority Tartarus objective is tied to this floor or your current deadline window.</div>';
+  }
+
+  container.innerHTML = html;
+}
+
 function renderFloorScout(floor) {
   const info = tartRoot.querySelector('#floorInfo');
   if (!floor || floor < 2 || floor > 264) {
     info.innerHTML =
       '<div style="color:var(--text-dim);font-size:0.85rem;margin-top:0.5rem">Enter a floor (2-264)</div>';
+    renderMajorChecks(null, null, null);
+    renderObjectives(null, null);
     return;
   }
 
   const block = BLOCKS.find((entry) => floor >= entry.fMin && floor <= entry.fMax);
   if (!block) {
     info.innerHTML = '<div style="color:var(--text-dim)">No block for this floor.</div>';
+    renderMajorChecks(null, null, null);
+    renderObjectives(null, null);
     return;
   }
 
@@ -974,6 +1341,8 @@ function renderFloorScout(floor) {
   }
 
   info.innerHTML = html;
+  renderMajorChecks(floor, block, upcomingGatekeeper);
+  renderObjectives(floor, block);
 }
 
 function renderFullMoon() {
@@ -1303,6 +1672,20 @@ function initTartarus({ root, store }) {
     floorScoutSections[section] = !isFloorScoutSectionOpen(section);
     const floorInput = tartRoot.querySelector('#floorInput');
     renderFloorScout(Number(floorInput.value));
+  });
+
+  tartRoot.querySelector('#tartarus-objectives').addEventListener('change', (event) => {
+    const toggle = event.target.closest('.objective-toggle');
+    if (!toggle) {
+      return;
+    }
+    tartStore.dispatch({
+      type: 'OBJECTIVE_SET_COMPLETE',
+      payload: {
+        id: toggle.dataset.objectiveId,
+        complete: toggle.checked
+      }
+    });
   });
 
   tartStore.subscribe(() => {

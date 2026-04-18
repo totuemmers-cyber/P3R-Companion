@@ -92,11 +92,26 @@ function sanitizeSocialLinks(rawSocialLinks, createDefaultSocialLinksState, arca
   };
 }
 
+function sanitizeObjectives(rawObjectives) {
+  const source = isPlainObject(rawObjectives) ? rawObjectives : {};
+  const nextObjectives = {};
+
+  Object.entries(source).forEach(([key, value]) => {
+    if (typeof key !== 'string') {
+      return;
+    }
+    nextObjectives[key] = Boolean(value);
+  });
+
+  return nextObjectives;
+}
+
 function sanitizeState(rawState, options) {
   const baseState = {
     version: 1,
     roster: [],
-    socialLinks: options.createDefaultSocialLinksState()
+    socialLinks: options.createDefaultSocialLinksState(),
+    objectives: {}
   };
 
   if (!isPlainObject(rawState)) {
@@ -110,7 +125,8 @@ function sanitizeState(rawState, options) {
       rawState.socialLinks,
       options.createDefaultSocialLinksState,
       options.arcanaOrder
-    )
+    ),
+    objectives: sanitizeObjectives(rawState.objectives)
   };
 }
 
@@ -162,6 +178,9 @@ function validateImportedPayload(rawData) {
   }
   if (!isPlainObject(rawData.socialLinks)) {
     throw new Error('Invalid save data: socialLinks must be an object.');
+  }
+  if (rawData.objectives !== undefined && !isPlainObject(rawData.objectives)) {
+    throw new Error('Invalid save data: objectives must be an object.');
   }
 }
 
@@ -257,6 +276,23 @@ function createStore(options) {
           }
         };
       }
+      case 'OBJECTIVE_SET_COMPLETE': {
+        const { id, complete } = action.payload || {};
+        if (typeof id !== 'string' || !id) {
+          return currentState;
+        }
+        const currentValue = Boolean(currentState.objectives[id]);
+        if (currentValue === Boolean(complete)) {
+          return currentState;
+        }
+        return {
+          ...currentState,
+          objectives: {
+            ...currentState.objectives,
+            [id]: Boolean(complete)
+          }
+        };
+      }
       case 'STATE_IMPORT':
         return sanitizeState(action.payload, options);
       case 'STATE_RESET':
@@ -298,6 +334,7 @@ function createStore(options) {
       version: snapshot.version,
       roster: snapshot.roster,
       socialLinks: snapshot.socialLinks,
+      objectives: snapshot.objectives,
       exportedAt: new Date().toISOString()
     };
   }
@@ -309,7 +346,8 @@ function createStore(options) {
       payload: {
         version: rawData.version,
         roster: rawData.roster,
-        socialLinks: rawData.socialLinks
+        socialLinks: rawData.socialLinks,
+        objectives: rawData.objectives
       }
     });
   }

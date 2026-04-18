@@ -413,6 +413,127 @@ function slRenderPlanningInsights() {
   container.innerHTML = html;
 }
 
+function slRenderBestUseBoard() {
+  const container = slRoot.querySelector('#sl-next-actions');
+  if (!container) {
+    return;
+  }
+
+  const currentDate = slState.gameDate;
+  const dayBlocked = slGetBlockedReason(currentDate.month, currentDate.day, 'day');
+  const eveningBlocked = slGetBlockedReason(currentDate.month, currentDate.day, 'evening');
+  const dayPick = dayBlocked ? null : slGetRecommendations('day').find((item) => item.score >= 0) || null;
+  const eveningPick =
+    eveningBlocked ? null : slGetRecommendations('evening').find((item) => item.score >= 0) || null;
+  const bottlenecks = slGetStatBottlenecks();
+
+  const renderAction = (label, item, blockedReason, statFallback) => {
+    if (blockedReason) {
+      return `<div class="sl-action-card blocked"><div class="sl-action-top"><span class="sl-action-slot">${label}</span><span class="sl-action-state">Blocked</span></div><div class="sl-action-main">${blockedReason}</div></div>`;
+    }
+    if (item) {
+      const extra = slGetLinkExtra(item.arcana);
+      return `<div class="sl-action-card"><div class="sl-action-top"><span class="sl-action-slot">${label}</span><span class="sl-action-state">${item.arcana}</span></div><div class="sl-action-main">${item.link.character}</div><div class="sl-action-copy">${item.factors.slice(0, 2).join(' • ')}</div>${
+        extra?.deadline ? `<div class="sl-action-note">${extra.deadline}</div>` : ''
+      }</div>`;
+    }
+    return `<div class="sl-action-card"><div class="sl-action-top"><span class="sl-action-slot">${label}</span><span class="sl-action-state">Fallback</span></div><div class="sl-action-main">Raise ${statFallback.stat}</div><div class="sl-action-copy">${statFallback.note}</div></div>`;
+  };
+
+  const firstBottleneck =
+    ['academics', 'charm', 'courage']
+      .map((stat) => ({ stat, entries: bottlenecks[stat] }))
+      .filter((entry) => entry.entries.length > 0)
+      .sort((left, right) => left.entries[0].delta - right.entries[0].delta)[0] || null;
+
+  const fallbackGuide = firstBottleneck
+    ? {
+        stat: firstBottleneck.stat,
+        note: slGetStatGuide(firstBottleneck.stat)[0]?.note || 'Next useful stat gate is currently here.'
+      }
+    : {
+        stat: 'social stats',
+        note: 'No urgent gate is blocking your links right now.'
+      };
+
+  container.innerHTML =
+    renderAction('Today', dayPick, dayBlocked, fallbackGuide) +
+    renderAction('Tonight', eveningPick, eveningBlocked, fallbackGuide);
+}
+
+function slRenderRiskBoard() {
+  const container = slRoot.querySelector('#sl-risk-board');
+  if (!container) {
+    return;
+  }
+
+  const currentDate = slState.gameDate;
+  const items = ARCANA_LIST.map((arcana) => {
+    const link = SOCIAL_LINKS[arcana];
+    const extra = slGetLinkExtra(arcana);
+    const rank = slState.ranks[arcana] || 0;
+    if (!link || link.automatic || rank >= 10) {
+      return null;
+    }
+
+    let urgency = 0;
+    const reasons = [];
+    if (link.endDate) {
+      const daysLeft = slDaysBetween(currentDate, link.endDate);
+      if (daysLeft >= 0 && daysLeft <= 45) {
+        urgency += 80 - daysLeft;
+        reasons.push(`${daysLeft} day${daysLeft === 1 ? '' : 's'} to cutoff`);
+      }
+    }
+    if (extra?.deadline) {
+      urgency += 10;
+      reasons.push(extra.deadline);
+    }
+    if (link.availableDays.length <= 2) {
+      urgency += 12;
+      reasons.push(`${link.availableDays.length} day${link.availableDays.length === 1 ? '' : 's'} / week`);
+    }
+    if (!slStatsMet(arcana)) {
+      const statEntry = Object.entries(link.statRequirements).find(
+        ([stat, requirement]) => (slState.stats[stat] || 1) < requirement
+      );
+      if (statEntry) {
+        urgency += 14;
+        reasons.push(`${statEntry[0]} gate`);
+      }
+    }
+    if (rank === 0 && link.timeSlot === 'day') {
+      urgency += 6;
+    }
+
+    if (urgency <= 0) {
+      return null;
+    }
+
+    return {
+      arcana,
+      character: link.character,
+      urgency,
+      reasons: reasons.slice(0, 3)
+    };
+  })
+    .filter(Boolean)
+    .sort((left, right) => right.urgency - left.urgency)
+    .slice(0, 5);
+
+  if (!items.length) {
+    container.innerHTML = '<div class="sl-rec-empty">No route looks especially fragile from your current date and ranks.</div>';
+    return;
+  }
+
+  container.innerHTML = items
+    .map(
+      (item) =>
+        `<div class="sl-risk-item"><div class="sl-risk-top"><span class="sl-risk-name">${item.character}</span><span class="sl-risk-arcana">${item.arcana}</span></div><div class="sl-risk-copy">${item.reasons.join(' • ')}</div></div>`
+    )
+    .join('');
+}
+
 function slUpdateDaySelect() {
   const daySelect = slRoot.querySelector('#sl-day');
   if (!daySelect) {
@@ -539,6 +660,8 @@ function slRenderDashboard() {
   slRenderStatusBar();
   slRenderProgressGrid();
   slRenderRecommendations();
+  slRenderBestUseBoard();
+  slRenderRiskBoard();
   slRenderPlanningInsights();
 }
 
