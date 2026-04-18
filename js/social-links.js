@@ -721,7 +721,10 @@ function slRenderMyLinks() {
 
     let answerHtml = '';
     if (!link.automatic && link.ranks.some((entry) => entry.answers && entry.answers.length)) {
-      answerHtml = `<button class="sl-expand-btn" data-arcana="${arcana}"><span class="sl-expand-arrow">&#9654;</span> Answer Guide</button><div class="sl-answer-guide"><div class="sl-persona-reminder">&#9733; Carry a ${arcana} Persona for +1 bonus points per answer</div>`;
+      const sourceLine = link.guideVersion
+        ? `<div class="sl-persona-reminder sl-answer-source">Verified for ${link.guideVersion}${link.guideSource ? ' answer flow' : ''}.</div>`
+        : '';
+      answerHtml = `<button class="sl-expand-btn" data-arcana="${arcana}"><span class="sl-expand-arrow">&#9654;</span> Answer Guide</button><div class="sl-answer-guide"><div class="sl-persona-reminder">&#9733; Carry a ${arcana} Persona for +1 bonus points per answer</div>${sourceLine}`;
       link.ranks.forEach((entry) => {
         if (!entry.answers || !entry.answers.length) {
           if (entry.note && entry.rank === 10) {

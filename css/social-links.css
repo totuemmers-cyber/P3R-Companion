@@ -737,6 +737,13 @@
   border:1px solid rgba(156,236,255,0.22);
   margin-bottom:0.6rem;
 }
+.sl-answer-source{
+  display:flex;
+  margin-top:-0.15rem;
+  background:rgba(255,255,255,0.04);
+  color:var(--text-dim);
+  border-color:rgba(255,255,255,0.08);
+}
 
 .sl-answer-rank{
   padding:0.6rem 0;
