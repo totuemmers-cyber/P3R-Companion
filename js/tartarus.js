@@ -147,8 +147,10 @@ const floorScoutSections = {
 };
 
 const MONAD_DOOR_BANDS = [
+  { floorMin: 70, floorMax: 94, label: 'Yabbashah 70F-94F', section: 'Yabbashah I' },
+  { floorMin: 95, floorMax: 118, label: 'Yabbashah 95F-118F', section: 'Yabbashah II' },
   { floorMin: 119, floorMax: 142, label: 'Tziah 119F-142F', section: 'Tziah I' },
-  { floorMin: 145, floorMax: 168, label: 'Tziah 145F-168F', section: 'Tziah II' },
+  { floorMin: 145, floorMax: 172, label: 'Tziah 145F-172F', section: 'Tziah II' },
   { floorMin: 173, floorMax: 197, label: 'Harabah 173F-197F', section: 'Harabah I' },
   { floorMin: 199, floorMax: 224, label: 'Harabah 199F-224F', section: 'Harabah II' },
   { floorMin: 227, floorMax: 251, label: 'Adamah 227F-251F', section: 'Adamah I' }
