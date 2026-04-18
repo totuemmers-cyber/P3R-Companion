@@ -11,7 +11,7 @@ function syncState() {
   const snapshot = slStore.getState();
   const dateKey = `${snapshot.profile.gameDate.month}-${snapshot.profile.gameDate.day}`;
   if (slLastDateKey && slLastDateKey !== dateKey) {
-    slCalWeekStart = null;
+    slCalWeekStart = slGetMonday(snapshot.profile.gameDate);
   }
   slLastDateKey = dateKey;
   slState = {
@@ -26,8 +26,12 @@ function getRosterSet() {
 }
 
 function slGetDayOfWeek(month, day) {
-  const year = month >= 2 ? 2009 : 2010;
+  const year = month >= 4 ? 2009 : 2010;
   return new Date(year, month - 1, day).getDay();
+}
+
+function slResetCalendarWeek() {
+  slCalWeekStart = slGetMonday(slState.gameDate);
 }
 
 function slDateToNum(date) {
@@ -816,7 +820,7 @@ function slCalLinkHtml(item, timeSlot) {
 
 function slRenderCalendar() {
   if (!slCalWeekStart) {
-    slCalWeekStart = slGetMonday(slState.gameDate);
+    slResetCalendarWeek();
   }
 
   const title = slRoot.querySelector('#sl-cal-title');
@@ -886,6 +890,7 @@ function slSwitchTab(tabName) {
   } else if (tabName === 'my-links') {
     slRenderMyLinks();
   } else if (tabName === 'calendar') {
+    slResetCalendarWeek();
     slRenderCalendar();
   }
 }
