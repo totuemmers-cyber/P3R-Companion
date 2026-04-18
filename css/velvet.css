@@ -24,10 +24,11 @@
   background: rgba(6,8,26,0.92);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
-  padding: 0.5rem 1.5rem;
+  padding: 0.8rem 1.5rem;
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  flex-wrap: wrap;
 }
 #velvet .header h1 {
   font-family: 'Cinzel', serif;
@@ -38,24 +39,28 @@
 }
 #velvet .header h1 span { color: var(--accent-cyan); font-size: 0.75em; }
 
-#velvet .tab-nav { display: flex; gap: 0.25rem; }
+#velvet .tab-nav { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 #velvet .tab-btn {
   font-family: 'Rajdhani', sans-serif;
   font-size: 0.95rem;
-  font-weight: 600;
-  padding: 0.5rem 1.2rem;
-  border: 1px solid transparent;
-  border-radius: 6px 6px 0 0;
-  background: transparent;
+  font-weight: 700;
+  min-height: 42px;
+  padding: var(--tab-padding-y) var(--tab-padding-x);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--tab-radius);
+  background: rgba(255,255,255,0.03);
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.03em;
 }
-#velvet .tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+#velvet .tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); transform: translateY(-1px); }
 #velvet .tab-btn.active {
   color: var(--accent-gold);
   border-color: var(--accent-gold);
-  border-bottom-color: transparent;
   background: rgba(255,213,79,0.08);
 }
 
@@ -99,6 +104,7 @@
   border-radius: 10px;
   padding: 1.2rem;
   margin-bottom: 1rem;
+  box-shadow: 0 18px 34px rgba(0,0,0,0.18);
 }
 #velvet .card h2, #velvet .card h3 {
   font-family: 'Cinzel', serif;
@@ -809,6 +815,19 @@
 }
 
 @media (max-width: 980px) {
+  #velvet .header{
+    gap:0.9rem;
+  }
+  #velvet .global-search{
+    margin-left:0;
+    width:100%;
+  }
+  #velvet .global-search input{
+    width:100%;
+  }
+  #velvet .tab-btn{
+    flex:1 1 calc(50% - 0.4rem);
+  }
   #velvet .compendium-layout {
     grid-template-columns: 1fr;
   }
@@ -943,9 +962,12 @@
 .sl-cov-missing { font-size:0.72rem;color:#ff5252;font-style:italic; }
 
 @media (max-width: 768px) {
+  #velvet .tab-btn{
+    flex-basis:100%;
+  }
   #velvet .header { flex-wrap: wrap; padding: 0.4rem 0.8rem; }
   #velvet .header h1 { font-size: 1rem; }
-  #velvet .global-search input { width: 140px; }
+  #velvet .global-search input { width: 100%; }
   #velvet .fusion-inputs { flex-direction: column; align-items: stretch; }
   #velvet .fusion-plus, #velvet .fusion-equals { text-align: center; }
   #velvet .roster-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }

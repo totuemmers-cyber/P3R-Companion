@@ -206,59 +206,64 @@
           </div>
         </div>
         <div class="controls shadow-intel-controls" id="controls">
-          <input class="search-box" id="searchBox" type="text" placeholder="Search shadows, skills, drops...">
-          <div class="filter-group">
-            <span class="filter-label">Wing:</span>
-            <select class="filter-select" id="blockFilter">
-              <option value="">All wings</option>
-              <option value="thebel">Thebel</option>
-              <option value="arqa">Arqa</option>
-              <option value="yabbashah">Yabbashah</option>
-              <option value="tziah">Tziah</option>
-              <option value="harabah">Harabah</option>
-              <option value="adamah">Adamah</option>
-            </select>
+          <div class="shadow-intel-controls-primary">
+            <input class="search-box" id="searchBox" type="text" placeholder="Search shadows, skills, drops...">
+            <div class="filter-group">
+              <span class="filter-label">Wing:</span>
+              <select class="filter-select" id="blockFilter">
+                <option value="">All wings</option>
+                <option value="thebel">Thebel</option>
+                <option value="arqa">Arqa</option>
+                <option value="yabbashah">Yabbashah</option>
+                <option value="tziah">Tziah</option>
+                <option value="harabah">Harabah</option>
+                <option value="adamah">Adamah</option>
+              </select>
+            </div>
+            <div class="filter-group shadow-intel-type-group">
+              <span class="filter-label">Type:</span>
+              <button class="filter-btn" data-type="regular">Regular</button>
+              <button class="filter-btn" data-type="gatekeeper">Gatekeeper</button>
+              <button class="filter-btn" data-type="fullmoon">Full Moon</button>
+              <button class="filter-btn" data-type="monad-door">Monad Door</button>
+              <button class="filter-btn" data-type="monad-passage">Monad Pass</button>
+            </div>
           </div>
-          <div class="filter-group">
-            <span class="filter-label">Type:</span>
-            <button class="filter-btn" data-type="regular">Regular</button>
-            <button class="filter-btn" data-type="gatekeeper">Gatekeeper</button>
-            <button class="filter-btn" data-type="fullmoon">Full Moon</button>
-            <button class="filter-btn" data-type="monad-door">Monad Door</button>
-            <button class="filter-btn" data-type="monad-passage">Monad Pass</button>
-          </div>
-          <div class="filter-group">
-            <span class="filter-label">Weak to:</span>
-            <select class="filter-select" id="weakFilter">
-              <option value="">Any</option>
-              <option value="sla">Slash</option>
-              <option value="str">Strike</option>
-              <option value="pie">Pierce</option>
-              <option value="fir">Fire</option>
-              <option value="ice">Ice</option>
-              <option value="ele">Elec</option>
-              <option value="win">Wind</option>
-              <option value="lig">Light</option>
-              <option value="dar">Dark</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <span class="filter-label">Lv:</span>
-            <input type="number" class="filter-select" id="lvlMin" placeholder="Min" min="1" max="99" style="width:55px">
-            <span style="color:var(--text-dim)">&ndash;</span>
-            <input type="number" class="filter-select" id="lvlMax" placeholder="Max" min="1" max="99" style="width:55px">
-          </div>
-          <div class="filter-group">
-            <span class="filter-label">Vuln to:</span>
-            <select class="filter-select" id="ailmentFilter">
-              <option value="">Any ailment</option>
-              <option value="0">Burn</option>
-              <option value="1">Freeze</option>
-              <option value="2">Shock</option>
-              <option value="3">Poison</option>
-              <option value="4">Charm</option>
-              <option value="5">Distress</option>
-            </select>
+          <div class="shadow-intel-controls-secondary">
+            <div class="shadow-intel-filter-row-label">More filters</div>
+            <div class="filter-group">
+              <span class="filter-label">Weak to:</span>
+              <select class="filter-select" id="weakFilter">
+                <option value="">Any</option>
+                <option value="sla">Slash</option>
+                <option value="str">Strike</option>
+                <option value="pie">Pierce</option>
+                <option value="fir">Fire</option>
+                <option value="ice">Ice</option>
+                <option value="ele">Elec</option>
+                <option value="win">Wind</option>
+                <option value="lig">Light</option>
+                <option value="dar">Dark</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <span class="filter-label">Lv:</span>
+              <input type="number" class="filter-select" id="lvlMin" placeholder="Min" min="1" max="99" style="width:55px">
+              <span style="color:var(--text-dim)">&ndash;</span>
+              <input type="number" class="filter-select" id="lvlMax" placeholder="Max" min="1" max="99" style="width:55px">
+            </div>
+            <div class="filter-group">
+              <span class="filter-label">Vuln to:</span>
+              <select class="filter-select" id="ailmentFilter">
+                <option value="">Any ailment</option>
+                <option value="0">Burn</option>
+                <option value="1">Freeze</option>
+                <option value="2">Shock</option>
+                <option value="3">Poison</option>
+                <option value="4">Charm</option>
+                <option value="5">Distress</option>
+              </select>
+            </div>
           </div>
         </div>
         <div class="table-wrap shadow-intel-table-wrap">
