@@ -451,6 +451,14 @@
   border-radius: 3px;
   font-weight: 600;
 }
+.sl-meta-status {
+  background: rgba(255,179,71,0.15);
+  color: #ffe0a6;
+}
+.sl-meta-status.available {
+  background: rgba(0,230,118,0.12);
+  color: #b8ffd6;
+}
 .sl-meta-location {
   background: rgba(255,255,255,0.06);
   color: var(--text-dim);

@@ -7,8 +7,19 @@ let slFusionCache = null;
 let slLastDateKey = '';
 let initialized = false;
 
+function slGetSnapshot() {
+  return slStore.getState();
+}
+
+function slGetLink(arcana) {
+  if (typeof window.getSocialLinkDefinition === 'function') {
+    return window.getSocialLinkDefinition(arcana);
+  }
+  return SOCIAL_LINKS[arcana];
+}
+
 function syncState() {
-  const snapshot = slStore.getState();
+  const snapshot = slGetSnapshot();
   const dateKey = `${snapshot.profile.gameDate.month}-${snapshot.profile.gameDate.day}`;
   if (slLastDateKey && slLastDateKey !== dateKey) {
     slCalWeekStart = slGetMonday(snapshot.profile.gameDate);
@@ -22,10 +33,13 @@ function syncState() {
 }
 
 function getRosterSet() {
-  return new Set(slStore.getState().roster);
+  return new Set(slGetSnapshot().roster);
 }
 
 function slGetDayOfWeek(month, day) {
+  if (typeof window.getSocialLinkDayOfWeek === 'function') {
+    return window.getSocialLinkDayOfWeek(month, day);
+  }
   const year = month >= 4 ? 2009 : 2010;
   return new Date(year, month - 1, day).getDay();
 }
@@ -78,7 +92,7 @@ function slGetMonday(date) {
 }
 
 function slIsExpired(arcana) {
-  const link = SOCIAL_LINKS[arcana];
+  const link = slGetLink(arcana);
   if (!link || !link.endDate) {
     return false;
   }
@@ -86,7 +100,7 @@ function slIsExpired(arcana) {
 }
 
 function slStatsMet(arcana) {
-  const link = SOCIAL_LINKS[arcana];
+  const link = slGetLink(arcana);
   if (!link) {
     return false;
   }
@@ -96,6 +110,9 @@ function slStatsMet(arcana) {
 }
 
 function slGetBlockedReason(month, day, timeSlot) {
+  if (typeof window.getSocialLinkBlockedReason === 'function') {
+    return window.getSocialLinkBlockedReason({ month, day }, timeSlot);
+  }
   const dayNumber = slDateToNum({ month, day });
   for (const blocked of BLOCKED_DATES) {
     if (dayNumber >= slDateToNum(blocked.from) && dayNumber <= slDateToNum(blocked.to)) {
@@ -108,34 +125,23 @@ function slGetBlockedReason(month, day, timeSlot) {
 }
 
 function slGetAvailableLinks(date, timeSlot) {
-  const dayOfWeek = slGetDayOfWeek(date.month, date.day);
+  const snapshot = slGetSnapshot();
   const results = [];
   ARCANA_LIST.forEach((arcana) => {
-    const link = SOCIAL_LINKS[arcana];
-    if (!link || link.automatic) {
+    const availability =
+      typeof window.getSocialLinkAvailability === 'function'
+        ? window.getSocialLinkAvailability(arcana, snapshot, date, timeSlot)
+        : null;
+    if (!availability || !availability.available) {
       return;
     }
-    if (slCompareDates(date, link.unlockDate) < 0) {
-      return;
-    }
-    if (link.endDate && slCompareDates(date, link.endDate) > 0) {
-      return;
-    }
-    if (timeSlot && link.timeSlot !== timeSlot) {
-      return;
-    }
-    if (!link.availableDays.includes(dayOfWeek)) {
-      return;
-    }
-    if ((slState.ranks[arcana] || 0) >= 10) {
-      return;
-    }
+    const link = availability.link;
     results.push({
       arcana,
       link,
-      rank: slState.ranks[arcana] || 0,
-      statsMet: slStatsMet(arcana),
-      blocked: slGetBlockedReason(date.month, date.day, link.timeSlot)
+      rank: availability.rank,
+      statsMet: availability.statsMet,
+      blocked: ''
     });
   });
   return results;
@@ -187,7 +193,7 @@ function slGetRosterMatchForArcana(arcana) {
 }
 
 function slScoreLink(arcana) {
-  const link = SOCIAL_LINKS[arcana];
+  const link = slGetLink(arcana);
   const currentRank = slState.ranks[arcana] || 0;
   if (currentRank >= 10) {
     return { score: -1, factors: [] };
@@ -307,7 +313,7 @@ function slGetDeadlineLabel(link) {
 function slGetHighPressureLinks() {
   const items = [];
   ARCANA_LIST.forEach((arcana) => {
-    const link = SOCIAL_LINKS[arcana];
+    const link = slGetLink(arcana);
     if (!link || link.automatic || (slState.ranks[arcana] || 0) >= 10) {
       return;
     }
@@ -355,7 +361,7 @@ function slGetStatBottlenecks() {
   };
 
   ARCANA_LIST.forEach((arcana) => {
-    const link = SOCIAL_LINKS[arcana];
+    const link = slGetLink(arcana);
     if (!link || link.automatic || (slState.ranks[arcana] || 0) >= 10) {
       return;
     }
@@ -484,7 +490,7 @@ function slRenderRiskBoard() {
 
   const currentDate = slState.gameDate;
   const items = ARCANA_LIST.map((arcana) => {
-    const link = SOCIAL_LINKS[arcana];
+    const link = slGetLink(arcana);
     const extra = slGetLinkExtra(arcana);
     const rank = slState.ranks[arcana] || 0;
     if (!link || link.automatic || rank >= 10) {
@@ -569,7 +575,7 @@ function slRenderProgressGrid() {
   }
 
   grid.innerHTML = ARCANA_LIST.map((arcana) => {
-    const link = SOCIAL_LINKS[arcana];
+    const link = slGetLink(arcana);
     const rank = slState.ranks[arcana] || 0;
     const pct = (rank / 10) * 100;
     let cssClass = 'sl-progress-item';
@@ -660,8 +666,12 @@ function slRenderMyLinks() {
 
   let html = '';
   ARCANA_LIST.forEach((arcana) => {
-    const link = SOCIAL_LINKS[arcana];
+    const link = slGetLink(arcana);
     const rank = slState.ranks[arcana] || 0;
+    const availability =
+      typeof window.getSocialLinkAvailability === 'function'
+        ? window.getSocialLinkAvailability(arcana, slGetSnapshot(), slState.gameDate, link?.timeSlot || null)
+        : null;
 
     if (statusFilter === 'active' && (rank === 0 || rank >= 10 || link.automatic)) {
       return;
@@ -672,7 +682,7 @@ function slRenderMyLinks() {
     if (statusFilter === 'locked' && (rank > 0 || link.automatic)) {
       return;
     }
-    if (statusFilter === 'unavailable' && !slIsExpired(arcana) && slCompareDates(slState.gameDate, link.unlockDate) >= 0) {
+    if (statusFilter === 'unavailable' && availability?.available) {
       return;
     }
     if (timeFilter && link.timeSlot !== timeFilter) {
@@ -697,6 +707,14 @@ function slRenderMyLinks() {
       metaHtml += `<span class="sl-meta-badge sl-meta-time-${link.timeSlot}">${link.timeSlot === 'day' ? 'Daytime' : 'Evening'}</span>`;
     }
     metaHtml += `<span class="sl-meta-badge sl-meta-unlock">Unlocks ${slFormatDate(link.unlockDate)}</span>`;
+    if (!link.automatic && availability) {
+      const statusText = availability.available
+        ? 'Available today'
+        : availability.status === 'setup_needed'
+          ? 'Ready to start'
+          : availability.reason;
+      metaHtml += `<span class="sl-meta-badge sl-meta-status${availability.available ? ' available' : ''}">${statusText}</span>`;
+    }
     Object.entries(link.statRequirements).forEach(([stat, requirement]) => {
       const met = (slState.stats[stat] || 1) >= requirement;
       metaHtml += `<span class="sl-meta-badge sl-meta-stat${met ? '' : ' unmet'}">${SOCIAL_STATS[stat][requirement - 1]} ${stat}${met ? ' ✓' : ' ✗'}</span>`;
@@ -787,27 +805,22 @@ function slRenderMyLinks() {
 }
 
 function slGetCalLinks(date, dayOfWeek, timeSlot) {
+  const snapshot = slGetSnapshot();
   const results = [];
   ARCANA_LIST.forEach((arcana) => {
-    const link = SOCIAL_LINKS[arcana];
-    if (!link || link.automatic || link.timeSlot !== timeSlot) {
-      return;
-    }
-    if (slCompareDates(date, link.unlockDate) < 0) {
-      return;
-    }
-    if (link.endDate && slCompareDates(date, link.endDate) > 0) {
-      return;
-    }
-    if (!link.availableDays.includes(dayOfWeek)) {
+    const availability =
+      typeof window.getSocialLinkAvailability === 'function'
+        ? window.getSocialLinkAvailability(arcana, snapshot, date, timeSlot)
+        : null;
+    if (!availability || !availability.available) {
       return;
     }
     results.push({
       arcana,
-      character: link.character,
-      rank: slState.ranks[arcana] || 0,
-      statsMet: slStatsMet(arcana),
-      maxed: (slState.ranks[arcana] || 0) >= 10
+      character: availability.link.character,
+      rank: availability.rank,
+      statsMet: availability.statsMet,
+      maxed: availability.rank >= 10
     });
   });
   return results;

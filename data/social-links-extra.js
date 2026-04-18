@@ -23,7 +23,7 @@ const SOCIAL_LINK_EXTRAS = {
     notes: ['Push Academics early if you do not want Mitsuru competing with January links.']
   },
   Emperor: {
-    priority: 'Student Council route with a Courage gate and strong midgame value.',
+    priority: 'Student Council route with strong midgame value once school-day slots are still flexible.',
     deadline: 'Worth opening as soon as the stat gate is met.',
     routeNote: 'Friendship only.',
     notes: ['Useful stepping stone because it opens another school link chain.']
@@ -95,10 +95,10 @@ const SOCIAL_LINK_EXTRAS = {
     notes: ['Best treated as a night-slot specialist rather than a main calendar pressure point.']
   },
   Star: {
-    priority: 'Sunday-exclusive link that competes directly with Hermit and Sun.',
-    deadline: 'Plan Sundays intentionally once this opens.',
+    priority: 'Limited school-day athlete link with only three available afternoons each week.',
+    deadline: 'Treat its Wednesday/Friday/Saturday slots as premium once it opens.',
     routeNote: 'Friendship only.',
-    notes: ['Very easy to underschedule if Sundays are being spent reactively.']
+    notes: ['Very easy to underschedule if those midweek and Saturday school slots are already crowded.']
   },
   Moon: {
     priority: 'Daytime non-school link that can soak up spare afternoons.',

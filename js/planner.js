@@ -123,6 +123,13 @@ function getLinkExtra(arcana) {
   return SOCIAL_LINK_EXTRAS[arcana] || null;
 }
 
+function getLink(arcana) {
+  if (typeof window.getSocialLinkDefinition === 'function') {
+    return window.getSocialLinkDefinition(arcana);
+  }
+  return SOCIAL_LINKS[arcana];
+}
+
 function getStatGuide(stat) {
   if (typeof SOCIAL_STAT_ACTIVITY_GUIDES === 'undefined') {
     return [];
@@ -131,6 +138,9 @@ function getStatGuide(stat) {
 }
 
 function getBlockedReason(month, day, timeSlot) {
+  if (typeof window.getSocialLinkBlockedReason === 'function') {
+    return window.getSocialLinkBlockedReason({ month, day }, timeSlot);
+  }
   const dayNumber = dateToNum({ month, day });
   for (const blocked of BLOCKED_DATES) {
     if (dayNumber >= dateToNum(blocked.from) && dayNumber <= dateToNum(blocked.to)) {
@@ -149,12 +159,15 @@ function statsMet(link, snapshot) {
 }
 
 function getDayOfWeek(month, day) {
-  const year = month >= 2 ? 2009 : 2010;
+  if (typeof window.getSocialLinkDayOfWeek === 'function') {
+    return window.getSocialLinkDayOfWeek(month, day);
+  }
+  const year = month >= 4 ? 2009 : 2010;
   return new Date(year, month - 1, day).getDay();
 }
 
 function scoreLink(arcana, snapshot) {
-  const link = SOCIAL_LINKS[arcana];
+  const link = getLink(arcana);
   const currentRank = snapshot.socialLinks.ranks[arcana] || 0;
   if (!link || currentRank >= 10) {
     return { score: -1, reasons: [] };
@@ -218,29 +231,16 @@ function scoreLink(arcana, snapshot) {
 
 function getAvailableLinks(snapshot, timeSlot) {
   const date = snapshot.profile.gameDate;
-  const dayOfWeek = getDayOfWeek(date.month, date.day);
   const results = [];
   ARCANA_LIST.forEach((arcana) => {
-    const link = SOCIAL_LINKS[arcana];
-    if (!link || link.automatic || link.timeSlot !== timeSlot) {
+    const availability =
+      typeof window.getSocialLinkAvailability === 'function'
+        ? window.getSocialLinkAvailability(arcana, snapshot, date, timeSlot)
+        : null;
+    if (!availability || !availability.available) {
       return;
     }
-    if ((snapshot.socialLinks.ranks[arcana] || 0) >= 10) {
-      return;
-    }
-    if (compareDates(date, link.unlockDate) < 0) {
-      return;
-    }
-    if (link.endDate && compareDates(date, link.endDate) > 0) {
-      return;
-    }
-    if (!link.availableDays.includes(dayOfWeek)) {
-      return;
-    }
-    const blocked = getBlockedReason(date.month, date.day, timeSlot);
-    if (blocked) {
-      return;
-    }
+    const link = availability.link;
     const result = scoreLink(arcana, snapshot);
     results.push({
       arcana,
@@ -255,7 +255,7 @@ function getAvailableLinks(snapshot, timeSlot) {
 function getStatBottlenecks(snapshot) {
   const entries = [];
   ARCANA_LIST.forEach((arcana) => {
-    const link = SOCIAL_LINKS[arcana];
+    const link = getLink(arcana);
     if (!link || link.automatic || (snapshot.socialLinks.ranks[arcana] || 0) >= 10) {
       return;
     }
