@@ -21,6 +21,12 @@ let tartRoot;
 let tartStore;
 let initialized = false;
 
+function setActiveTartarusView(view) {
+  tartRoot.querySelectorAll('.nav-tab').forEach((entry) => {
+    entry.classList.toggle('active', entry.dataset.view === view);
+  });
+}
+
 function getRosterSet() {
   if (!tartStore) {
     return new Set();
@@ -300,6 +306,7 @@ function openShadowIntelDrawer(focusName = '') {
 
   syncIntelControlsFromState();
   renderTable();
+  setActiveTartarusView('shadowintel');
   drawer.classList.add('open');
   overlay.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');
@@ -314,6 +321,9 @@ function closeShadowIntelDrawer() {
   drawer.classList.remove('open');
   overlay.classList.remove('open');
   drawer.setAttribute('aria-hidden', 'true');
+  if (state.view === 'database') {
+    setActiveTartarusView('database');
+  }
 }
 
 function filterShadows() {
@@ -1137,15 +1147,20 @@ function initTartarus({ root, store }) {
 
   tartRoot.querySelectorAll('.nav-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
-      tartRoot.querySelectorAll('.nav-tab').forEach((entry) => entry.classList.remove('active'));
-      tab.classList.add('active');
       const { view } = tab.dataset;
       if (view === 'fullmoon') {
+        setActiveTartarusView('fullmoon');
         closeShadowIntelDrawer();
         state.view = 'fullmoon';
         tartRoot.querySelector('#mainView').style.display = 'none';
         tartRoot.querySelector('#fullmoonSection').classList.add('active');
+      } else if (view === 'shadowintel') {
+        state.view = 'database';
+        tartRoot.querySelector('#mainView').style.display = 'block';
+        tartRoot.querySelector('#fullmoonSection').classList.remove('active');
+        openShadowIntelDrawer();
       } else {
+        setActiveTartarusView('database');
         state.view = 'database';
         tartRoot.querySelector('#mainView').style.display = 'block';
         tartRoot.querySelector('#fullmoonSection').classList.remove('active');
@@ -1233,10 +1248,6 @@ function initTartarus({ root, store }) {
     floorScoutSections[section] = !isFloorScoutSectionOpen(section);
     const floorInput = tartRoot.querySelector('#floorInput');
     renderFloorScout(Number(floorInput.value));
-  });
-
-  tartRoot.querySelector('#openShadowIntel').addEventListener('click', () => {
-    openShadowIntelDrawer();
   });
 
   tartRoot.querySelector('#closeShadowIntel').addEventListener('click', () => {

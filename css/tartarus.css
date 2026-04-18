@@ -34,8 +34,6 @@
 #tartarus .floor-dashboard{position:static;top:auto;max-width:980px;margin:0 auto}
 #tartarus .floor-dashboard-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.85rem}
 #tartarus .floor-dashboard-note{font-size:0.82rem;color:var(--text-dim);letter-spacing:0.03em}
-#tartarus .floor-dashboard-intel-btn{flex-shrink:0}
-#tartarus #openShadowIntel,
 #tartarus #closeShadowIntel{
   appearance:none;
   background:linear-gradient(180deg,rgba(0,229,255,0.14),rgba(0,229,255,0.06));
@@ -52,27 +50,20 @@
   transition:background 0.2s ease,border-color 0.2s ease,box-shadow 0.2s ease,color 0.2s ease,transform 0.2s ease;
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 0 0 rgba(0,229,255,0);
 }
-#tartarus #openShadowIntel:hover,
 #tartarus #closeShadowIntel:hover{
   background:linear-gradient(180deg,rgba(0,229,255,0.2),rgba(0,229,255,0.09));
   border-color:rgba(0,229,255,0.45);
   color:var(--text-bright);
   box-shadow:0 0 18px rgba(0,229,255,0.18);
 }
-#tartarus #openShadowIntel:focus-visible,
 #tartarus #closeShadowIntel:focus-visible{
   outline:none;
   border-color:rgba(0,229,255,0.65);
   box-shadow:0 0 0 3px rgba(0,229,255,0.16),0 0 20px rgba(0,229,255,0.2);
 }
-#tartarus #openShadowIntel:active,
 #tartarus #closeShadowIntel:active{
   transform:translateY(1px);
   box-shadow:0 0 10px rgba(0,229,255,0.12);
-}
-#tartarus #openShadowIntel{
-  background:linear-gradient(180deg,rgba(0,229,255,0.18),rgba(0,229,255,0.08));
-  border-color:rgba(0,229,255,0.34);
 }
 #tartarus #closeShadowIntel{
   background:linear-gradient(180deg,rgba(0,229,255,0.1),rgba(0,229,255,0.04));
@@ -248,6 +239,6 @@
 #tartarus .loot-enemy{color:var(--text)}
 #tartarus .loot-area{color:var(--text-dim);font-size:0.72rem}
 
-@media(max-width:900px){#tartarus .floor-dashboard-header{flex-direction:column;align-items:stretch}#tartarus .floor-dashboard-intel-btn{width:100%}#tartarus .floor-scout{position:static}#tartarus .shadow-intel-drawer{top:0;left:0;transform:translateY(1rem);width:100vw;height:100vh;max-height:none;border-radius:0;border-left:none;border-right:none}}
+@media(max-width:900px){#tartarus .floor-dashboard-header{flex-direction:column;align-items:stretch}#tartarus .floor-scout{position:static}#tartarus .shadow-intel-drawer{top:0;left:0;transform:translateY(1rem);width:100vw;height:100vh;max-height:none;border-radius:0;border-left:none;border-right:none}}
 @media(max-width:900px){#tartarus .shadow-intel-drawer.open{transform:translateY(0)}}
 @media(max-width:768px){#tartarus .header h1{font-size:2rem;letter-spacing:0.15em}#tartarus .controls{padding:0.5rem}#tartarus .shadow-table{font-size:0.8rem}#tartarus .shadow-table th,#tartarus .shadow-table td{padding:0.3rem}}
