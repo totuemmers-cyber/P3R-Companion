@@ -269,44 +269,56 @@
 
     <!-- COMPENDIUM TAB -->
     <div class="tab-content" id="tab-compendium">
-      <div class="card">
-        <h2>Persona Compendium</h2>
-        <div class="filters-bar">
-          <select id="comp-arcana"><option value="">All Arcana</option></select>
-          <input type="number" id="comp-lvl-min" placeholder="Min Lv" min="1" max="99">
-          <input type="number" id="comp-lvl-max" placeholder="Max Lv" min="1" max="99">
-          <input type="text" id="comp-search" placeholder="Name or skill..." style="width:180px">
-          <select id="comp-elem-filter"><option value="">All Elements</option></select>
-          <select id="comp-resist-type">
-            <option value="">Any resist type</option>
-            <option value="w">Weak</option>
-            <option value="s">Resist</option>
-            <option value="n">Null</option>
-            <option value="r">Repel</option>
-            <option value="d">Drain</option>
-            <option value="no-weak">No weakness</option>
-          </select>
+      <div class="compendium-layout">
+        <div class="card compendium-list-panel">
+          <h2>Persona Compendium</h2>
+          <div class="filters-bar">
+            <select id="comp-arcana"><option value="">All Arcana</option></select>
+            <input type="number" id="comp-lvl-min" placeholder="Min Lv" min="1" max="99">
+            <input type="number" id="comp-lvl-max" placeholder="Max Lv" min="1" max="99">
+            <input type="text" id="comp-search" placeholder="Name or skill..." style="width:180px">
+            <select id="comp-elem-filter"><option value="">All Elements</option></select>
+            <select id="comp-resist-type">
+              <option value="">Any resist type</option>
+              <option value="w">Weak</option>
+              <option value="s">Resist</option>
+              <option value="n">Null</option>
+              <option value="r">Repel</option>
+              <option value="d">Drain</option>
+              <option value="no-weak">No weakness</option>
+            </select>
+          </div>
+          <div class="comp-table-wrap">
+            <table class="comp-table">
+              <thead><tr>
+                <th data-sort="name">Name</th>
+                <th data-sort="race">Arcana</th>
+                <th data-sort="lvl">Lv</th>
+                <th data-sort="st">St</th>
+                <th data-sort="ma">Ma</th>
+                <th data-sort="en">En</th>
+                <th data-sort="ag">Ag</th>
+                <th data-sort="lu">Lu</th>
+                <th>Sla</th><th>Str</th><th>Pie</th>
+                <th>Fir</th><th>Ice</th><th>Ele</th>
+                <th>Win</th><th>Lig</th><th>Dar</th>
+              </tr></thead>
+              <tbody id="comp-body"></tbody>
+            </table>
+          </div>
         </div>
-        <div class="comp-table-wrap" style="max-height:600px;overflow-y:auto">
-          <table class="comp-table">
-            <thead><tr>
-              <th data-sort="name">Name</th>
-              <th data-sort="race">Arcana</th>
-              <th data-sort="lvl">Lv</th>
-              <th data-sort="st">St</th>
-              <th data-sort="ma">Ma</th>
-              <th data-sort="en">En</th>
-              <th data-sort="ag">Ag</th>
-              <th data-sort="lu">Lu</th>
-              <th>Sla</th><th>Str</th><th>Pie</th>
-              <th>Fir</th><th>Ice</th><th>Ele</th>
-              <th>Win</th><th>Lig</th><th>Dar</th>
-            </tr></thead>
-            <tbody id="comp-body"></tbody>
-          </table>
+        <div class="compendium-detail-column">
+          <div id="comp-detail-desktop"></div>
         </div>
       </div>
-      <div id="comp-detail"></div>
+      <div class="comp-detail-overlay" id="comp-detail-overlay"></div>
+      <div class="comp-detail-drawer" id="comp-detail-drawer" aria-hidden="true">
+        <div class="comp-detail-drawer-header">
+          <h3>Persona Details</h3>
+          <button class="btn btn-sm" id="comp-detail-close">Close</button>
+        </div>
+        <div class="comp-detail-drawer-body" id="comp-detail-mobile"></div>
+      </div>
     </div>
   </div>
 </div>

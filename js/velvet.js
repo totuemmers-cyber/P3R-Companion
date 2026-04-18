@@ -1194,37 +1194,122 @@ function renderCompendium() {
           .join('')}</tr>`
     )
     .join('');
+
+  if (selectedPersona && !list.some((persona) => persona.name === selectedPersona)) {
+    selectedPersona = null;
+    closeCompDetailDrawer();
+    renderCompDetailEmptyState(
+      'Selection Cleared',
+      'The previously selected persona is hidden by the current filters. Pick another row to inspect its details.'
+    );
+  }
 }
 
-function showCompDetail(name) {
+function isCompDetailDrawerMode() {
+  return window.innerWidth <= 980;
+}
+
+function getCompDetailDesktopHost() {
+  return velvetRoot.querySelector('#comp-detail-desktop');
+}
+
+function getCompDetailMobileHost() {
+  return velvetRoot.querySelector('#comp-detail-mobile');
+}
+
+function getCompDetailDrawer() {
+  return velvetRoot.querySelector('#comp-detail-drawer');
+}
+
+function getCompDetailOverlay() {
+  return velvetRoot.querySelector('#comp-detail-overlay');
+}
+
+function renderCompDetailEmptyState(title = 'Select a Persona', message = 'Pick a persona from the compendium table to inspect details, add it to your roster, or set it as a fusion target.') {
+  const markup = `<div class="detail-panel comp-detail-empty"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(message)}</p></div>`;
+  getCompDetailDesktopHost().innerHTML = markup;
+  getCompDetailMobileHost().innerHTML = markup;
+}
+
+function renderCompDetailMarkup(name) {
+  return `<div class="detail-panel">${renderPersonaCard(name)}<div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap"><button class="btn btn-gold" data-action="add-roster" data-name="${escapeHtml(name)}">Add to Roster</button><button class="btn" data-action="set-target" data-name="${escapeHtml(name)}">Set as Fusion Target</button></div><h3 style="margin-top:1rem;font-size:0.95rem">How to Fuse</h3><div data-role="reverse-results"><p style="color:var(--text-muted);font-size:0.85rem">Computing...</p></div></div>`;
+}
+
+function openCompDetailDrawer() {
+  if (!isCompDetailDrawerMode()) {
+    return;
+  }
+  getCompDetailOverlay().classList.add('active');
+  const drawer = getCompDetailDrawer();
+  drawer.classList.add('active');
+  drawer.setAttribute('aria-hidden', 'false');
+}
+
+function closeCompDetailDrawer() {
+  getCompDetailOverlay().classList.remove('active');
+  const drawer = getCompDetailDrawer();
+  drawer.classList.remove('active');
+  drawer.setAttribute('aria-hidden', 'true');
+}
+
+function showCompDetail(name, options = {}) {
+  const openDrawer = options.openDrawer !== false;
   selectedPersona = name;
-  const div = velvetRoot.querySelector('#comp-detail');
-  div.innerHTML = `<div class="detail-panel">${renderPersonaCard(name)}<div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap"><button class="btn btn-gold" data-action="add-roster" data-name="${escapeHtml(name)}">Add to Roster</button><button class="btn" data-action="set-target" data-name="${escapeHtml(name)}">Set as Fusion Target</button></div><h3 style="margin-top:1rem;font-size:0.95rem">How to Fuse</h3><div id="reverse-results"><p style="color:var(--text-muted);font-size:0.85rem">Computing...</p></div></div>`;
+
+  const markup = renderCompDetailMarkup(name);
+  getCompDetailDesktopHost().innerHTML = markup;
+  getCompDetailMobileHost().innerHTML = markup;
+
+  if (openDrawer) {
+    openCompDetailDrawer();
+  }
+
   setTimeout(() => {
-    const target = velvetRoot.querySelector('#reverse-results');
+    if (selectedPersona !== name) {
+      return;
+    }
     const results = reverseLookup(name);
     const roster = getRosterSet();
-    if (!target) {
+    const targets = [
+      ...velvetRoot.querySelectorAll('[data-role="reverse-results"]')
+    ];
+    if (!targets.length) {
       return;
     }
+
+    let html;
     if (!results.length) {
-      target.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem">No fusion recipes found (base persona or treasure demon)</p>';
-      return;
-    }
-    if (results[0].type === 'special') {
-      target.innerHTML = `<div style="margin-bottom:0.5rem;color:var(--accent-gold);font-size:0.85rem">Special Fusion:</div><div style="display:flex;gap:0.3rem;flex-wrap:wrap">${results[0].ingredients
+      html = '<p style="color:var(--text-muted);font-size:0.85rem">No fusion recipes found (base persona or treasure demon)</p>';
+    } else if (results[0].type === 'special') {
+      html = `<div style="margin-bottom:0.5rem;color:var(--accent-gold);font-size:0.85rem">Special Fusion:</div><div style="display:flex;gap:0.3rem;flex-wrap:wrap">${results[0].ingredients
         .map((ingredient) => `<span class="sp-ing ${roster.has(ingredient) ? 'have' : 'missing'}">${ingredient}</span>`)
         .join(' + ')}</div>`;
-      return;
+    } else {
+      html = `<div class="reverse-results">${results
+        .slice(0, 50)
+        .map(
+          (entry) =>
+            `<div class="reverse-item"><span class="${roster.has(entry.p1) ? 'ri-have' : 'ri-miss'}">${entry.p1}</span><span class="ri-plus">+</span><span class="${roster.has(entry.p2) ? 'ri-have' : 'ri-miss'}">${entry.p2}</span></div>`
+        )
+        .join('')}${results.length > 50 ? `<div style="color:var(--text-muted);font-size:0.8rem;padding:0.3rem">...and ${results.length - 50} more</div>` : ''}</div>`;
     }
-    target.innerHTML = `<div class="reverse-results">${results
-      .slice(0, 50)
-      .map(
-        (entry) =>
-          `<div class="reverse-item"><span class="${roster.has(entry.p1) ? 'ri-have' : 'ri-miss'}">${entry.p1}</span><span class="ri-plus">+</span><span class="${roster.has(entry.p2) ? 'ri-have' : 'ri-miss'}">${entry.p2}</span></div>`
-      )
-      .join('')}${results.length > 50 ? `<div style="color:var(--text-muted);font-size:0.8rem;padding:0.3rem">...and ${results.length - 50} more</div>` : ''}</div>`;
+
+    targets.forEach((target) => {
+      target.innerHTML = html;
+    });
   }, 10);
+}
+
+function syncCompDetailLayout() {
+  if (!selectedPersona) {
+    closeCompDetailDrawer();
+    renderCompDetailEmptyState();
+    return;
+  }
+  showCompDetail(selectedPersona, { openDrawer: false });
+  if (!isCompDetailDrawerMode()) {
+    closeCompDetailDrawer();
+  }
 }
 
 function planFusionChain(targetName) {
@@ -1306,6 +1391,7 @@ function switchTab(tab) {
     content.classList.toggle('active', content.id === `tab-${tab}`);
   });
   if (tab === 'fusion') {
+    closeCompDetailDrawer();
     renderSpecialFusions();
     if (allFusions.length) {
       renderRecommendedFusions();
@@ -1330,7 +1416,7 @@ function rerenderFromStore() {
   }
   if (selectedPersona) {
     renderCompendium();
-    showCompDetail(selectedPersona);
+    showCompDetail(selectedPersona, { openDrawer: false });
   } else {
     renderCompendium();
   }
@@ -1420,6 +1506,14 @@ function initVelvet({ root, store }) {
     element.addEventListener('input', renderCompendium);
     element.addEventListener('change', renderCompendium);
   });
+  velvetRoot.querySelector('#comp-detail-close').addEventListener('click', closeCompDetailDrawer);
+  velvetRoot.querySelector('#comp-detail-overlay').addEventListener('click', closeCompDetailDrawer);
+  window.addEventListener('resize', syncCompDetailLayout);
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeCompDetailDrawer();
+    }
+  });
 
   velvetRoot.querySelector('#roster-clear-btn').addEventListener('click', clearRoster);
   velvetRoot.querySelector('#fusion-reset-btn').addEventListener('click', resetFusion);
@@ -1457,6 +1551,7 @@ function initVelvet({ root, store }) {
     }
     const setTargetButton = event.target.closest('[data-action="set-target"]');
     if (setTargetButton) {
+      closeCompDetailDrawer();
       switchTab('fusion');
       showChainPlanner(setTargetButton.dataset.name);
       return;
@@ -1465,11 +1560,12 @@ function initVelvet({ root, store }) {
     if (compRow) {
       selectedPersona = compRow.dataset.name;
       renderCompendium();
-      showCompDetail(selectedPersona);
+      showCompDetail(selectedPersona, { openDrawer: isCompDetailDrawerMode() });
     }
   });
 
   velvetStore.subscribe(rerenderFromStore);
+  renderCompDetailEmptyState();
   renderRoster();
   renderCompendium();
   renderSpecialFusions();
