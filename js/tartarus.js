@@ -250,6 +250,7 @@ function renderFloorScoutSection({ key, title, summary = '', tone, bodyHtml }) {
 
 function syncIntelControlsFromState() {
   const searchBox = tartRoot.querySelector('#searchBox');
+  const blockFilter = tartRoot.querySelector('#blockFilter');
   const weakFilter = tartRoot.querySelector('#weakFilter');
   const lvlMin = tartRoot.querySelector('#lvlMin');
   const lvlMax = tartRoot.querySelector('#lvlMax');
@@ -257,6 +258,9 @@ function syncIntelControlsFromState() {
 
   if (searchBox) {
     searchBox.value = state.query;
+  }
+  if (blockFilter) {
+    blockFilter.value = state.blockFilter || '';
   }
   if (weakFilter) {
     weakFilter.value = state.weakFilter;
@@ -1135,27 +1139,17 @@ function initTartarus({ root, store }) {
     tab.addEventListener('click', () => {
       tartRoot.querySelectorAll('.nav-tab').forEach((entry) => entry.classList.remove('active'));
       tab.classList.add('active');
-      const { view, block } = tab.dataset;
+      const { view } = tab.dataset;
       if (view === 'fullmoon') {
         closeShadowIntelDrawer();
         state.view = 'fullmoon';
         tartRoot.querySelector('#mainView').style.display = 'none';
-        tartRoot.querySelector('#controls').style.display = 'none';
         tartRoot.querySelector('#fullmoonSection').classList.add('active');
       } else {
         state.view = 'database';
         tartRoot.querySelector('#mainView').style.display = 'block';
-        tartRoot.querySelector('#controls').style.display = 'flex';
         tartRoot.querySelector('#fullmoonSection').classList.remove('active');
-        state.blockFilter = block || null;
-        state.expandedRow = null;
-        syncIntelControlsFromState();
-        renderTable();
-        if (block) {
-          openShadowIntelDrawer();
-        } else {
-          closeShadowIntelDrawer();
-        }
+        closeShadowIntelDrawer();
       }
     });
   });
@@ -1177,6 +1171,12 @@ function initTartarus({ root, store }) {
 
   tartRoot.querySelector('#weakFilter').addEventListener('change', (event) => {
     state.weakFilter = event.target.value;
+    state.expandedRow = null;
+    renderTable();
+  });
+
+  tartRoot.querySelector('#blockFilter').addEventListener('change', (event) => {
+    state.blockFilter = event.target.value || null;
     state.expandedRow = null;
     renderTable();
   });

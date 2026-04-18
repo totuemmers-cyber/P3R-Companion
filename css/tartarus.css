@@ -35,14 +35,14 @@
 #tartarus .floor-dashboard-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.85rem}
 #tartarus .floor-dashboard-note{font-size:0.82rem;color:var(--text-dim);letter-spacing:0.03em}
 #tartarus .floor-dashboard-intel-btn{flex-shrink:0}
-#tartarus .shadow-intel-overlay{position:fixed;inset:0;background:rgba(3,6,18,0.65);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity 0.25s ease;z-index:80}
+#tartarus .shadow-intel-overlay{position:fixed;inset:0;background:rgba(3,6,18,0.72);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity 0.25s ease;z-index:80}
 #tartarus .shadow-intel-overlay.open{opacity:1;pointer-events:auto}
-#tartarus .shadow-intel-drawer{position:fixed;top:0;right:0;height:100vh;width:min(1080px,92vw);background:rgba(7,11,24,0.98);border-left:1px solid var(--glass-border);box-shadow:-12px 0 32px rgba(0,0,0,0.35);transform:translateX(100%);transition:transform 0.25s ease;z-index:81;display:flex;flex-direction:column}
-#tartarus .shadow-intel-drawer.open{transform:translateX(0)}
+#tartarus .shadow-intel-drawer{position:fixed;top:2.25rem;left:50%;transform:translate(-50%,1.75rem) scale(0.98);width:min(1320px,96vw);height:min(88vh,960px);background:rgba(7,11,24,0.98);border:1px solid rgba(0,229,255,0.14);border-radius:18px;box-shadow:0 28px 64px rgba(0,0,0,0.42);opacity:0;pointer-events:none;transition:transform 0.25s ease,opacity 0.25s ease;z-index:81;display:flex;flex-direction:column;overflow:hidden}
+#tartarus .shadow-intel-drawer.open{transform:translate(-50%,0) scale(1);opacity:1;pointer-events:auto}
 #tartarus .shadow-intel-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1rem 1rem 0.75rem;border-bottom:1px solid rgba(0,229,255,0.08)}
 #tartarus .shadow-intel-header h2{font-family:'Cinzel',serif;font-size:1.05rem;color:var(--cyan);margin:0}
 #tartarus .shadow-intel-note{font-size:0.8rem;color:var(--text-dim);margin-top:0.2rem}
-#tartarus .shadow-intel-controls{max-width:none;padding:0.85rem 1rem 0.7rem;border-bottom:1px solid rgba(0,229,255,0.08)}
+#tartarus .shadow-intel-controls{max-width:none;padding:0.85rem 1rem 0.7rem;border-bottom:1px solid rgba(0,229,255,0.08);background:linear-gradient(180deg,rgba(0,229,255,0.04),rgba(0,0,0,0))}
 #tartarus .shadow-intel-table-wrap{padding:0 1rem 1rem;overflow:auto;flex:1;min-height:0}
 
 #tartarus .shadow-table{width:100%;border-collapse:collapse;background:var(--glass);border:1px solid var(--glass-border);border-radius:6px;overflow:hidden}
@@ -204,5 +204,6 @@
 #tartarus .loot-enemy{color:var(--text)}
 #tartarus .loot-area{color:var(--text-dim);font-size:0.72rem}
 
-@media(max-width:900px){#tartarus .floor-dashboard-header{flex-direction:column;align-items:stretch}#tartarus .floor-dashboard-intel-btn{width:100%}#tartarus .floor-scout{position:static}#tartarus .shadow-intel-drawer{width:100vw}}
+@media(max-width:900px){#tartarus .floor-dashboard-header{flex-direction:column;align-items:stretch}#tartarus .floor-dashboard-intel-btn{width:100%}#tartarus .floor-scout{position:static}#tartarus .shadow-intel-drawer{top:0;left:0;transform:translateY(1rem);width:100vw;height:100vh;max-height:none;border-radius:0;border-left:none;border-right:none}}
+@media(max-width:900px){#tartarus .shadow-intel-drawer.open{transform:translateY(0)}}
 @media(max-width:768px){#tartarus .header h1{font-size:2rem;letter-spacing:0.15em}#tartarus .controls{padding:0.5rem}#tartarus .shadow-table{font-size:0.8rem}#tartarus .shadow-table th,#tartarus .shadow-table td{padding:0.3rem}}
