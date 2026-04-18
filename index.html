@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/profile.css">
 <link rel="stylesheet" href="css/planner.css">
+<link rel="stylesheet" href="css/requests.css">
 <link rel="stylesheet" href="css/tartarus.css">
 <link rel="stylesheet" href="css/velvet.css">
 <link rel="stylesheet" href="css/social-links.css">
@@ -19,6 +20,7 @@
   <div class="app-nav-tabs">
     <button class="app-nav-tab" data-section="profile">Profile</button>
     <button class="app-nav-tab" data-section="planner">Planner</button>
+    <button class="app-nav-tab" data-section="requests">Requests</button>
     <button class="app-nav-tab" data-section="tartarus">Tartarus</button>
     <button class="app-nav-tab" data-section="velvet">Velvet Room</button>
     <button class="app-nav-tab" data-section="social-links">Social Links</button>
@@ -154,6 +156,44 @@
       <section class="planner-card" id="planner-day-night"></section>
       <section class="planner-card" id="planner-tartarus"></section>
       <section class="planner-card" id="planner-fusion"></section>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REQUESTS SECTION ===== -->
+<div id="requests" class="app-section">
+  <header class="requests-header">
+    <h1>Elizabeth Requests <span>P3R</span></h1>
+    <div class="requests-subtitle">Track every numbered request, see compact solutions, and jump straight into the right part of your run.</div>
+  </header>
+
+  <div class="requests-main">
+    <section class="requests-summary-strip" id="requests-summary"></section>
+    <section class="requests-upcoming-card" id="requests-upcoming"></section>
+
+    <div class="requests-layout">
+      <section class="requests-panel requests-list-panel">
+        <div class="requests-controls">
+          <input id="requests-search" class="requests-search" type="search" placeholder="Search requests, rewards, solutions..." />
+          <select id="requests-category" class="requests-select">
+            <option value="">All categories</option>
+            <option value="tartarus">Tartarus</option>
+            <option value="velvet">Velvet Room</option>
+            <option value="town">Town / outing</option>
+            <option value="milestone">Milestone</option>
+            <option value="boss">Boss challenge</option>
+            <option value="item">Item / errand</option>
+          </select>
+          <select id="requests-status" class="requests-select">
+            <option value="open">Open</option>
+            <option value="all">All visible</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+        <div class="requests-list" id="requests-list"></div>
+      </section>
+
+      <section class="requests-panel requests-detail-panel" id="requests-detail"></section>
     </div>
   </div>
 </div>
@@ -567,9 +607,11 @@
 <script src="data/personas-extra.js"></script>
 <script src="data/social-links-extra.js"></script>
 <script src="data/requests-extra.js"></script>
+<script src="data/elizabeth-requests.js"></script>
 <script src="js/store.js"></script>
 <script src="js/profile.js"></script>
 <script src="js/planner.js"></script>
+<script src="js/requests.js"></script>
 <script src="js/tartarus.js"></script>
 <script src="js/velvet.js"></script>
 <script src="js/social-links.js"></script>

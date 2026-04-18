@@ -128,6 +128,8 @@ function bootstrap() {
       initTartarus({ root, store });
     } else if (sectionName === 'planner') {
       initPlanner({ root, store });
+    } else if (sectionName === 'requests') {
+      initRequests({ root, store });
     } else if (sectionName === 'profile') {
       initProfile({ root, store });
     } else if (sectionName === 'velvet') {
@@ -157,6 +159,9 @@ function bootstrap() {
     switchSection,
     openSocialLinks() {
       switchSection('social-links');
+    },
+    openRequests() {
+      switchSection('requests');
     },
     openTartarusFloor(floor) {
       if (Number.isFinite(floor)) {
