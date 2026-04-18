@@ -123,6 +123,12 @@ const state = {
   view: 'database'
 };
 
+const floorScoutSections = {
+  regular: true,
+  monad: false,
+  gatekeepers: false
+};
+
 const MONAD_DOOR_BANDS = [
   { floorMin: 119, floorMax: 142, label: 'Tziah 119F-142F', section: 'Tziah I' },
   { floorMin: 145, floorMax: 168, label: 'Tziah 145F-168F', section: 'Tziah II' },
@@ -211,6 +217,26 @@ function renderGatekeeperPanel(title, shadow, options = {}) {
   html += renderFloorAffinities(shadow, 'margin-top:4px');
   html += '</div>';
   return html;
+}
+
+function isFloorScoutSectionOpen(key) {
+  return floorScoutSections[key] !== false;
+}
+
+function renderFloorScoutSection({ key, title, summary = '', tone, bodyHtml }) {
+  const isOpen = isFloorScoutSectionOpen(key);
+  return `<section class="floor-scout-section floor-scout-section-${escapeHtml(tone)}${isOpen ? ' is-open' : ''}">
+    <button class="floor-scout-toggle" type="button" data-section="${escapeHtml(key)}" aria-expanded="${isOpen ? 'true' : 'false'}">
+      <span class="floor-scout-toggle-copy">
+        <span class="floor-scout-toggle-title">${escapeHtml(title)}</span>
+        ${summary ? `<span class="floor-scout-toggle-summary">${escapeHtml(summary)}</span>` : ''}
+      </span>
+      <span class="floor-scout-toggle-chevron" aria-hidden="true">${isOpen ? '−' : '+'}</span>
+    </button>
+    <div class="floor-scout-section-body"${isOpen ? '' : ' hidden'}>
+      ${bodyHtml}
+    </div>
+  </section>`;
 }
 
 function filterShadows() {
@@ -574,16 +600,17 @@ function renderFloorScout(floor) {
       floor >= shadow.floorMin &&
       floor <= shadow.floorMax
   );
+  let regularBody = '';
 
   if (shadows.length > 0) {
     shadows.sort((left, right) => left.lvl - right.lvl);
-    html += '<div class="floor-enemies" style="margin-top:0.75rem"><div class="label">Shadows on this floor</div>';
+    regularBody += '<div class="floor-enemies">';
     shadows.forEach((shadow) => {
-      html += `<div class="floor-enemy"><div class="floor-enemy-name">${escapeHtml(
+      regularBody += `<div class="floor-enemy"><div class="floor-enemy-name">${escapeHtml(
         shadow.name
       )} (Lv ${shadow.lvl})</div>${renderFloorAffinities(shadow)}</div>`;
     });
-    html += '</div>';
+    regularBody += '</div>';
 
     const weaknessCounts = {};
     shadows.forEach((shadow) => {
@@ -596,7 +623,7 @@ function renderFloorScout(floor) {
     });
     const sortedWeaknesses = Object.entries(weaknessCounts).sort((left, right) => right[1] - left[1]);
     if (sortedWeaknesses.length > 0) {
-      html += `<div class="floor-tip"><strong>Tip:</strong> Most effective elements: ${sortedWeaknesses
+      regularBody += `<div class="floor-tip"><strong>Tip:</strong> Most effective elements: ${sortedWeaknesses
         .slice(0, 3)
         .map(([key, count]) => `${RESIST_LABELS[RESIST_KEYS.indexOf(key)]} (${count})`)
         .join(', ')}</div>`;
@@ -615,20 +642,31 @@ function renderFloorScout(floor) {
     const avgFloorExp = Math.round(totalExp / shadows.length);
     const indicator =
       avgFloorExp > avgBlockExp * 1.15 ? '↑ Above avg' : avgFloorExp < avgBlockExp * 0.85 ? '↓ Below avg' : '≈ Average';
-    html += `<div class="floor-exp-summary"><span class="label">Floor EXP: </span><strong>${totalExp}</strong> total (${avgFloorExp}/shadow) <span class="floor-exp-ind">${indicator}</span></div>`;
+    regularBody += `<div class="floor-exp-summary"><span class="label">Floor EXP: </span><strong>${totalExp}</strong> total (${avgFloorExp}/shadow) <span class="floor-exp-ind">${indicator}</span></div>`;
+    html += renderFloorScoutSection({
+      key: 'regular',
+      title: 'Shadows on this floor',
+      summary: `${shadows.length} encounter${shadows.length === 1 ? '' : 's'}`,
+      tone: 'regular',
+      bodyHtml: regularBody
+    });
   }
 
   const monadDoorData = getMonadDoorEnemiesForFloor(floor);
   if (monadDoorData.band && monadDoorData.enemies.length > 0) {
-    html += '<div class="floor-monad-section">';
-    html += '<div class="label floor-monad-label">Possible Monad Door minibosses</div>';
-    html += `<div class="floor-monad-note">Possible encounters for ${escapeHtml(monadDoorData.band.label)}.</div>`;
+    let monadBody = `<div class="floor-monad-note">Possible encounters for ${escapeHtml(monadDoorData.band.label)}.</div>`;
     monadDoorData.enemies.forEach((shadow) => {
-      html += `<div class="floor-enemy"><div class="floor-enemy-name">${escapeHtml(
+      monadBody += `<div class="floor-enemy"><div class="floor-enemy-name">${escapeHtml(
         shadow.name
       )} (Lv ${shadow.lvl})</div>${renderFloorAffinities(shadow)}</div>`;
     });
-    html += '</div>';
+    html += renderFloorScoutSection({
+      key: 'monad',
+      title: 'Possible Monad Door minibosses',
+      summary: monadDoorData.band.label,
+      tone: 'monad',
+      bodyHtml: monadBody
+    });
   }
 
   const gatekeepers = ALL_SHADOWS.filter(
@@ -637,9 +675,10 @@ function renderFloorScout(floor) {
   const currentGatekeepers = gatekeepers.filter((shadow) => shadow.floorMin === floor);
   const upcomingGatekeeper = gatekeepers.find((shadow) => shadow.floorMin > floor) || null;
 
+  let gatekeeperBody = '';
   if (currentGatekeepers.length > 0) {
     currentGatekeepers.forEach((shadow) => {
-      html += renderGatekeeperPanel(`Gatekeeper on this floor: Floor ${shadow.floorMin}`, shadow, {
+      gatekeeperBody += renderGatekeeperPanel(`Gatekeeper on this floor: Floor ${shadow.floorMin}`, shadow, {
         accentStyle: 'background:rgba(255,23,68,0.12);border:1px solid rgba(255,23,68,0.32)',
         titleColor: 'var(--wk)'
       });
@@ -647,9 +686,26 @@ function renderFloorScout(floor) {
   }
 
   if (upcomingGatekeeper) {
-    html += renderGatekeeperPanel(`Next Gatekeeper: Floor ${upcomingGatekeeper.floorMin}`, upcomingGatekeeper, {
+    gatekeeperBody += renderGatekeeperPanel(`Next Gatekeeper: Floor ${upcomingGatekeeper.floorMin}`, upcomingGatekeeper, {
       accentStyle: 'background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2)',
       titleColor: 'var(--wk)'
+    });
+  }
+
+  if (gatekeeperBody) {
+    const gatekeeperSummaryParts = [];
+    if (currentGatekeepers.length > 0) {
+      gatekeeperSummaryParts.push(`${currentGatekeepers.length} on this floor`);
+    }
+    if (upcomingGatekeeper) {
+      gatekeeperSummaryParts.push(`next ${upcomingGatekeeper.floorMin}F`);
+    }
+    html += renderFloorScoutSection({
+      key: 'gatekeepers',
+      title: 'Gatekeeper / minibosses',
+      summary: gatekeeperSummaryParts.join(' · '),
+      tone: 'gatekeeper',
+      bodyHtml: gatekeeperBody
     });
   }
 
@@ -963,6 +1019,20 @@ function initTartarus({ root, store }) {
 
   tartRoot.querySelector('#floorInput').addEventListener('input', (event) => {
     renderFloorScout(Number(event.target.value));
+  });
+
+  tartRoot.querySelector('#floorInfo').addEventListener('click', (event) => {
+    const toggle = event.target.closest('.floor-scout-toggle');
+    if (!toggle) {
+      return;
+    }
+    const { section } = toggle.dataset;
+    if (!section || !(section in floorScoutSections)) {
+      return;
+    }
+    floorScoutSections[section] = !isFloorScoutSectionOpen(section);
+    const floorInput = tartRoot.querySelector('#floorInput');
+    renderFloorScout(Number(floorInput.value));
   });
 
   tartRoot.querySelector('#grindInput').addEventListener('input', (event) => {
