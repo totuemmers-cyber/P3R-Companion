@@ -97,6 +97,9 @@
 #tartarus .floor-aff-abs{background:rgba(46,125,50,0.2);color:#66bb6a}
 #tartarus .floor-tip{margin-top:0.75rem;padding:0.5rem;border-radius:4px;background:rgba(0,229,255,0.05);border:1px solid var(--cyan-dim);font-size:0.8rem;color:var(--text)}
 #tartarus .floor-tip strong{color:var(--cyan)}
+#tartarus .floor-monad-section{margin-top:0.75rem;padding:0.6rem;border-radius:4px;background:rgba(123,31,162,0.08);border:1px solid rgba(123,31,162,0.22)}
+#tartarus .floor-monad-label{color:#ce93d8!important}
+#tartarus .floor-monad-note{margin:0.2rem 0 0.45rem;color:var(--text-dim);font-size:0.78rem}
 
 #tartarus .fullmoon-section{max-width:1400px;margin:0 auto;padding:0 1rem 2rem;display:none}
 #tartarus .fullmoon-section.active{display:block}

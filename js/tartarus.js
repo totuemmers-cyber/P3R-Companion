@@ -123,6 +123,14 @@ const state = {
   view: 'database'
 };
 
+const MONAD_DOOR_BANDS = [
+  { floorMin: 119, floorMax: 142, label: 'Tziah 119F-142F', section: 'Tziah I' },
+  { floorMin: 145, floorMax: 168, label: 'Tziah 145F-168F', section: 'Tziah II' },
+  { floorMin: 173, floorMax: 197, label: 'Harabah 173F-197F', section: 'Harabah I' },
+  { floorMin: 199, floorMax: 224, label: 'Harabah 199F-224F', section: 'Harabah II' },
+  { floorMin: 227, floorMax: 251, label: 'Adamah 227F-251F', section: 'Adamah I' }
+];
+
 const RESIST_ORDER = {
   z: -2,
   Z: -2,
@@ -148,6 +156,50 @@ function escapeHtml(value) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function getMonadDoorBandForFloor(floor) {
+  return MONAD_DOOR_BANDS.find((band) => floor >= band.floorMin && floor <= band.floorMax) || null;
+}
+
+function getMonadDoorEnemiesForFloor(floor) {
+  const band = getMonadDoorBandForFloor(floor);
+  if (!band) {
+    return { band: null, enemies: [] };
+  }
+
+  const enemies = ALL_SHADOWS.filter(
+    (shadow) => shadow.type === 'monad-door' && shadow.area && shadow.area.startsWith(band.section)
+  ).sort((left, right) => left.lvl - right.lvl);
+
+  return { band, enemies };
+}
+
+function renderFloorAffinities(shadow, extraStyle = '') {
+  let html = `<div class="floor-enemy-affs"${extraStyle ? ` style="${extraStyle}"` : ''}>`;
+  const affMap = {
+    w: { label: 'WK', cls: 'floor-aff-wk' },
+    W: { label: 'WK', cls: 'floor-aff-wk' },
+    v: { label: 'WK', cls: 'floor-aff-wk' },
+    V: { label: 'WK', cls: 'floor-aff-wk' },
+    z: { label: 'WK!', cls: 'floor-aff-z' },
+    Z: { label: 'WK!', cls: 'floor-aff-z' },
+    s: { label: 'RS', cls: 'floor-aff-rs' },
+    S: { label: 'RS', cls: 'floor-aff-rs' },
+    t: { label: 'RS', cls: 'floor-aff-rs' },
+    T: { label: 'NU', cls: 'floor-aff-nu' },
+    n: { label: 'NU', cls: 'floor-aff-nu' },
+    r: { label: 'RP', cls: 'floor-aff-rp' },
+    d: { label: 'ABS', cls: 'floor-aff-abs' }
+  };
+  RESIST_KEYS.slice(0, 9).forEach((key, index) => {
+    const code = shadow.resists[key];
+    if (code && code !== '-' && code !== '_' && code !== 'u' && affMap[code]) {
+      html += `<span class="floor-aff ${affMap[code].cls}">${RESIST_LABELS[index]} ${affMap[code].label}</span>`;
+    }
+  });
+  html += '</div>';
+  return html;
 }
 
 function filterShadows() {
@@ -505,7 +557,7 @@ function renderFloorScout(floor) {
   const shadows = ALL_SHADOWS.filter(
     (shadow) =>
       shadow.block === block.id &&
-      (shadow.type === 'regular' || shadow.type === 'monad-passage' || shadow.type === 'monad-door') &&
+      shadow.type === 'regular' &&
       shadow.floorMin &&
       shadow.floorMax &&
       floor >= shadow.floorMin &&
@@ -518,29 +570,7 @@ function renderFloorScout(floor) {
     shadows.forEach((shadow) => {
       html += `<div class="floor-enemy"><div class="floor-enemy-name">${escapeHtml(
         shadow.name
-      )} (Lv ${shadow.lvl})</div><div class="floor-enemy-affs">`;
-      const affMap = {
-        w: { label: 'WK', cls: 'floor-aff-wk' },
-        W: { label: 'WK', cls: 'floor-aff-wk' },
-        v: { label: 'WK', cls: 'floor-aff-wk' },
-        V: { label: 'WK', cls: 'floor-aff-wk' },
-        z: { label: 'WK!', cls: 'floor-aff-z' },
-        Z: { label: 'WK!', cls: 'floor-aff-z' },
-        s: { label: 'RS', cls: 'floor-aff-rs' },
-        S: { label: 'RS', cls: 'floor-aff-rs' },
-        t: { label: 'RS', cls: 'floor-aff-rs' },
-        T: { label: 'NU', cls: 'floor-aff-nu' },
-        n: { label: 'NU', cls: 'floor-aff-nu' },
-        r: { label: 'RP', cls: 'floor-aff-rp' },
-        d: { label: 'ABS', cls: 'floor-aff-abs' }
-      };
-      RESIST_KEYS.slice(0, 9).forEach((key, index) => {
-        const code = shadow.resists[key];
-        if (code && code !== '-' && code !== '_' && code !== 'u' && affMap[code]) {
-          html += `<span class="floor-aff ${affMap[code].cls}">${RESIST_LABELS[index]} ${affMap[code].label}</span>`;
-        }
-      });
-      html += '</div></div>';
+      )} (Lv ${shadow.lvl})</div>${renderFloorAffinities(shadow)}</div>`;
     });
     html += '</div>';
 
@@ -565,10 +595,7 @@ function renderFloorScout(floor) {
   if (shadows.length > 0) {
     const totalExp = shadows.reduce((sum, shadow) => sum + (shadow.exp || 0), 0);
     const blockShadows = ALL_SHADOWS.filter(
-      (shadow) =>
-        shadow.block === block.id &&
-        (shadow.type === 'regular' || shadow.type === 'monad-passage' || shadow.type === 'monad-door') &&
-        shadow.exp
+      (shadow) => shadow.block === block.id && shadow.type === 'regular' && shadow.exp
     );
     const avgBlockExp =
       blockShadows.length > 0
@@ -580,6 +607,19 @@ function renderFloorScout(floor) {
     html += `<div class="floor-exp-summary"><span class="label">Floor EXP: </span><strong>${totalExp}</strong> total (${avgFloorExp}/shadow) <span class="floor-exp-ind">${indicator}</span></div>`;
   }
 
+  const monadDoorData = getMonadDoorEnemiesForFloor(floor);
+  if (monadDoorData.band && monadDoorData.enemies.length > 0) {
+    html += '<div class="floor-monad-section">';
+    html += '<div class="label floor-monad-label">Possible Monad Door minibosses</div>';
+    html += `<div class="floor-monad-note">Possible encounters for ${escapeHtml(monadDoorData.band.label)}.</div>`;
+    monadDoorData.enemies.forEach((shadow) => {
+      html += `<div class="floor-enemy"><div class="floor-enemy-name">${escapeHtml(
+        shadow.name
+      )} (Lv ${shadow.lvl})</div>${renderFloorAffinities(shadow)}</div>`;
+    });
+    html += '</div>';
+  }
+
   const gatekeepers = ALL_SHADOWS.filter(
     (shadow) => shadow.block === block.id && shadow.type === 'gatekeeper' && shadow.floorMin && shadow.floorMin >= floor
   ).sort((left, right) => left.floorMin - right.floorMin);
@@ -589,29 +629,8 @@ function renderFloorScout(floor) {
       '<div style="margin-top:0.75rem;padding:0.5rem;border-radius:4px;background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2)">';
     html += `<div style="font-size:0.8rem;color:var(--wk);font-weight:600">Next Gatekeeper: Floor ${nextGatekeeper.floorMin}</div>`;
     html += `<div style="font-size:0.85rem">${escapeHtml(nextGatekeeper.name)} (Lv ${nextGatekeeper.lvl})</div>`;
-    html += '<div class="floor-enemy-affs" style="margin-top:4px">';
-    const gatekeeperAffMap = {
-      w: { label: 'WK', cls: 'floor-aff-wk' },
-      W: { label: 'WK', cls: 'floor-aff-wk' },
-      v: { label: 'WK', cls: 'floor-aff-wk' },
-      V: { label: 'WK', cls: 'floor-aff-wk' },
-      z: { label: 'WK!', cls: 'floor-aff-z' },
-      Z: { label: 'WK!', cls: 'floor-aff-z' },
-      s: { label: 'RS', cls: 'floor-aff-rs' },
-      S: { label: 'RS', cls: 'floor-aff-rs' },
-      t: { label: 'RS', cls: 'floor-aff-rs' },
-      T: { label: 'NU', cls: 'floor-aff-nu' },
-      n: { label: 'NU', cls: 'floor-aff-nu' },
-      r: { label: 'RP', cls: 'floor-aff-rp' },
-      d: { label: 'ABS', cls: 'floor-aff-abs' }
-    };
-    RESIST_KEYS.slice(0, 9).forEach((key, index) => {
-      const code = nextGatekeeper.resists[key];
-      if (code && code !== '-' && code !== '_' && code !== 'u' && gatekeeperAffMap[code]) {
-        html += `<span class="floor-aff ${gatekeeperAffMap[code].cls}">${RESIST_LABELS[index]} ${gatekeeperAffMap[code].label}</span>`;
-      }
-    });
-    html += '</div></div>';
+    html += renderFloorAffinities(nextGatekeeper, 'margin-top:4px');
+    html += '</div>';
   }
 
   const rosterSet = getRosterSet();
