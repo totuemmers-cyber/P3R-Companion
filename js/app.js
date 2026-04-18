@@ -14,6 +14,7 @@ function createDefaultProfileState() {
   return {
     gameDate: { month: 4, day: 7 },
     playerLevel: 1,
+    currentFloor: 2,
     stats: { academics: 1, charm: 1, courage: 1 }
   };
 }
@@ -125,6 +126,8 @@ function bootstrap() {
 
     if (sectionName === 'tartarus') {
       initTartarus({ root, store });
+    } else if (sectionName === 'planner') {
+      initPlanner({ root, store });
     } else if (sectionName === 'profile') {
       initProfile({ root, store });
     } else if (sectionName === 'velvet') {
@@ -149,6 +152,34 @@ function bootstrap() {
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => switchSection(tab.dataset.section));
   });
+
+  window.p3rApp = {
+    switchSection,
+    openSocialLinks() {
+      switchSection('social-links');
+    },
+    openTartarusFloor(floor) {
+      if (Number.isFinite(floor)) {
+        store.dispatch({
+          type: 'PROFILE_SET_FLOOR',
+          payload: floor
+        });
+      }
+      switchSection('tartarus');
+    },
+    openShadowIntel(focusName = '') {
+      switchSection('tartarus');
+      if (typeof window.openShadowIntelViewExternal === 'function') {
+        window.openShadowIntelViewExternal(focusName);
+      }
+    },
+    openFusionTarget(targetName) {
+      switchSection('velvet');
+      if (typeof window.openVelvetFusionTarget === 'function') {
+        window.openVelvetFusionTarget(targetName);
+      }
+    }
+  };
 
   initClearableInputs();
   switchSection('profile');

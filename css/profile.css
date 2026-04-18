@@ -53,7 +53,7 @@
 }
 #profile .profile-grid{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:0.85rem;
 }
 #profile .profile-grid-stats{
@@ -103,7 +103,7 @@
 
 #profile .profile-use-grid{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:0.75rem;
 }
 #profile .profile-use-item{

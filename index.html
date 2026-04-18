@@ -6,6 +6,7 @@
 <title>P3R Companion — Tartarus &amp; Velvet Room &amp; Social Links</title>
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/profile.css">
+<link rel="stylesheet" href="css/planner.css">
 <link rel="stylesheet" href="css/tartarus.css">
 <link rel="stylesheet" href="css/velvet.css">
 <link rel="stylesheet" href="css/social-links.css">
@@ -17,6 +18,7 @@
   <div class="app-title">P3R <span>Companion</span></div>
   <div class="app-nav-tabs">
     <button class="app-nav-tab" data-section="profile">Profile</button>
+    <button class="app-nav-tab" data-section="planner">Planner</button>
     <button class="app-nav-tab" data-section="tartarus">Tartarus</button>
     <button class="app-nav-tab" data-section="velvet">Velvet Room</button>
     <button class="app-nav-tab" data-section="social-links">Social Links</button>
@@ -82,6 +84,10 @@
           <span class="profile-label">Player Level</span>
           <input id="profile-level" type="number" min="1" max="99" placeholder="Lv">
         </label>
+        <label class="profile-field">
+          <span class="profile-label">Current Floor</span>
+          <input id="profile-floor" type="number" min="2" max="264" placeholder="Floor">
+        </label>
       </div>
       <p class="profile-note">Used by Tartarus readiness checks, deadline pressure, and Full Moon timing.</p>
     </section>
@@ -120,8 +126,35 @@
           <span class="profile-use-title">Save Data</span>
           <span class="profile-use-copy">Your run state is exported once and stays consistent across every section.</span>
         </div>
+        <div class="profile-use-item">
+          <span class="profile-use-title">Planner</span>
+          <span class="profile-use-copy">The Planner uses your shared floor, date, level, stats, ranks, and roster to suggest the next best step.</span>
+        </div>
       </div>
     </section>
+  </div>
+</div>
+
+<!-- ===== PLANNER SECTION ===== -->
+<div id="planner" class="app-section">
+  <header class="planner-header">
+    <h1>Planner <span>P3R</span></h1>
+    <div class="planner-subtitle">A cross-system guide for what to do next in your current run.</div>
+  </header>
+
+  <div class="planner-main">
+    <section class="planner-state-strip" id="planner-state-strip"></section>
+
+    <div class="planner-hero-grid">
+      <section class="planner-card planner-card-primary" id="planner-primary-action"></section>
+      <section class="planner-card planner-card-warnings" id="planner-warnings"></section>
+    </div>
+
+    <div class="planner-grid">
+      <section class="planner-card" id="planner-day-night"></section>
+      <section class="planner-card" id="planner-tartarus"></section>
+      <section class="planner-card" id="planner-fusion"></section>
+    </div>
   </div>
 </div>
 
@@ -531,6 +564,7 @@
 <script src="data/requests-extra.js"></script>
 <script src="js/store.js"></script>
 <script src="js/profile.js"></script>
+<script src="js/planner.js"></script>
 <script src="js/tartarus.js"></script>
 <script src="js/velvet.js"></script>
 <script src="js/social-links.js"></script>

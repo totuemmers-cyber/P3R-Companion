@@ -43,6 +43,11 @@ function renderProfile() {
     levelInput.value = String(profile.playerLevel);
   }
 
+  const floorInput = profileRoot.querySelector('#profile-floor');
+  if (floorInput) {
+    floorInput.value = String(profile.currentFloor);
+  }
+
   ['academics', 'charm', 'courage'].forEach((stat) => {
     const select = profileRoot.querySelector(`#profile-${stat}`);
     if (select && !select.dataset.init) {
@@ -79,6 +84,18 @@ function onLevelChange() {
   });
 }
 
+function onFloorChange() {
+  const floorInput = profileRoot.querySelector('#profile-floor');
+  const value = Number(floorInput.value);
+  if (!Number.isFinite(value) || value < 2 || value > 264) {
+    return;
+  }
+  profileStore.dispatch({
+    type: 'PROFILE_SET_FLOOR',
+    payload: value
+  });
+}
+
 function onStatChange(event) {
   const stat = event.target.id.replace('profile-', '');
   profileStore.dispatch({
@@ -102,6 +119,7 @@ function initProfile({ root, store }) {
   profileRoot.querySelector('#profile-month')?.addEventListener('change', onDateChange);
   profileRoot.querySelector('#profile-day')?.addEventListener('change', onDateChange);
   profileRoot.querySelector('#profile-level')?.addEventListener('change', onLevelChange);
+  profileRoot.querySelector('#profile-floor')?.addEventListener('change', onFloorChange);
   ['academics', 'charm', 'courage'].forEach((stat) => {
     profileRoot.querySelector(`#profile-${stat}`)?.addEventListener('change', onStatChange);
   });

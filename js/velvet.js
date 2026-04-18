@@ -1498,6 +1498,14 @@ function closeChainPlanner() {
   velvetRoot.querySelector('#chain-planner-card').style.display = 'none';
 }
 
+function openFusionPlannerTarget(targetName) {
+  if (!initialized || !targetName || !PERSONAS[targetName]) {
+    return;
+  }
+  switchTab('fusion');
+  showChainPlanner(targetName);
+}
+
 function switchTab(tab) {
   velvetRoot.querySelectorAll('.tab-btn').forEach((button) => {
     button.classList.toggle('active', button.dataset.tab === tab);
@@ -1686,5 +1694,6 @@ function initVelvet({ root, store }) {
   renderSpecialFusions();
 }
 
+window.openVelvetFusionTarget = openFusionPlannerTarget;
 window.initVelvet = initVelvet;
 })();

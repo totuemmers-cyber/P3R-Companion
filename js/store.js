@@ -99,6 +99,7 @@ function sanitizeProfile(rawProfile, createDefaultProfileState) {
   return {
     gameDate: sanitizeDate(rawProfile.gameDate, defaults.gameDate),
     playerLevel: clampInt(rawProfile.playerLevel, 1, 99, defaults.playerLevel),
+    currentFloor: clampInt(rawProfile.currentFloor, 2, 264, defaults.currentFloor),
     stats: sanitizeStats(rawProfile.stats, defaults.stats)
   };
 }
@@ -301,6 +302,14 @@ function createStore(options) {
           profile: {
             ...currentState.profile,
             playerLevel: clampInt(action.payload, 1, 99, currentState.profile.playerLevel)
+          }
+        };
+      case 'PROFILE_SET_FLOOR':
+        return {
+          ...currentState,
+          profile: {
+            ...currentState.profile,
+            currentFloor: clampInt(action.payload, 2, 264, currentState.profile.currentFloor)
           }
         };
       case 'PROFILE_SET_STAT': {

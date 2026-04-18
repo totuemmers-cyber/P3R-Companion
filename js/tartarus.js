@@ -218,6 +218,7 @@ function getCurrentProfile() {
     tartStore?.getState()?.profile || {
       gameDate: { month: 4, day: 7 },
       playerLevel: 1,
+      currentFloor: 2,
       stats: { academics: 1, charm: 1, courage: 1 }
     }
   );
@@ -587,6 +588,18 @@ function openShadowIntelView(focusName = '') {
   syncIntelControlsFromState();
   renderTable();
   showTartarusView('shadowintel');
+}
+
+function syncFloorInputFromProfile() {
+  const floorInput = tartRoot?.querySelector('#floorInput');
+  if (!floorInput) {
+    return;
+  }
+  const targetFloor = getCurrentProfile().currentFloor;
+  if (document.activeElement === floorInput && floorInput.value && Number(floorInput.value) !== targetFloor) {
+    return;
+  }
+  floorInput.value = targetFloor ? String(targetFloor) : '';
 }
 
 function filterShadows() {
@@ -1600,7 +1613,8 @@ function initTartarus({ root, store }) {
 
   renderTable();
   renderFullMoon();
-  renderFloorScout(null);
+  syncFloorInputFromProfile();
+  renderFloorScout(getCurrentProfile().currentFloor);
   showTartarusView('database');
 
   tartRoot.querySelector('#tableBody').addEventListener('click', (event) => {
@@ -1691,6 +1705,14 @@ function initTartarus({ root, store }) {
   });
 
   tartRoot.querySelector('#floorInput').addEventListener('input', (event) => {
+    const nextFloor = Number(event.target.value);
+    if (Number.isFinite(nextFloor) && nextFloor >= 2 && nextFloor <= 264) {
+      tartStore.dispatch({
+        type: 'PROFILE_SET_FLOOR',
+        payload: nextFloor
+      });
+      return;
+    }
     renderFloorScout(Number(event.target.value));
   });
 
@@ -1728,10 +1750,12 @@ function initTartarus({ root, store }) {
   });
 
   tartStore.subscribe(() => {
+    syncFloorInputFromProfile();
     const floorInput = tartRoot.querySelector('#floorInput');
     renderFloorScout(Number(floorInput.value));
   });
 }
 
+window.openShadowIntelViewExternal = openShadowIntelView;
 window.initTartarus = initTartarus;
 })();

@@ -67,6 +67,10 @@ body::before{
   color:#7dd3fc;border-color:#7dd3fc;
   background:rgba(125,211,252,0.08);
 }
+.app-nav-tab.active[data-section="planner"]{
+  color:#5eead4;border-color:#5eead4;
+  background:rgba(94,234,212,0.08);
+}
 .app-nav-tab.active[data-section="velvet"]{
   color:var(--gold);border-color:var(--gold);
   background:rgba(255,213,79,0.08);
