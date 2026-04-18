@@ -121,45 +121,49 @@
   </div>
 
   <div class="main" id="mainView">
-    <div class="table-wrap">
-      <div class="result-count" id="resultCount"></div>
-      <table class="shadow-table">
-        <thead id="tableHead">
-          <tr>
-            <th data-col="name">Name</th>
-            <th data-col="lvl">Lv</th>
-            <th data-col="race">Arcana</th>
-            <th data-col="area">Area</th>
-            <th data-col="type">Type</th>
-            <th data-col="sla" title="Slash">Sla</th>
-            <th data-col="str" title="Strike">Str</th>
-            <th data-col="pie" title="Pierce">Pie</th>
-            <th data-col="fir" title="Fire">Fir</th>
-            <th data-col="ice" title="Ice">Ice</th>
-            <th data-col="ele" title="Elec">Ele</th>
-            <th data-col="win" title="Wind">Win</th>
-            <th data-col="lig" title="Light">Lig</th>
-            <th data-col="dar" title="Dark">Dar</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
+    <div class="content-column">
+      <div class="table-wrap">
+        <div class="result-count" id="resultCount"></div>
+        <table class="shadow-table">
+          <thead id="tableHead">
+            <tr>
+              <th data-col="name">Name</th>
+              <th data-col="lvl">Lv</th>
+              <th data-col="race">Arcana</th>
+              <th data-col="area">Area</th>
+              <th data-col="type">Type</th>
+              <th data-col="sla" title="Slash">Sla</th>
+              <th data-col="str" title="Strike">Str</th>
+              <th data-col="pie" title="Pierce">Pie</th>
+              <th data-col="fir" title="Fire">Fir</th>
+              <th data-col="ice" title="Ice">Ice</th>
+              <th data-col="ele" title="Elec">Ele</th>
+              <th data-col="win" title="Wind">Win</th>
+              <th data-col="lig" title="Light">Lig</th>
+              <th data-col="dar" title="Dark">Dar</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="aux-panels">
+        <div class="floor-scout aux-panel">
+          <h2>Grinding Guide</h2>
+          <input class="floor-input" id="grindInput" type="number" placeholder="Your level" min="1" max="99">
+          <div class="floor-info" id="grindInfo"></div>
+        </div>
+        <div class="floor-scout aux-panel">
+          <h2>Loot Finder</h2>
+          <input class="floor-input" id="lootSearch" type="text" placeholder="Search item name..." style="width:100%">
+          <div class="floor-info" id="lootInfo"></div>
+        </div>
+      </div>
     </div>
     <div class="sidebar">
       <div class="floor-scout">
         <h2>Floor Scout</h2>
         <input class="floor-input" id="floorInput" type="number" placeholder="Enter floor #" min="2" max="264">
         <div class="floor-info" id="floorInfo"></div>
-      </div>
-      <div class="floor-scout" style="margin-top:1rem">
-        <h2>Grinding Guide</h2>
-        <input class="floor-input" id="grindInput" type="number" placeholder="Your level" min="1" max="99">
-        <div class="floor-info" id="grindInfo"></div>
-      </div>
-      <div class="floor-scout" style="margin-top:1rem">
-        <h2>Loot Finder</h2>
-        <input class="floor-input" id="lootSearch" type="text" placeholder="Search item name..." style="width:100%">
-        <div class="floor-info" id="lootInfo"></div>
       </div>
     </div>
   </div>

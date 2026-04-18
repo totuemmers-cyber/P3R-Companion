@@ -202,6 +202,17 @@ function renderFloorAffinities(shadow, extraStyle = '') {
   return html;
 }
 
+function renderGatekeeperPanel(title, shadow, options = {}) {
+  const accentStyle = options.accentStyle || 'background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2)';
+  const titleColor = options.titleColor || 'var(--wk)';
+  let html = `<div class="floor-gatekeeper-panel" style="${accentStyle}">`;
+  html += `<div style="font-size:0.8rem;color:${titleColor};font-weight:600">${escapeHtml(title)}</div>`;
+  html += `<div style="font-size:0.85rem">${escapeHtml(shadow.name)} (Lv ${shadow.lvl})</div>`;
+  html += renderFloorAffinities(shadow, 'margin-top:4px');
+  html += '</div>';
+  return html;
+}
+
 function filterShadows() {
   let list = ALL_SHADOWS;
 
@@ -621,16 +632,25 @@ function renderFloorScout(floor) {
   }
 
   const gatekeepers = ALL_SHADOWS.filter(
-    (shadow) => shadow.block === block.id && shadow.type === 'gatekeeper' && shadow.floorMin && shadow.floorMin >= floor
-  ).sort((left, right) => left.floorMin - right.floorMin);
-  if (gatekeepers.length > 0) {
-    const nextGatekeeper = gatekeepers[0];
-    html +=
-      '<div style="margin-top:0.75rem;padding:0.5rem;border-radius:4px;background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2)">';
-    html += `<div style="font-size:0.8rem;color:var(--wk);font-weight:600">Next Gatekeeper: Floor ${nextGatekeeper.floorMin}</div>`;
-    html += `<div style="font-size:0.85rem">${escapeHtml(nextGatekeeper.name)} (Lv ${nextGatekeeper.lvl})</div>`;
-    html += renderFloorAffinities(nextGatekeeper, 'margin-top:4px');
-    html += '</div>';
+    (shadow) => shadow.block === block.id && shadow.type === 'gatekeeper' && shadow.floorMin
+  ).sort((left, right) => left.floorMin - right.floorMin || left.lvl - right.lvl);
+  const currentGatekeepers = gatekeepers.filter((shadow) => shadow.floorMin === floor);
+  const upcomingGatekeeper = gatekeepers.find((shadow) => shadow.floorMin > floor) || null;
+
+  if (currentGatekeepers.length > 0) {
+    currentGatekeepers.forEach((shadow) => {
+      html += renderGatekeeperPanel(`Gatekeeper on this floor: Floor ${shadow.floorMin}`, shadow, {
+        accentStyle: 'background:rgba(255,23,68,0.12);border:1px solid rgba(255,23,68,0.32)',
+        titleColor: 'var(--wk)'
+      });
+    });
+  }
+
+  if (upcomingGatekeeper) {
+    html += renderGatekeeperPanel(`Next Gatekeeper: Floor ${upcomingGatekeeper.floorMin}`, upcomingGatekeeper, {
+      accentStyle: 'background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.2)',
+      titleColor: 'var(--wk)'
+    });
   }
 
   const rosterSet = getRosterSet();

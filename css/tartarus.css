@@ -29,8 +29,11 @@
 #tartarus select.filter-select option{background:#0d1229;color:var(--text)}
 
 #tartarus .main{max-width:1400px;margin:0 auto;padding:0 1rem 2rem;display:flex;gap:1rem}
+#tartarus .content-column{flex:1;min-width:0;display:flex;flex-direction:column;gap:1rem}
 #tartarus .table-wrap{flex:1;overflow-x:auto}
 #tartarus .sidebar{width:300px;flex-shrink:0}
+#tartarus .aux-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+#tartarus .aux-panel{position:static;top:auto}
 
 #tartarus .shadow-table{width:100%;border-collapse:collapse;background:var(--glass);border:1px solid var(--glass-border);border-radius:6px;overflow:hidden}
 #tartarus .shadow-table thead{position:sticky;top:0;z-index:10}
@@ -100,6 +103,7 @@
 #tartarus .floor-monad-section{margin-top:0.75rem;padding:0.6rem;border-radius:4px;background:rgba(123,31,162,0.08);border:1px solid rgba(123,31,162,0.22)}
 #tartarus .floor-monad-label{color:#ce93d8!important}
 #tartarus .floor-monad-note{margin:0.2rem 0 0.45rem;color:var(--text-dim);font-size:0.78rem}
+#tartarus .floor-gatekeeper-panel{margin-top:0.75rem;padding:0.5rem;border-radius:4px}
 
 #tartarus .fullmoon-section{max-width:1400px;margin:0 auto;padding:0 1rem 2rem;display:none}
 #tartarus .fullmoon-section.active{display:block}
@@ -168,5 +172,5 @@
 #tartarus .loot-enemy{color:var(--text)}
 #tartarus .loot-area{color:var(--text-dim);font-size:0.72rem}
 
-@media(max-width:900px){#tartarus .main{flex-direction:column}#tartarus .sidebar{width:100%;order:-1}#tartarus .floor-scout{position:static}}
+@media(max-width:900px){#tartarus .main{flex-direction:column}#tartarus .sidebar{width:100%;order:-1}#tartarus .aux-panels{grid-template-columns:1fr}#tartarus .floor-scout{position:static}}
 @media(max-width:768px){#tartarus .header h1{font-size:2rem;letter-spacing:0.15em}#tartarus .controls{padding:0.5rem}#tartarus .shadow-table{font-size:0.8rem}#tartarus .shadow-table th,#tartarus .shadow-table td{padding:0.3rem}}
