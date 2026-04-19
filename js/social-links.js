@@ -218,28 +218,20 @@ function slScoreLink(arcana) {
   const factors = [];
   const fusion = slGetFusionData(arcana);
 
-  const fusionScore = Math.round((fusion.pairs / 12) * 15);
-  const personaBonus = Math.round((fusion.personas / 12) * 10);
+  const fusionScore = Math.round((fusion.pairs / 12) * 4);
+  const personaBonus = Math.round((fusion.personas / 12) * 3);
   score += fusionScore + personaBonus;
-  if (fusionScore >= 10) {
+  if (fusionScore >= 3) {
     factors.push(`High fusion value (${fusion.pairs} recipe pairs)`);
   }
-  if (personaBonus >= 5) {
+  if (personaBonus >= 2) {
     factors.push(`${fusion.personas} personas in this arcana`);
-  }
-
-  const rankScore = Math.round((10 - currentRank) * 2);
-  score += rankScore;
-  if (currentRank === 0) {
-    factors.push('Not started - high growth potential');
-  } else if (currentRank <= 3) {
-    factors.push('Early ranks - big gains ahead');
   }
 
   if (link.endDate) {
     const daysLeft = slDaysBetween(slState.gameDate, link.endDate);
     if (daysLeft > 0 && daysLeft <= 30) {
-      const urgency = Math.round(15 * (1 - daysLeft / 30));
+      const urgency = Math.round(4 * (1 - daysLeft / 30));
       score += urgency;
       factors.push(`Window closing in ~${daysLeft} days`);
     } else if (daysLeft <= 0) {
@@ -249,7 +241,7 @@ function slScoreLink(arcana) {
   }
 
   if (link.availableDays.length > 0 && link.availableDays.length <= 2) {
-    score += 5;
+    score += link.availableDays.length === 1 ? 4 : 3;
     factors.push(
       `Only available ${link.availableDays.length} day${link.availableDays.length > 1 ? 's' : ''}/week`
     );
@@ -260,26 +252,21 @@ function slScoreLink(arcana) {
     const requirements = Object.entries(link.statRequirements).map(
       ([stat, requirement]) => `${SOCIAL_STATS[stat][requirement - 1]} ${stat}`
     );
-    factors.push(`LOCKED - requires ${requirements.join(', ')}`);
-  }
-
-  if (currentRank >= 7) {
-    score += [0, 0, 0, 0, 0, 0, 0, 3, 6, 10][currentRank];
-    factors.push(`Almost maxed - rank ${currentRank}/10`);
+      factors.push(`LOCKED - requires ${requirements.join(', ')}`);
   }
 
   if (link.timeSlot === 'evening') {
-    score += 3;
+    score += 1;
     factors.push('Evening slot (does not use daytime)');
   }
 
   const rosterMatch = slGetRosterMatchForArcana(arcana);
   const roster = getRosterSet();
   if (rosterMatch) {
-    score += 5;
+    score += 2;
     factors.push(`Have ${rosterMatch} for arcana bonus`);
   } else if (roster.size > 0) {
-    score -= 2;
+    score -= 1;
     factors.push(`No ${arcana} persona in roster`);
   }
 
@@ -707,68 +694,91 @@ function slEstimateRemainingTimeSlots(startDate = slState.gameDate, endDate = SL
 }
 
 function slGetTodayPriority({
-  score,
   availableToday,
   actionableToday,
   deadlineInfo,
   isRare,
-  rank,
+  link,
   noPersona,
-  missingStats
+  setupNeeded,
+  completion,
+  score
 }) {
-  let total = Math.max(0, score);
+  if (!actionableToday) {
+    return -500 + Math.max(0, completion.pressure);
+  }
 
-  if (availableToday) {
-    total += 40;
-  } else if (actionableToday) {
-    total += 30;
-  } else {
-    total -= 40;
+  let total = 220 + Math.max(0, completion.pressure) * 3;
+  const availableDayCount = Array.isArray(link?.availableDays) && link.availableDays.length ? link.availableDays.length : 6;
+
+  if (completion.slack < 0) {
+    total += 120;
+  } else if (completion.slack <= 0) {
+    total += 92;
+  } else if (completion.slack <= 2) {
+    total += 68;
+  } else if (completion.slack <= 4) {
+    total += 38;
+  } else if (completion.slack <= 8) {
+    total += 16;
   }
 
   if (deadlineInfo.isSoon) {
-    total += actionableToday ? 12 : 2;
+    total += typeof deadlineInfo.daysLeft === 'number'
+      ? Math.max(12, 36 - Math.min(deadlineInfo.daysLeft, 24))
+      : 18;
   }
-  if (isRare && actionableToday) {
-    total += 6;
+
+  if (isRare) {
+    if (availableDayCount === 1) {
+      total += 28;
+    } else if (availableDayCount === 2) {
+      total += 22;
+    } else {
+      total += 14;
+    }
   }
-  if (rank === 0 && actionableToday) {
-    total += 4;
-  }
-  if (missingStats.length) {
-    total -= 20;
+
+  if (setupNeeded) {
+    total -= 6;
   }
   if (noPersona) {
-    total -= 4;
+    total -= 2;
   }
 
-  return total;
+  return total + Math.min(8, Math.max(0, Math.round(score / 2)));
 }
 
-function slGetWeeklyPressure({ deadlineInfo, isRare, rank, missingStats, setupNeeded, actionableToday }) {
-  let total = 0;
+function slGetWeeklyPressure({ deadlineInfo, isRare, rank, missingStats, setupNeeded, actionableToday, completion, link }) {
+  let total = Math.max(0, completion.pressure);
+  const availableDayCount = Array.isArray(link?.availableDays) && link.availableDays.length ? link.availableDays.length : 6;
 
   if (deadlineInfo.isSoon) {
     if (typeof deadlineInfo.daysLeft === 'number') {
-      total += Math.max(10, 32 - Math.min(deadlineInfo.daysLeft, 22));
+      total += Math.max(12, 34 - Math.min(deadlineInfo.daysLeft, 22));
     } else {
       total += 18;
     }
   }
   if (isRare) {
-    total += 18;
+    total += availableDayCount === 1 ? 22 : availableDayCount === 2 ? 18 : 10;
   }
   if (rank === 0) {
     total += 8;
   }
+  if (completion.slack <= 2) {
+    total += 26;
+  } else if (completion.slack <= 4) {
+    total += 14;
+  }
   if (missingStats.length) {
-    total += 10;
+    total += completion.criticalPath ? 16 : 10;
   }
   if (setupNeeded) {
-    total += 8;
+    total += completion.criticalPath ? 14 : 8;
   }
   if (!actionableToday) {
-    total += 4;
+    total += 6;
   }
 
   return total;
@@ -811,10 +821,16 @@ function slGetMyLinksTags(model) {
     tags.push('Available today');
   }
 
+  if (model.completion.slack <= 2) {
+    tags.push('Tight schedule');
+  } else if (model.completion.slack >= 8 && !model.deadlineInfo.isSoon && !model.isRare) {
+    tags.push('Safe to delay');
+  }
+
   if (!model.actionableToday && (model.isRare || model.deadlineInfo.isSoon)) {
     tags.push('Watch later this week');
   } else if (model.isRare) {
-    tags.push('Limited days');
+    tags.push('Rare slot');
   }
 
   if (model.deadlineInfo.isSoon) {
@@ -852,24 +868,6 @@ function slBuildLinkModel(arcana, date = slState.gameDate) {
   const schoolLink = !!link?.schoolLink;
   const sundayLink = !!link?.availableDays?.includes(0);
   const score = Number.isFinite(scoreResult.score) ? scoreResult.score : 0;
-  const todayPriority = slGetTodayPriority({
-    score,
-    availableToday,
-    actionableToday,
-    deadlineInfo,
-    isRare,
-    rank,
-    noPersona,
-    missingStats
-  });
-  const weeklyPressure = slGetWeeklyPressure({
-    deadlineInfo,
-    isRare,
-    rank,
-    missingStats,
-    setupNeeded,
-    actionableToday
-  });
   const completion = slGetCompletionMetrics({
     arcana,
     link,
@@ -880,6 +878,27 @@ function slBuildLinkModel(arcana, date = slState.gameDate) {
     setupNeeded,
     deadlineInfo,
     date
+  });
+  const todayPriority = slGetTodayPriority({
+    availableToday,
+    actionableToday,
+    deadlineInfo,
+    isRare,
+    link,
+    noPersona,
+    setupNeeded,
+    completion,
+    score
+  });
+  const weeklyPressure = slGetWeeklyPressure({
+    deadlineInfo,
+    isRare,
+    rank,
+    missingStats,
+    setupNeeded,
+    actionableToday,
+    completion,
+    link
   });
 
   const model = {
@@ -927,8 +946,11 @@ function slCompareModels(left, right) {
   }
 
   return (
+    Number(right.actionableToday) - Number(left.actionableToday) ||
     right.todayPriority - left.todayPriority ||
     right.weeklyPressure - left.weeklyPressure ||
+    left.completion.slack - right.completion.slack ||
+    right.score - left.score ||
     left.link.character.localeCompare(right.link.character)
   );
 }
@@ -961,16 +983,23 @@ function slGetRecommendationWhy(model) {
 
   const reasons = [];
 
-  if (model.actionableToday && !model.availableToday) {
-    reasons.push('Ready to start right now.');
-  } else if (model.availableToday) {
-    reasons.push(`Open ${slGetSlotLabel(model.link.timeSlot).toLowerCase()} at ${model.link.location}.`);
+  if (model.completion.slack <= 0) {
+    reasons.push(`Only ${model.completion.remainingWindows} safe window${model.completion.remainingWindows === 1 ? '' : 's'} remain for ${model.completion.requiredSlots} rank events.`);
+  } else if (model.completion.slack <= 2) {
+    reasons.push(`Tight route: ${model.completion.remainingWindows} windows left for ${model.completion.requiredSlots} rank events.`);
+  } else if (model.completion.slack <= 5) {
+    reasons.push(`Less schedule slack than most links right now.`);
   }
   if (model.deadlineInfo.isSoon && model.actionableToday && model.deadlineInfo.label) {
     reasons.push(model.deadlineInfo.label);
   }
   if (model.isRare && model.actionableToday) {
     reasons.push(`Only ${model.link.availableDays.length} day${model.link.availableDays.length === 1 ? '' : 's'} each week.`);
+  }
+  if (model.actionableToday && !model.availableToday) {
+    reasons.push('Ready to start right now.');
+  } else if (model.availableToday) {
+    reasons.push(`Open ${slGetSlotLabel(model.link.timeSlot).toLowerCase()} at ${model.link.location}.`);
   }
   if (model.noPersona) {
     reasons.push(`Bring a ${model.arcana} persona next time.`);
@@ -1453,7 +1482,7 @@ function slRenderFocusModeUi() {
   if (note) {
     note.textContent = slIsCompletionFocus()
       ? `Completion Focus protects the ${SL_COMPLETION_REWARD} route by prioritizing links that are hardest to finish before ${slFormatDate(SL_COMPLETION_FINAL_DATE)}.`
-      : 'Balanced mode keeps Social Links focused on strong immediate picks while still respecting urgency and scarcity.';
+      : 'Balanced mode now recommends only actionable links and ranks them mainly by remaining windows, scarcity, and deadline pressure.';
   }
 
   const titleMap = slIsCompletionFocus()
@@ -1487,7 +1516,7 @@ function slRenderFocusModeUi() {
   if (recommendationNote) {
     recommendationNote.textContent = slIsCompletionFocus()
       ? `Completion Focus re-ranks this tab around links that are most likely to block the ${SL_COMPLETION_REWARD} path. These are minimum-slot estimates and do not simulate hidden affinity points.`
-      : 'Scores reflect fusion value, rank potential, availability urgency, and stat access. Carry a persona of the matching arcana for bonus points.';
+      : 'Default recommendations now prioritize time trouble first: few remaining windows, limited availability, and hard deadlines. Fusion value only breaks close ties.';
   }
 }
 
