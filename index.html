@@ -552,6 +552,14 @@
           <h2>At Risk Soon</h2>
           <div id="sl-risk-board" class="sl-risk-board"></div>
         </div>
+        <div class="card">
+          <h2>Unlock Next</h2>
+          <div id="sl-unlock-next" class="sl-unlock-next"></div>
+        </div>
+        <div class="card">
+          <h2>Premium Slots This Week</h2>
+          <div id="sl-premium-week" class="sl-premium-week"></div>
+        </div>
       </div>
       <div class="card" id="sl-planning-card">
         <h2>Planning Focus</h2>
@@ -564,6 +572,14 @@
       <div class="card">
         <h2>All Social Links</h2>
         <div class="sl-filters">
+          <input id="sl-links-search" class="sl-links-search" type="search" placeholder="Search character or arcana..." />
+          <select id="sl-links-sort">
+            <option value="urgency">Sort: Urgency</option>
+            <option value="today">Sort: Today</option>
+            <option value="rank-asc">Sort: Rank low to high</option>
+            <option value="rank-desc">Sort: Rank high to low</option>
+            <option value="alpha">Sort: Alphabetical</option>
+          </select>
           <select id="sl-filter-status">
             <option value="">All Links</option>
             <option value="active">In Progress</option>
@@ -577,6 +593,16 @@
             <option value="evening">Evening</option>
           </select>
         </div>
+        <div class="sl-filter-chips" id="sl-filter-chips">
+          <button class="sl-filter-chip active" data-filter="">All</button>
+          <button class="sl-filter-chip" data-filter="actionable">Actionable today</button>
+          <button class="sl-filter-chip" data-filter="setup">Needs setup</button>
+          <button class="sl-filter-chip" data-filter="deadline">Deadline soon</button>
+          <button class="sl-filter-chip" data-filter="stat-gated">Stat gated</button>
+          <button class="sl-filter-chip" data-filter="no-persona">No matching persona</button>
+          <button class="sl-filter-chip" data-filter="school">School link</button>
+          <button class="sl-filter-chip" data-filter="sunday">Sunday link</button>
+        </div>
         <div id="sl-links-grid" class="sl-links-grid"></div>
       </div>
     </div>
@@ -589,10 +615,17 @@
           <h2 id="sl-cal-title">Week of ...</h2>
           <button class="btn" id="sl-cal-next">Next Week &rarr;</button>
         </div>
+        <div class="sl-cal-controls">
+          <button class="sl-cal-mode-btn active" data-mode="all">All available</button>
+          <button class="sl-cal-mode-btn" data-mode="urgent">Urgent only</button>
+          <button class="sl-cal-mode-btn" data-mode="actionable">Actionable only</button>
+        </div>
         <div id="sl-calendar-grid" class="sl-calendar-grid"></div>
         <div class="sl-cal-legend">
           <span class="sl-legend-day">&#9679; Daytime</span>
           <span class="sl-legend-evening">&#9679; Evening</span>
+          <span class="sl-legend-premium">&#9670; Rare slot</span>
+          <span class="sl-legend-start">Start = ready to begin</span>
         </div>
       </div>
     </div>
