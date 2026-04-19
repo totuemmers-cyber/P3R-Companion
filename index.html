@@ -436,7 +436,13 @@
     <!-- DASHBOARD TAB -->
     <div class="sl-tab-content active" id="sl-tab-dashboard">
       <div class="card" id="sl-status-card">
-        <h2>Current Status</h2>
+        <div class="sl-card-head">
+          <h2>Current Status</h2>
+          <div class="sl-focus-toggle" id="sl-focus-toggle">
+            <button class="sl-focus-btn active" data-focus="balanced">Balanced</button>
+            <button class="sl-focus-btn" data-focus="completion">Completion Focus</button>
+          </div>
+        </div>
         <div class="sl-status-summary" id="sl-status-summary">
           <div class="sl-status-pill">
             <span class="sl-status-pill-label">Date</span>
@@ -455,41 +461,43 @@
             <span class="sl-status-pill-value" id="sl-status-courage">1</span>
           </div>
         </div>
+        <p class="sl-note" id="sl-focus-note">Balanced mode keeps Social Links focused on strong immediate picks while still respecting urgency and scarcity.</p>
       </div>
       <div class="card" id="sl-run-state-card"></div>
       <div class="card" id="sl-progress-card">
-        <h2>Progress Overview</h2>
+        <h2 id="sl-progress-title">Progress Overview</h2>
+        <div id="sl-progress-summary"></div>
         <div id="sl-progress-grid" class="sl-progress-grid"></div>
       </div>
       <div class="card" id="sl-recommendations-card">
-        <h2>Today's Recommendations</h2>
+        <h2 id="sl-recommendations-title">Today's Recommendations</h2>
         <div class="sl-time-toggle">
           <button class="sl-time-btn active" data-slot="day">Daytime</button>
           <button class="sl-time-btn" data-slot="evening">Evening</button>
         </div>
         <div id="sl-recommendations" class="sl-recommendations"></div>
-        <p class="sl-note">Scores reflect fusion value, rank potential, availability urgency, and stat access. Carry a persona of the matching arcana for bonus points.</p>
+        <p class="sl-note" id="sl-recommendations-note">Scores reflect fusion value, rank potential, availability urgency, and stat access. Carry a persona of the matching arcana for bonus points.</p>
       </div>
       <div class="sl-dashboard-grid">
         <div class="card">
-          <h2>Best Use of Time</h2>
+          <h2 id="sl-next-actions-title">Best Use of Time</h2>
           <div id="sl-next-actions" class="sl-next-actions"></div>
         </div>
         <div class="card">
-          <h2>At Risk Soon</h2>
+          <h2 id="sl-risk-title">At Risk Soon</h2>
           <div id="sl-risk-board" class="sl-risk-board"></div>
         </div>
         <div class="card">
-          <h2>Unlock Next</h2>
+          <h2 id="sl-unlock-title">Unlock Next</h2>
           <div id="sl-unlock-next" class="sl-unlock-next"></div>
         </div>
         <div class="card">
-          <h2>Premium Slots This Week</h2>
+          <h2 id="sl-premium-title">Premium Slots This Week</h2>
           <div id="sl-premium-week" class="sl-premium-week"></div>
         </div>
       </div>
       <div class="card" id="sl-planning-card">
-        <h2>Planning Focus</h2>
+        <h2 id="sl-planning-title">Planning Focus</h2>
         <div id="sl-planning-insights" class="sl-planning-insights"></div>
       </div>
     </div>

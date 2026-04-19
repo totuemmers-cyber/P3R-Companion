@@ -113,6 +113,45 @@
   color: var(--text-bright);
   margin-bottom: 0.6rem;
 }
+.sl-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:0.9rem;
+  margin-bottom:0.8rem;
+}
+.sl-card-head h2{
+  margin-bottom:0;
+}
+.sl-focus-toggle{
+  display:inline-flex;
+  gap:0.35rem;
+  padding:0.22rem;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(0,0,0,0.22);
+}
+.sl-focus-btn{
+  border:0;
+  border-radius:999px;
+  padding:0.45rem 0.8rem;
+  background:transparent;
+  color:var(--text-dim);
+  font-family:var(--font-app);
+  font-size:0.76rem;
+  font-weight:700;
+  letter-spacing:0.03em;
+  cursor:pointer;
+  transition:background 0.2s,color 0.2s,transform 0.2s;
+}
+.sl-focus-btn:hover{
+  color:var(--text-bright);
+}
+.sl-focus-btn.active{
+  background:var(--accent-dim);
+  color:var(--accent);
+  box-shadow:0 0 0 1px rgba(68,216,255,0.18) inset;
+}
 
 /* ===== DASHBOARD: Status bar ===== */
 .sl-status-bar {
@@ -160,6 +199,28 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 0.75rem;
+}
+.sl-progress-summary-row{
+  margin-bottom:0.75rem;
+}
+.sl-completion-summary{
+  padding:0.9rem;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(0,0,0,0.16);
+}
+.sl-completion-summary.tight{
+  border-color:rgba(255,193,7,0.2);
+  background:rgba(255,193,7,0.06);
+}
+.sl-completion-summary.risk{
+  border-color:rgba(255,82,82,0.2);
+  background:rgba(255,82,82,0.06);
+}
+.sl-completion-copy{
+  font-size:0.82rem;
+  line-height:1.5;
+  color:var(--text-dim);
 }
 
 .sl-status-pill {
@@ -891,6 +952,34 @@
   line-height:1.45;
 }
 .sl-focus-note{margin-top:0.25rem}
+.sl-time-budget-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0.55rem;
+}
+.sl-time-budget-item{
+  display:flex;
+  flex-direction:column;
+  gap:0.22rem;
+  padding:0.65rem 0.75rem;
+  border-radius:7px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.05);
+}
+.sl-time-budget-label{
+  font-size:0.72rem;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  color:var(--text-dim);
+}
+.sl-time-budget-value{
+  font-family:var(--font-app);
+  font-size:1rem;
+  color:var(--text-bright);
+}
+.sl-time-budget-note{
+  margin-top:0.7rem;
+}
 .sl-stat-targets{
   display:flex;
   flex-wrap:wrap;
@@ -1342,9 +1431,13 @@
   .sl-progress-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .sl-planning-grid { grid-template-columns: 1fr; }
   .sl-dashboard-grid { grid-template-columns: 1fr; }
+  .sl-card-head{flex-direction:column;}
 }
 @media (max-width: 600px) {
   #social-links .sl-tab-btn { flex-basis: 100%; }
   .sl-calendar-grid { grid-template-columns: repeat(2, 1fr); }
   .sl-status-bar { flex-direction: column; gap: 0.8rem; }
+  .sl-focus-toggle{width:100%;}
+  .sl-focus-btn{flex:1 1 0;}
+  .sl-time-budget-grid{grid-template-columns:1fr;}
 }
