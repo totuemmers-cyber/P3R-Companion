@@ -3251,6 +3251,90 @@ const SOCIAL_LINK_RELOAD_ANSWERS = {
   }
 };
 
+function slGuideCleanText(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^[“"]+/, '')
+    .replace(/[”"]+$/, '')
+    .trim();
+}
+
+function slGuideBranchLabel(tag) {
+  if (tag === 'romance') {
+    return 'Romance';
+  }
+  if (tag === 'platonic') {
+    return 'Platonic';
+  }
+  return 'Route split';
+}
+
+function slGuideNormalizeOption(option) {
+  let text = slGuideCleanText(option?.text || '');
+  let points = Number(option?.points) || 0;
+  let branchTag = '';
+  let branchNote = '';
+
+  const embeddedPoints = text.match(/\+\s*(\d+)/);
+  if (embeddedPoints) {
+    points = Math.max(points, Number(embeddedPoints[1]) || 0);
+    text = text.replace(/\s*\+\s*\d+/, '').trim();
+  }
+
+  if (/Enter a Dating Relationship/i.test(text)) {
+    branchTag = 'romance';
+    branchNote = 'Starts the romance route.';
+    text = text.replace(/\s*[-–]\s*Enter a Dating Relationship/i, '').trim();
+  } else if (/Enter a Platonic(?: Relationship)?/i.test(text)) {
+    branchTag = 'platonic';
+    branchNote = 'Keeps the platonic route.';
+    text = text.replace(/\s*[-–]\s*Enter a Platonic(?: Relationship)?/i, '').trim();
+  }
+
+  const annotationMatch = text.match(/\s*\(([^)]*(?:romance|platonic|route|flag)[^)]*)\)\.?$/i);
+  if (annotationMatch) {
+    const annotation = annotationMatch[1].trim();
+    if (!branchTag) {
+      if (/romance/i.test(annotation)) {
+        branchTag = 'romance';
+      } else if (/platonic/i.test(annotation)) {
+        branchTag = 'platonic';
+      } else {
+        branchTag = 'route';
+      }
+    }
+    if (/different dialogue|different route/i.test(annotation)) {
+      branchNote = 'Changes the next few ranks to a different route.';
+    } else if (/romance/i.test(annotation)) {
+      branchNote = 'Sets a romance flag for later ranks.';
+    } else if (/platonic/i.test(annotation)) {
+      branchNote = 'Keeps the platonic route.';
+    } else if (/flag/i.test(annotation)) {
+      branchNote = 'Sets a route flag for later ranks.';
+    }
+    text = text.replace(/\s*\(([^)]*(?:romance|platonic|route|flag)[^)]*)\)\.?$/i, '').trim();
+  }
+
+  text = text.replace(/\s*[-–]\s*$/, '').trim();
+  text = slGuideCleanText(text.replace(/[”"]+\s*$/g, ''));
+
+  const normalized = { text, points };
+  if (branchTag) {
+    normalized.branchTag = branchTag;
+    normalized.branchLabel = slGuideBranchLabel(branchTag);
+    normalized.branchNote = branchNote || 'Changes the route.';
+  }
+  return normalized;
+}
+
+function slGuideNormalizeAnswer(answer) {
+  return {
+    prompt: slGuideCleanText(answer?.prompt || ''),
+    options: (answer?.options || []).map(slGuideNormalizeOption)
+  };
+}
+
 Object.entries(SOCIAL_LINK_RELOAD_ANSWERS).forEach(([arcana, rankMap]) => {
   const link = SOCIAL_LINKS[arcana];
   if (!link || !Array.isArray(link.ranks)) {
@@ -3267,7 +3351,12 @@ Object.entries(SOCIAL_LINK_RELOAD_ANSWERS).forEach(([arcana, rankMap]) => {
     const rankNumber = Number(rankKey);
     const target = link.ranks.find((entry) => entry.rank === rankNumber);
     if (target) {
-      target.answers = answers;
+      target.answers = answers.map(slGuideNormalizeAnswer);
+    }
+  });
+  link.ranks.forEach((entry) => {
+    if (entry.rank >= 2 && entry.rank <= 10 && !entry.answers && !entry.note) {
+      entry.note = 'Reload guide lists no point-affecting dialogue choices for this rank.';
     }
   });
 });

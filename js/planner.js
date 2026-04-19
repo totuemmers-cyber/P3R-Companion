@@ -237,7 +237,7 @@ function getAvailableLinks(snapshot, timeSlot) {
       typeof window.getSocialLinkAvailability === 'function'
         ? window.getSocialLinkAvailability(arcana, snapshot, date, timeSlot)
         : null;
-    if (!availability || !availability.available) {
+    if (!availability || (!availability.available && !availability.actionable)) {
       return;
     }
     const link = availability.link;
@@ -245,6 +245,8 @@ function getAvailableLinks(snapshot, timeSlot) {
     results.push({
       arcana,
       link,
+      available: availability.available,
+      actionable: availability.actionable,
       score: result.score,
       reasons: result.reasons
     });

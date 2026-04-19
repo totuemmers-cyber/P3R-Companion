@@ -132,7 +132,7 @@ function slGetAvailableLinks(date, timeSlot) {
       typeof window.getSocialLinkAvailability === 'function'
         ? window.getSocialLinkAvailability(arcana, snapshot, date, timeSlot)
         : null;
-    if (!availability || !availability.available) {
+    if (!availability || (!availability.available && !availability.actionable)) {
       return;
     }
     const link = availability.link;
@@ -140,6 +140,8 @@ function slGetAvailableLinks(date, timeSlot) {
       arcana,
       link,
       rank: availability.rank,
+      available: availability.available,
+      actionable: availability.actionable,
       statsMet: availability.statsMet,
       blocked: ''
     });
@@ -310,6 +312,51 @@ function slGetDeadlineLabel(link) {
   return `${daysLeft}d left`;
 }
 
+function slBuildGuidePreview(rankData) {
+  if (!rankData || !Array.isArray(rankData.answers) || !rankData.answers.length) {
+    return '';
+  }
+  const promptCount = rankData.answers.length;
+  const hasBranch = rankData.answers.some((answer) =>
+    (answer.options || []).some((option) => option.branchTag)
+  );
+  return `<div class="sl-rec-answers-preview">Guide: ${promptCount} prompt${
+    promptCount === 1 ? '' : 's'
+  }${hasBranch ? ' | route split' : ''}</div>`;
+}
+
+function slRenderGuideSource(link) {
+  if (!link?.guideVersion) {
+    return '';
+  }
+  if (!link.guideSource) {
+    return `<div class="sl-persona-reminder sl-answer-source">Verified for ${link.guideVersion}.</div>`;
+  }
+  return `<div class="sl-persona-reminder sl-answer-source">Verified for ${link.guideVersion}. <a href="${link.guideSource}" target="_blank" rel="noopener noreferrer">Source</a></div>`;
+}
+
+function slRenderGuideOption(option) {
+  const isBranchOnly = !!option.branchTag && option.points <= 0;
+  let optionClass = 'sl-answer-option';
+  if (isBranchOnly) {
+    optionClass += ' sl-answer-branch';
+  } else if (option.points >= 3) {
+    optionClass += ' sl-answer-best';
+  } else if (option.points === 2) {
+    optionClass += ' sl-answer-good';
+  } else if (option.points === 1) {
+    optionClass += ' sl-answer-neutral';
+  } else {
+    optionClass += ' sl-answer-bad';
+  }
+  const pointsHtml = isBranchOnly ? '' : `<span class="sl-pts">+${option.points}</span>`;
+  const branchHtml = option.branchTag
+    ? `<span class="sl-answer-branch-badge">${option.branchLabel || 'Route split'}</span>`
+    : '';
+  const noteHtml = option.branchNote ? `<span class="sl-answer-branch-note">${option.branchNote}</span>` : '';
+  return `<div class="${optionClass}">${pointsHtml}<span class="sl-answer-text">${option.text}</span>${branchHtml}${noteHtml}</div>`;
+}
+
 function slGetHighPressureLinks() {
   const items = [];
   ARCANA_LIST.forEach((arcana) => {
@@ -454,7 +501,8 @@ function slRenderBestUseBoard() {
     }
     if (item) {
       const extra = slGetLinkExtra(item.arcana);
-      return `<div class="sl-action-card"><div class="sl-action-top"><span class="sl-action-slot">${label}</span><span class="sl-action-state">${item.arcana}</span></div><div class="sl-action-main">${item.link.character}</div><div class="sl-action-copy">${item.factors.slice(0, 2).join(' • ')}</div>${
+      const stateLabel = item.actionable && !item.available ? 'Start' : item.arcana;
+      return `<div class="sl-action-card"><div class="sl-action-top"><span class="sl-action-slot">${label}</span><span class="sl-action-state">${stateLabel}</span></div><div class="sl-action-main">${item.link.character}</div><div class="sl-action-copy">${item.factors.slice(0, 2).join(' • ')}</div>${
         extra?.deadline ? `<div class="sl-action-note">${extra.deadline}</div>` : ''
       }</div>`;
     }
@@ -619,15 +667,7 @@ function slRenderRecommendations() {
       const nextRankData = item.link.ranks
         ? item.link.ranks.find((rankEntry) => rankEntry.rank === nextRank)
         : null;
-      let preview = '';
-      if (nextRankData && nextRankData.answers && nextRankData.answers.length) {
-        const bestOption = nextRankData.answers[0].options
-          .slice()
-          .sort((left, right) => right.points - left.points)[0];
-        if (bestOption) {
-          preview = `<div class="sl-rec-answers-preview">Best answer: <span class="sl-rec-ans sl-rec-best">"${bestOption.text}"</span></div>`;
-        }
-      }
+      const preview = slBuildGuidePreview(nextRankData);
       const rosterMatch = slGetRosterMatchForArcana(item.arcana);
       let matchBadge = '';
       if (rosterMatch) {
@@ -638,10 +678,11 @@ function slRenderRecommendations() {
       const extra = slGetLinkExtra(item.arcana);
       const planningLine = extra?.deadline || extra?.priority || '';
       const factorText = item.factors.slice(0, 3).join(' | ');
+      const rankBadge = item.actionable && !item.available ? 'Start' : `Rk ${item.rank}/10`;
       return `<div class="sl-rec-item${isLocked ? ' locked' : ''}"><div class="sl-rec-score">${Math.max(
         0,
         item.score
-      )}</div><div class="sl-rec-info"><div><span class="sl-rec-name">${item.link.character}</span><span class="sl-rec-arcana">${item.arcana}</span>${matchBadge}</div><div class="sl-rec-detail">${factorText}</div>${planningLine ? `<div class="sl-rec-planning">${planningLine}</div>` : ''}${preview}</div><div class="sl-rec-rank-badge">Rk ${item.rank}/10</div></div>`;
+      )}</div><div class="sl-rec-info"><div><span class="sl-rec-name">${item.link.character}</span><span class="sl-rec-arcana">${item.arcana}</span>${matchBadge}</div><div class="sl-rec-detail">${factorText}</div>${planningLine ? `<div class="sl-rec-planning">${planningLine}</div>` : ''}${preview}</div><div class="sl-rec-rank-badge">${rankBadge}</div></div>`;
     })
     .join('');
 }
@@ -682,7 +723,7 @@ function slRenderMyLinks() {
     if (statusFilter === 'locked' && (rank > 0 || link.automatic)) {
       return;
     }
-    if (statusFilter === 'unavailable' && availability?.available) {
+    if (statusFilter === 'unavailable' && (availability?.available || availability?.actionable)) {
       return;
     }
     if (timeFilter && link.timeSlot !== timeFilter) {
@@ -713,7 +754,9 @@ function slRenderMyLinks() {
         : availability.status === 'setup_needed'
           ? 'Ready to start'
           : availability.reason;
-      metaHtml += `<span class="sl-meta-badge sl-meta-status${availability.available ? ' available' : ''}">${statusText}</span>`;
+      metaHtml += `<span class="sl-meta-badge sl-meta-status${
+        availability.available || availability.actionable ? ' available' : ''
+      }">${statusText}</span>`;
     }
     Object.entries(link.statRequirements).forEach(([stat, requirement]) => {
       const met = (slState.stats[stat] || 1) >= requirement;
@@ -738,14 +781,12 @@ function slRenderMyLinks() {
     }
 
     let answerHtml = '';
-    if (!link.automatic && link.ranks.some((entry) => entry.answers && entry.answers.length)) {
-      const sourceLine = link.guideVersion
-        ? `<div class="sl-persona-reminder sl-answer-source">Verified for ${link.guideVersion}${link.guideSource ? ' answer flow' : ''}.</div>`
-        : '';
+    if (!link.automatic && link.ranks.some((entry) => (entry.answers && entry.answers.length) || entry.note)) {
+      const sourceLine = slRenderGuideSource(link);
       answerHtml = `<button class="sl-expand-btn" data-arcana="${arcana}"><span class="sl-expand-arrow">&#9654;</span> Answer Guide</button><div class="sl-answer-guide"><div class="sl-persona-reminder">&#9733; Carry a ${arcana} Persona for +1 bonus points per answer</div>${sourceLine}`;
       link.ranks.forEach((entry) => {
         if (!entry.answers || !entry.answers.length) {
-          if (entry.note && entry.rank === 10) {
+          if (entry.note) {
             answerHtml += `<div class="sl-answer-rank"><div class="sl-answer-rank-header">Rank ${entry.rank}</div><div class="sl-answer-note">${entry.note}</div></div>`;
           }
           return;
@@ -760,15 +801,7 @@ function slRenderMyLinks() {
             .slice()
             .sort((left, right) => right.points - left.points)
             .forEach((option) => {
-              const optionClass =
-                option.points >= 3
-                  ? 'sl-answer-best'
-                  : option.points === 2
-                    ? 'sl-answer-good'
-                    : option.points === 1
-                      ? 'sl-answer-neutral'
-                      : 'sl-answer-bad';
-              answerHtml += `<div class="sl-answer-option ${optionClass}"><span class="sl-pts">+${option.points}</span><span class="sl-answer-text">${option.text}</span></div>`;
+              answerHtml += slRenderGuideOption(option);
             });
           answerHtml += '</div>';
         });
@@ -812,13 +845,15 @@ function slGetCalLinks(date, dayOfWeek, timeSlot) {
       typeof window.getSocialLinkAvailability === 'function'
         ? window.getSocialLinkAvailability(arcana, snapshot, date, timeSlot)
         : null;
-    if (!availability || !availability.available) {
+    if (!availability || (!availability.available && !availability.actionable)) {
       return;
     }
     results.push({
       arcana,
       character: availability.link.character,
       rank: availability.rank,
+      available: availability.available,
+      actionable: availability.actionable,
       statsMet: availability.statsMet,
       maxed: availability.rank >= 10
     });
@@ -831,7 +866,8 @@ function slCalLinkHtml(item, timeSlot) {
   if (!item.statsMet || item.maxed) {
     cssClass += ' locked';
   }
-  return `<div class="${cssClass}"><span class="sl-cal-link-dot ${timeSlot}"></span><span class="sl-cal-link-name">${item.character}</span><span class="sl-cal-link-rank">${item.maxed ? 'MAX' : item.rank}</span></div>`;
+  const rankLabel = item.actionable && !item.available ? 'Start' : item.maxed ? 'MAX' : item.rank;
+  return `<div class="${cssClass}"><span class="sl-cal-link-dot ${timeSlot}"></span><span class="sl-cal-link-name">${item.character}</span><span class="sl-cal-link-rank">${rankLabel}</span></div>`;
 }
 
 function slRenderCalendar() {

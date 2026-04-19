@@ -7,13 +7,13 @@ const SOCIAL_LINK_RULE_OVERRIDES = {
   Priestess: {
     availableDays: [1, 3, 4, 6],
     schoolLink: true,
-    unlockDate: { month: 6, day: 18 },
+    unlockDate: { month: 6, day: 22 },
     statRequirements: { courage: 6 },
     prerequisites: [
       { type: 'started', arcana: 'Fortune', label: 'Start Keisuke (Fortune) first.' }
     ],
     manualUnlock: true,
-    setupLabel: 'Talk to Fuuka outside your classroom to start the link.'
+    setupLabel: 'After June 22, talk to Fuuka on 2F once Courage is maxed and Fortune has started.'
   },
   Empress: {
     schoolLink: true,
@@ -38,10 +38,10 @@ const SOCIAL_LINK_RULE_OVERRIDES = {
   Lovers: {
     availableDays: [1, 3, 4, 6],
     schoolLink: true,
-    unlockDate: { month: 9, day: 3 },
+    unlockDate: { month: 7, day: 24 },
     statRequirements: { charm: 6 },
     manualUnlock: true,
-    setupLabel: 'Talk to Yukari in class after the fall term begins.'
+    setupLabel: 'After Yakushima, talk to Yukari in the classroom once Charm is maxed.'
   },
   Chariot: {
     availableDays: [1, 2, 4, 5],
@@ -52,6 +52,7 @@ const SOCIAL_LINK_RULE_OVERRIDES = {
   Justice: {
     availableDays: [2, 4, 6],
     schoolLink: true,
+    unlockDate: { month: 4, day: 27 },
     statRequirements: {},
     prerequisites: [
       { type: 'started', arcana: 'Emperor', label: 'Start Hidetoshi (Emperor) first.' }
@@ -122,7 +123,7 @@ const SOCIAL_LINK_RULE_OVERRIDES = {
       { type: 'rank', arcana: 'Strength', minRank: 4, label: 'Raise Yuko (Strength) to Rank 4 first.' }
     ],
     manualUnlock: true,
-    setupLabel: 'Mutatsu requires the Club Escapade drink-order setup before the link begins.'
+    setupLabel: 'Mutatsu requires the Club Escapade drink-order setup after Yuko mentions him; some guides note a Rank 3 Strength rewrite, but this app uses Rank 4.'
   },
   Star: {
     availableDays: [3, 5, 0],
@@ -153,7 +154,7 @@ const SOCIAL_LINK_RULE_OVERRIDES = {
     setupLabel: 'Akinari needs the Red Fountain Pen after Koromaru joins the dorm.'
   },
   Aeon: {
-    availableDays: [1, 2, 3, 4, 5, 6],
+    availableDays: [5],
     schoolLink: true
   }
 };
@@ -338,73 +339,81 @@ function capitalize(value) {
 function getSocialLinkAvailability(arcana, snapshot, date = snapshot.profile.gameDate, timeSlot = null) {
   const link = getSocialLinkDefinition(arcana);
   if (!link) {
-    return { status: 'missing', available: false, link: null, reason: 'Missing link data.' };
+    return { status: 'missing', available: false, actionable: false, link: null, reason: 'Missing link data.' };
   }
 
   const rank = getSnapshotValue(snapshot, ['socialLinks', 'ranks', arcana], 0);
   if (link.automatic) {
-    return { status: 'automatic', available: false, link, rank, reason: 'Automatic story link.' };
+    return { status: 'automatic', available: false, actionable: false, link, rank, reason: 'Automatic story link.' };
   }
   if (rank >= 10) {
-    return { status: 'maxed', available: false, link, rank, reason: 'Already maxed.' };
+    return { status: 'maxed', available: false, actionable: false, link, rank, reason: 'Already maxed.' };
   }
   if (timeSlot && link.timeSlot !== timeSlot) {
-    return { status: 'wrong_timeslot', available: false, link, rank, reason: 'Wrong time slot.' };
+    return { status: 'wrong_timeslot', available: false, actionable: false, link, rank, reason: 'Wrong time slot.' };
   }
   if (compareDates(date, link.unlockDate) < 0) {
-    return { status: 'before_unlock', available: false, link, rank, reason: `Unlocks ${MONTH_NAMES[link.unlockDate.month]} ${link.unlockDate.day}.` };
+    return { status: 'before_unlock', available: false, actionable: false, link, rank, reason: `Unlocks ${MONTH_NAMES[link.unlockDate.month]} ${link.unlockDate.day}.` };
   }
   if (link.endDate && compareDates(date, link.endDate) > 0) {
-    return { status: 'expired', available: false, link, rank, reason: 'Link window has already ended.' };
+    return { status: 'expired', available: false, actionable: false, link, rank, reason: 'Link window has already ended.' };
   }
 
   const prerequisiteReason = getPrerequisiteReason(link, snapshot);
   if (prerequisiteReason) {
-    return { status: 'locked_prerequisite', available: false, link, rank, reason: prerequisiteReason };
+    return { status: 'locked_prerequisite', available: false, actionable: false, link, rank, reason: prerequisiteReason };
   }
 
   const statsReason = getStatBlockedReason(link, snapshot);
   if (statsReason) {
-    return { status: 'locked_stats', available: false, link, rank, reason: statsReason };
+    return { status: 'locked_stats', available: false, actionable: false, link, rank, reason: statsReason };
   }
 
   const globalBlocked = getGlobalBlockedReason(date, link.timeSlot);
   if (globalBlocked) {
-    return { status: 'blocked_global', available: false, link, rank, reason: globalBlocked };
+    return { status: 'blocked_global', available: false, actionable: false, link, rank, reason: globalBlocked };
   }
 
   const preExamBlocked = isSchoolPreExamBlocked(link, date);
   if (preExamBlocked) {
-    return { status: 'blocked_pre_exam', available: false, link, rank, reason: preExamBlocked };
+    return { status: 'blocked_pre_exam', available: false, actionable: false, link, rank, reason: preExamBlocked };
   }
 
   const vacationBlocked = isSchoolVacationBlocked(link, date);
   if (vacationBlocked) {
-    return { status: 'blocked_vacation', available: false, link, rank, reason: vacationBlocked };
+    return { status: 'blocked_vacation', available: false, actionable: false, link, rank, reason: vacationBlocked };
   }
 
   const holidayBlocked = isSchoolHolidayBlocked(link, date);
   if (holidayBlocked) {
-    return { status: 'blocked_holiday', available: false, link, rank, reason: holidayBlocked };
+    return { status: 'blocked_holiday', available: false, actionable: false, link, rank, reason: holidayBlocked };
   }
 
   const rangeBlocked = getRangeBlockedReason(link, date);
   if (rangeBlocked) {
-    return { status: 'blocked_range', available: false, link, rank, reason: rangeBlocked };
+    return { status: 'blocked_range', available: false, actionable: false, link, rank, reason: rangeBlocked };
   }
 
   const dayOfWeek = getDayOfWeek(date.month, date.day);
   if (!link.availableDays.includes(dayOfWeek) && !isExtraAvailableDate(link, date)) {
-    return { status: 'unavailable_weekday', available: false, link, rank, reason: 'Not available on this day of the week.' };
+    return { status: 'unavailable_weekday', available: false, actionable: false, link, rank, reason: 'Not available on this day of the week.' };
   }
 
   if (rank === 0 && link.manualUnlock) {
-    return { status: 'setup_needed', available: false, link, rank, reason: link.setupLabel || 'This Social Link still needs its start event.' };
+    return {
+      status: 'setup_needed',
+      available: false,
+      actionable: true,
+      link,
+      rank,
+      reason: link.setupLabel || 'This Social Link still needs its start event.'
+    };
   }
 
   return {
     status: 'available',
     available: true,
+    actionable: true,
     link,
     rank,
     reason: '',

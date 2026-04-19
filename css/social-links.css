@@ -752,6 +752,11 @@
   color:var(--text-dim);
   border-color:rgba(255,255,255,0.08);
 }
+.sl-answer-source a{
+  color:var(--accent-secondary);
+  text-decoration:none;
+}
+.sl-answer-source a:hover{text-decoration:underline}
 
 .sl-answer-rank{
   padding:0.6rem 0;
@@ -789,6 +794,7 @@
 }
 .sl-answer-option{
   display:flex;align-items:center;gap:0.5rem;
+  flex-wrap:wrap;
   font-size:0.78rem;padding:0.2rem 0.4rem;border-radius:4px;
 }
 .sl-answer-option .sl-pts{
@@ -802,6 +808,26 @@
 .sl-answer-neutral .sl-pts{background:rgba(255,255,255,0.08);color:var(--text-dim)}
 .sl-answer-bad .sl-pts{background:rgba(255,82,82,0.15);color:#ff5252}
 .sl-answer-text{color:var(--text)}
+.sl-answer-branch{
+  background:rgba(156,236,255,0.08);
+  border:1px solid rgba(156,236,255,0.14);
+}
+.sl-answer-branch-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:0.1rem 0.45rem;
+  border-radius:999px;
+  background:rgba(255,255,255,0.08);
+  color:var(--text-bright);
+  font-size:0.68rem;
+  font-weight:700;
+  letter-spacing:0.03em;
+  text-transform:uppercase;
+}
+.sl-answer-branch-note{
+  color:var(--text-dim);
+  font-size:0.72rem;
+}
 
 /* Persona match badge on recommendations (Feature 2) */
 .sl-rec-match{
