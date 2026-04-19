@@ -130,8 +130,6 @@ function bootstrap() {
       initPlanner({ root, store });
     } else if (sectionName === 'requests') {
       initRequests({ root, store });
-    } else if (sectionName === 'profile') {
-      initProfile({ root, store });
     } else if (sectionName === 'velvet') {
       initVelvet({ root, store });
     } else if (sectionName === 'social-links') {
@@ -187,7 +185,7 @@ function bootstrap() {
   };
 
   initClearableInputs();
-  switchSection('profile');
+  switchSection('planner');
 
   const overlay = document.getElementById('save-modal-overlay');
   const gearButton = document.getElementById('save-gear-btn');

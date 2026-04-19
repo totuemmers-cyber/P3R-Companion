@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>P3R Companion — Tartarus &amp; Velvet Room &amp; Social Links</title>
 <link rel="stylesheet" href="css/shared.css">
-<link rel="stylesheet" href="css/profile.css">
 <link rel="stylesheet" href="css/planner.css">
 <link rel="stylesheet" href="css/requests.css">
 <link rel="stylesheet" href="css/tartarus.css">
@@ -18,7 +17,6 @@
 <nav class="app-nav">
   <div class="app-title">P3R <span>Companion</span></div>
   <div class="app-nav-tabs">
-    <button class="app-nav-tab" data-section="profile">Profile</button>
     <button class="app-nav-tab" data-section="planner">Planner</button>
     <button class="app-nav-tab" data-section="requests">Requests</button>
     <button class="app-nav-tab" data-section="tartarus">Tartarus</button>
@@ -63,80 +61,6 @@
   </div>
 </div>
 
-<!-- ===== PROFILE SECTION ===== -->
-<div id="profile" class="app-section">
-  <header class="profile-header">
-    <h1>Profile <span>P3R</span></h1>
-    <div class="profile-subtitle">Central run state for Tartarus, Social Links, and future app-wide guidance.</div>
-  </header>
-
-  <div class="profile-main">
-    <section class="profile-card">
-      <h2>Run State</h2>
-      <div class="profile-grid">
-        <label class="profile-field">
-          <span class="profile-label">Month</span>
-          <select id="profile-month"></select>
-        </label>
-        <label class="profile-field">
-          <span class="profile-label">Day</span>
-          <select id="profile-day"></select>
-        </label>
-        <label class="profile-field">
-          <span class="profile-label">Player Level</span>
-          <input id="profile-level" type="number" min="1" max="99" placeholder="Lv">
-        </label>
-        <label class="profile-field">
-          <span class="profile-label">Current Floor</span>
-          <input id="profile-floor" type="number" min="2" max="264" placeholder="Floor">
-        </label>
-      </div>
-      <p class="profile-note">Used by Tartarus readiness checks, deadline pressure, and Full Moon timing.</p>
-    </section>
-
-    <section class="profile-card">
-      <h2>Social Stats</h2>
-      <div class="profile-grid profile-grid-stats">
-        <label class="profile-field">
-          <span class="profile-label">Academics</span>
-          <select id="profile-academics"></select>
-        </label>
-        <label class="profile-field">
-          <span class="profile-label">Charm</span>
-          <select id="profile-charm"></select>
-        </label>
-        <label class="profile-field">
-          <span class="profile-label">Courage</span>
-          <select id="profile-courage"></select>
-        </label>
-      </div>
-      <p class="profile-note">These values feed Social Link unlock checks and route-priority recommendations.</p>
-    </section>
-
-    <section class="profile-card profile-card-summary">
-      <h2>Used Across The App</h2>
-      <div class="profile-use-grid">
-        <div class="profile-use-item">
-          <span class="profile-use-title">Tartarus</span>
-          <span class="profile-use-copy">Next Full Moon, objective urgency, and major-check readiness all read from this profile.</span>
-        </div>
-        <div class="profile-use-item">
-          <span class="profile-use-title">Social Links</span>
-          <span class="profile-use-copy">The Dashboard, Calendar, and risk boards use this shared date and your current stat tiers.</span>
-        </div>
-        <div class="profile-use-item">
-          <span class="profile-use-title">Save Data</span>
-          <span class="profile-use-copy">Your run state is exported once and stays consistent across every section.</span>
-        </div>
-        <div class="profile-use-item">
-          <span class="profile-use-title">Planner</span>
-          <span class="profile-use-copy">The Planner uses your shared floor, date, level, stats, ranks, and roster to suggest the next best step.</span>
-        </div>
-      </div>
-    </section>
-  </div>
-</div>
-
 <!-- ===== PLANNER SECTION ===== -->
 <div id="planner" class="app-section">
   <header class="planner-header">
@@ -146,6 +70,7 @@
 
   <div class="planner-main">
     <section class="planner-state-strip" id="planner-state-strip"></section>
+    <section class="planner-card planner-run-state-card" id="planner-run-state"></section>
 
     <div class="planner-hero-grid">
       <section class="planner-card planner-card-primary" id="planner-primary-action"></section>
@@ -169,6 +94,7 @@
 
   <div class="requests-main">
     <section class="requests-summary-strip" id="requests-summary"></section>
+    <section class="requests-upcoming-card requests-run-state-card" id="requests-run-state"></section>
     <section class="requests-upcoming-card" id="requests-upcoming"></section>
 
     <div class="requests-layout">
@@ -214,6 +140,7 @@
   <div class="main" id="mainView">
     <section class="tartarus-view tartarus-view-floorops active" id="floorOpsView">
       <div class="dashboard-shell">
+        <section class="floor-scout floor-dashboard tartarus-run-state-card" id="tartarus-run-state"></section>
         <div class="floor-scout floor-dashboard">
           <div class="floor-dashboard-header">
             <div>
@@ -528,8 +455,8 @@
             <span class="sl-status-pill-value" id="sl-status-courage">1</span>
           </div>
         </div>
-        <p class="sl-note">Edit date, player level, and social stats in the Profile tab.</p>
       </div>
+      <div class="card" id="sl-run-state-card"></div>
       <div class="card" id="sl-progress-card">
         <h2>Progress Overview</h2>
         <div id="sl-progress-grid" class="sl-progress-grid"></div>
@@ -644,7 +571,7 @@
 <script src="data/requests-extra.js"></script>
 <script src="data/elizabeth-requests.js"></script>
 <script src="js/store.js"></script>
-<script src="js/profile.js"></script>
+<script src="js/run-state.js"></script>
 <script src="js/social-link-rules.js"></script>
 <script src="js/planner.js"></script>
 <script src="js/requests.js"></script>

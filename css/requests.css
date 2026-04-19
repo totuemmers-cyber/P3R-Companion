@@ -89,6 +89,10 @@
   border:1px solid rgba(255,255,255,0.08);
 }
 
+#requests .requests-run-state-card{
+  display:block;
+}
+
 #requests .requests-upcoming-card.has-items{
   display:block;
 }

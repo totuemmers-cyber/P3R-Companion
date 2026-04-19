@@ -36,6 +36,7 @@
 #tartarus .dashboard-shell{min-width:0}
 #tartarus .table-wrap{overflow-x:auto}
 #tartarus .floor-dashboard{position:static;top:auto;max-width:980px;margin:0 auto}
+#tartarus .tartarus-run-state-card{margin-bottom:1rem}
 #tartarus .floor-dashboard-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.85rem}
 #tartarus .floor-dashboard-note{font-size:0.82rem;color:var(--text-dim);letter-spacing:0.03em}
 #tartarus .shadow-intel-panel{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:1.1rem;box-shadow:0 16px 36px rgba(0,0,0,0.2)}

@@ -776,6 +776,18 @@ function initPlanner({ root, store }) {
   plannerStore = store;
   initialized = true;
 
+  if (typeof window.mountRunStatePanel === 'function') {
+    window.mountRunStatePanel({
+      root: plannerRoot,
+      store: plannerStore,
+      selector: '#planner-run-state',
+      title: 'Run State',
+      subtitle: 'Shared inputs for planning, Tartarus readiness, and Social Link routing.',
+      fields: ['date', 'level', 'floor', 'academics', 'charm', 'courage'],
+      note: 'These controls update the same save-backed state used across every section.'
+    });
+  }
+
   plannerRoot.addEventListener('click', onPlannerAction);
   plannerStore.subscribe(renderPlanner);
   renderPlanner();

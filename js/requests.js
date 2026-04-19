@@ -468,6 +468,19 @@ function initRequests({ root, store }) {
   requestsStore = store;
   initialized = true;
 
+  if (typeof window.mountRunStatePanel === 'function') {
+    window.mountRunStatePanel({
+      root: requestsRoot,
+      store: requestsStore,
+      selector: '#requests-run-state',
+      title: 'Current Run Date',
+      subtitle: 'Request availability and deadline pressure update from the shared calendar date.',
+      fields: ['date'],
+      readOnly: true,
+      note: 'Change the date from Planner, Tartarus, or Social Links.'
+    });
+  }
+
   requestsRoot.addEventListener('input', onInputChange);
   requestsRoot.addEventListener('change', onInputChange);
   requestsRoot.addEventListener('click', onClick);

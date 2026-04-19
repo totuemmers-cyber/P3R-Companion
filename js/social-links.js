@@ -1573,6 +1573,18 @@ function initSocialLinks({ root, store }) {
   syncState();
   initialized = true;
 
+  if (typeof window.mountRunStatePanel === 'function') {
+    window.mountRunStatePanel({
+      root: slRoot,
+      store: slStore,
+      selector: '#sl-run-state-card',
+      title: 'Social Link Inputs',
+      subtitle: 'Date and social stats immediately update unlock checks, calendar availability, and today-first recommendations.',
+      fields: ['date', 'academics', 'charm', 'courage'],
+      note: 'Carry a matching arcana persona for bonus points, but the route logic itself reads from these shared values.'
+    });
+  }
+
   slRoot.querySelectorAll('.sl-tab-btn').forEach((button) => {
     button.addEventListener('click', () => slSwitchTab(button.dataset.tab));
   });
