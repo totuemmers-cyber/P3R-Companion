@@ -1278,7 +1278,11 @@
   color:var(--text-dim);
 }
 .sl-cal-day-premium{
-  color:#ffd166;
+  color:#d9b35b;
+}
+.sl-cal-day-best{
+  color:var(--accent);
+  font-weight:700;
 }
 .sl-cal-slot{
   display:flex;
@@ -1301,18 +1305,29 @@
   font-style:italic;
 }
 .sl-cal-link.premium{
-  border:1px solid rgba(255,209,102,0.16);
-  background:rgba(255,209,102,0.06);
+  border:1px solid rgba(217,179,91,0.12);
+  background:rgba(217,179,91,0.04);
+}
+.sl-cal-link.recommended{
+  border:1px solid rgba(0,229,255,0.35);
+  background:rgba(0,229,255,0.1);
+  box-shadow:0 0 0 1px rgba(0,229,255,0.08) inset;
 }
 .sl-cal-link-flag{
   font-size:0.58rem;
-  color:#ffd166;
+  color:#d9b35b;
   font-weight:700;
   text-transform:uppercase;
   letter-spacing:0.05em;
 }
+.sl-cal-link.recommended .sl-cal-link-flag{
+  color:#7cefff;
+}
 .sl-legend-premium{
-  color:#ffd166;
+  color:#d9b35b;
+}
+.sl-legend-best{
+  color:#7cefff;
 }
 .sl-legend-start{
   color:var(--text-dim);
