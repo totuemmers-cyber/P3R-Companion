@@ -54,6 +54,14 @@ function slIsCompletionFocus() {
   return slUiState.focusMode === 'completion';
 }
 
+function slGetFocusMode() {
+  return slIsCompletionFocus() ? 'completion' : 'balanced';
+}
+
+function slGetAdvisor() {
+  return window.socialLinkAdvisor;
+}
+
 function getRosterSet() {
   return new Set(slGetSnapshot().roster);
 }
@@ -333,37 +341,7 @@ function slRenderGuideOption(option) {
 }
 
 function slGetStatBottlenecks() {
-  const bottlenecks = {
-    academics: [],
-    charm: [],
-    courage: []
-  };
-
-  ARCANA_LIST.forEach((arcana) => {
-    const link = slGetLink(arcana);
-    if (!link || link.automatic || (slState.ranks[arcana] || 0) >= 10) {
-      return;
-    }
-    Object.entries(link.statRequirements).forEach(([stat, requirement]) => {
-      const current = slState.stats[stat] || 1;
-      if (current >= requirement) {
-        return;
-      }
-      bottlenecks[stat].push({
-        arcana,
-        character: link.character,
-        current,
-        requirement,
-        delta: requirement - current
-      });
-    });
-  });
-
-  Object.values(bottlenecks).forEach((entries) => {
-    entries.sort((left, right) => left.delta - right.delta || left.requirement - right.requirement);
-  });
-
-  return bottlenecks;
+  return slGetAdvisor().getStatBottlenecks(slGetSnapshot());
 }
 
 function slGetAvailabilityState(arcana, date = slState.gameDate, timeSlot = null) {
@@ -850,85 +828,11 @@ function slGetMyLinksTags(model) {
 }
 
 function slBuildLinkModel(arcana, date = slState.gameDate) {
-  const link = slGetLink(arcana);
-  const rank = slState.ranks[arcana] || 0;
-  const extra = slGetLinkExtra(arcana);
-  const availability = slGetAvailabilityState(arcana, date, link?.timeSlot || null);
-  const scoreResult = slScoreLink(arcana);
-  const rosterMatch = slGetRosterMatchForArcana(arcana);
-  const missingStats = slGetMissingStats(link);
-  const deadlineInfo = slGetDeadlineInfo(link, extra, date);
-  const checklist = slGetChecklistItems(link, rank, availability);
-  const guideSummaryBits = slGetGuideSummaryBits(link);
-  const actionableToday = !!(availability?.available || availability?.actionable);
-  const availableToday = !!availability?.available;
-  const isRare = slIsRareLink(link);
-  const noPersona = !rosterMatch && !link?.automatic;
-  const setupNeeded = availability?.status === 'setup_needed';
-  const schoolLink = !!link?.schoolLink;
-  const sundayLink = !!link?.availableDays?.includes(0);
-  const score = Number.isFinite(scoreResult.score) ? scoreResult.score : 0;
-  const completion = slGetCompletionMetrics({
+  return slGetAdvisor().getModel(slGetSnapshot(), {
     arcana,
-    link,
-    rank,
-    availability,
-    missingStats,
-    isRare,
-    setupNeeded,
-    deadlineInfo,
-    date
+    date,
+    focusMode: slGetFocusMode()
   });
-  const todayPriority = slGetTodayPriority({
-    availableToday,
-    actionableToday,
-    deadlineInfo,
-    isRare,
-    link,
-    noPersona,
-    setupNeeded,
-    completion,
-    score
-  });
-  const weeklyPressure = slGetWeeklyPressure({
-    deadlineInfo,
-    isRare,
-    rank,
-    missingStats,
-    setupNeeded,
-    actionableToday,
-    completion,
-    link
-  });
-
-  const model = {
-    arcana,
-    link,
-    rank,
-    extra,
-    availability,
-    actionableToday,
-    availableToday,
-    setupNeeded,
-    missingStats,
-    rosterMatch,
-    noPersona,
-    deadlineInfo,
-    checklist,
-    guideSummaryBits,
-    isRare,
-    schoolLink,
-    sundayLink,
-    score,
-    factors: scoreResult.factors || [],
-    todayPriority,
-    weeklyPressure,
-    completion
-  };
-
-  model.nextStep = slGetNextStep(model);
-  model.tags = slGetMyLinksTags(model);
-  return model;
 }
 
 function slGetPriorityValue(model) {
@@ -936,76 +840,11 @@ function slGetPriorityValue(model) {
 }
 
 function slCompareModels(left, right) {
-  if (slIsCompletionFocus()) {
-    return (
-      right.completion.pressure - left.completion.pressure ||
-      left.completion.slack - right.completion.slack ||
-      right.todayPriority - left.todayPriority ||
-      left.link.character.localeCompare(right.link.character)
-    );
-  }
-
-  return (
-    Number(right.actionableToday) - Number(left.actionableToday) ||
-    right.todayPriority - left.todayPriority ||
-    right.weeklyPressure - left.weeklyPressure ||
-    left.completion.slack - right.completion.slack ||
-    right.score - left.score ||
-    left.link.character.localeCompare(right.link.character)
-  );
+  return slGetAdvisor().compareModels(left, right, { focusMode: slGetFocusMode() });
 }
 
 function slGetRecommendationWhy(model) {
-  if (slIsCompletionFocus()) {
-    const reasons = [];
-    if (model.completion.criticalPath) {
-      reasons.push(`Critical path for ${SL_COMPLETION_REWARD}.`);
-    }
-    if (model.completion.state === 'must_act_now') {
-      reasons.push(`Minimum safe windows are almost gone: ${model.completion.remainingWindows} left for ${model.completion.requiredSlots} rank events.`);
-    } else if (model.completion.state === 'tight') {
-      reasons.push(`Schedule is tight: ${model.completion.remainingWindows} windows left for ${model.completion.requiredSlots} rank events.`);
-    } else if (model.completion.state === 'blocked') {
-      reasons.push('This route matters for completion, but it is blocked right now.');
-    }
-    if (model.setupNeeded) {
-      reasons.push('Setup still needs to be cleared.');
-    } else if (model.missingStats.length) {
-      reasons.push(`${model.missingStats[0].stat} is still below the required rank.`);
-    } else if (model.actionableToday) {
-      reasons.push(`You can protect this ${slGetSlotLabel(model.link.timeSlot).toLowerCase()} slot today.`);
-    }
-    if (model.isRare) {
-      reasons.push('It competes for scarce weekly slots.');
-    }
-    return reasons.slice(0, 3).join(' ');
-  }
-
-  const reasons = [];
-
-  if (model.completion.slack <= 0) {
-    reasons.push(`Only ${model.completion.remainingWindows} safe window${model.completion.remainingWindows === 1 ? '' : 's'} remain for ${model.completion.requiredSlots} rank events.`);
-  } else if (model.completion.slack <= 2) {
-    reasons.push(`Tight route: ${model.completion.remainingWindows} windows left for ${model.completion.requiredSlots} rank events.`);
-  } else if (model.completion.slack <= 5) {
-    reasons.push(`Less schedule slack than most links right now.`);
-  }
-  if (model.deadlineInfo.isSoon && model.actionableToday && model.deadlineInfo.label) {
-    reasons.push(model.deadlineInfo.label);
-  }
-  if (model.isRare && model.actionableToday) {
-    reasons.push(`Only ${model.link.availableDays.length} day${model.link.availableDays.length === 1 ? '' : 's'} each week.`);
-  }
-  if (model.actionableToday && !model.availableToday) {
-    reasons.push('Ready to start right now.');
-  } else if (model.availableToday) {
-    reasons.push(`Open ${slGetSlotLabel(model.link.timeSlot).toLowerCase()} at ${model.link.location}.`);
-  }
-  if (model.noPersona) {
-    reasons.push(`Bring a ${model.arcana} persona next time.`);
-  }
-
-  return reasons.slice(0, 3).join(' ');
+  return slGetAdvisor().getRecommendationWhy(model, { focusMode: slGetFocusMode() });
 }
 
 function slRenderFocusButton(arcana, label = 'Open') {
@@ -1046,20 +885,18 @@ function slFocusArcana(arcana) {
 }
 
 function slGetModelsForCurrentState() {
-  return ARCANA_LIST.map((arcana) => slBuildLinkModel(arcana));
+  return slGetAdvisor().getModels(slGetSnapshot(), {
+    date: slState.gameDate,
+    focusMode: slGetFocusMode()
+  });
 }
 
 function slGetActionableModels(date = slState.gameDate, timeSlot = 'day') {
-  return ARCANA_LIST.map((arcana) => slBuildLinkModel(arcana, date))
-    .filter(
-      (model) =>
-        model.link &&
-        !model.link.automatic &&
-        model.rank < 10 &&
-        model.link.timeSlot === timeSlot &&
-        model.actionableToday
-    )
-    .sort(slCompareModels);
+  return slGetAdvisor().getActionableModels(slGetSnapshot(), {
+    date,
+    timeSlot,
+    focusMode: slGetFocusMode()
+  });
 }
 
 function slGetTopTodayModelForDate(date = slState.gameDate, timeSlot = 'day') {
@@ -1067,17 +904,11 @@ function slGetTopTodayModelForDate(date = slState.gameDate, timeSlot = 'day') {
 }
 
 function slGetBlockedImportantModel(timeSlot) {
-  return slGetModelsForCurrentState()
-    .filter(
-      (model) =>
-        model.link &&
-        !model.link.automatic &&
-        model.rank < 10 &&
-        model.link.timeSlot === timeSlot &&
-        !model.actionableToday &&
-        (slIsCompletionFocus() ? model.completion.pressure > 0 : model.weeklyPressure > 0)
-    )
-    .sort((left, right) => slCompareModels(left, right) || left.rank - right.rank)[0] || null;
+  return slGetAdvisor().getBlockedImportantModel(slGetSnapshot(), {
+    date: slState.gameDate,
+    timeSlot,
+    focusMode: slGetFocusMode()
+  });
 }
 
 function slRenderPlanningInsights() {
@@ -2085,8 +1916,25 @@ function initSocialLinks({ root, store }) {
 
   slRoot = root;
   slStore = store;
+  if (window.p3rApp?.getSocialLinkFocusMode) {
+    slUiState.focusMode = window.p3rApp.getSocialLinkFocusMode();
+  }
   syncState();
   initialized = true;
+
+  if (window.p3rApp?.subscribeToSocialLinkFocusMode) {
+    window.p3rApp.subscribeToSocialLinkFocusMode((mode) => {
+      if (slUiState.focusMode === mode) {
+        return;
+      }
+      slUiState.focusMode = mode;
+      if (initialized) {
+        slRenderDashboard();
+        slRenderMyLinks();
+        slRenderCalendar();
+      }
+    });
+  }
 
   if (typeof window.mountRunStatePanel === 'function') {
     window.mountRunStatePanel({
@@ -2129,12 +1977,14 @@ function initSocialLinks({ root, store }) {
     const modeButton = event.target.closest('.sl-focus-btn');
     if (modeButton) {
       const nextMode = modeButton.dataset.focus === 'completion' ? 'completion' : 'balanced';
-      if (slUiState.focusMode !== nextMode) {
+      if (window.p3rApp?.setSocialLinkFocusMode) {
+        window.p3rApp.setSocialLinkFocusMode(nextMode);
+      } else if (slUiState.focusMode !== nextMode) {
         slUiState.focusMode = nextMode;
+        slRenderDashboard();
+        slRenderMyLinks();
+        slRenderCalendar();
       }
-      slRenderDashboard();
-      slRenderMyLinks();
-      slRenderCalendar();
       return;
     }
 

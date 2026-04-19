@@ -113,6 +113,8 @@ function bootstrap() {
     [...document.querySelectorAll('.app-section')].map((section) => [section.id, section])
   );
   const initialized = new Set();
+  let socialLinkFocusMode = 'balanced';
+  const socialLinkFocusListeners = new Set();
 
   function ensureSection(sectionName) {
     if (initialized.has(sectionName)) {
@@ -155,6 +157,24 @@ function bootstrap() {
 
   window.p3rApp = {
     switchSection,
+    getSocialLinkFocusMode() {
+      return socialLinkFocusMode;
+    },
+    setSocialLinkFocusMode(mode) {
+      const nextMode = mode === 'completion' ? 'completion' : 'balanced';
+      if (nextMode === socialLinkFocusMode) {
+        return socialLinkFocusMode;
+      }
+      socialLinkFocusMode = nextMode;
+      socialLinkFocusListeners.forEach((listener) => listener(socialLinkFocusMode));
+      return socialLinkFocusMode;
+    },
+    subscribeToSocialLinkFocusMode(listener) {
+      socialLinkFocusListeners.add(listener);
+      return function unsubscribe() {
+        socialLinkFocusListeners.delete(listener);
+      };
+    },
     openSocialLinks() {
       switchSection('social-links');
     },

@@ -7,13 +7,14 @@ const context = {
 };
 vm.createContext(context);
 
-for (const file of ['data/social-links.js', 'data/social-links-verified.js', 'js/social-link-rules.js']) {
+for (const file of ['data/personas.js', 'data/social-links.js', 'data/social-links-verified.js', 'js/social-link-rules.js', 'js/social-link-advisor.js']) {
   vm.runInContext(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'), context, { filename: file });
 }
 
 const SOCIAL_LINKS = vm.runInContext('SOCIAL_LINKS', context);
 const getDefinition = context.window.getSocialLinkDefinition;
 const getAvailability = context.window.getSocialLinkAvailability;
+const advisor = context.window.socialLinkAdvisor;
 
 const failures = [];
 
@@ -115,6 +116,64 @@ assert(
   chariotStartable.status === 'setup_needed' && chariotStartable.actionable === true,
   'Manual rank 0 links should surface as actionable start events'
 );
+
+function makeSnapshot({ month, day, stats, roster = [], ranks = {} }) {
+  return {
+    roster,
+    profile: {
+      gameDate: { month, day },
+      playerLevel: 20,
+      currentFloor: 54,
+      stats
+    },
+    socialLinks: {
+      ranks: Object.fromEntries(
+        Object.keys(SOCIAL_LINKS).map((arcana) => [arcana, ranks[arcana] || 0])
+      )
+    },
+    objectives: {}
+  };
+}
+
+const summerSnapshot = makeSnapshot({
+  month: 7,
+  day: 28,
+  stats: { academics: 4, charm: 5, courage: 5 },
+  roster: ['Nekomata', 'Apsaras', 'Angel'],
+  ranks: { Magician: 4, Chariot: 3, Priestess: 2, Hermit: 4, Emperor: 2 }
+});
+const summerDayPick = advisor.getTopModelForDate(summerSnapshot, { timeSlot: 'day', focusMode: 'balanced' });
+assert(summerDayPick?.arcana === 'Hierophant', `Expected July 28 daytime pick to be Hierophant, got ${summerDayPick?.arcana}`);
+const summerEveningPick = advisor.getTopModelForDate(summerSnapshot, { timeSlot: 'evening', focusMode: 'balanced' });
+assert(summerEveningPick?.arcana === 'Devil', `Expected July 28 evening pick to be Devil, got ${summerEveningPick?.arcana}`);
+
+const plannerPressureSnapshot = makeSnapshot({
+  month: 6,
+  day: 24,
+  stats: { academics: 3, charm: 4, courage: 4 },
+  roster: ['Nekomata', 'Apsaras', 'Angel'],
+  ranks: { Magician: 3, Chariot: 2, Hermit: 4 }
+});
+const blockedBalanced = advisor.getBlockedImportantModel(plannerPressureSnapshot, {
+  timeSlot: 'day',
+  focusMode: 'balanced'
+});
+assert(blockedBalanced?.arcana === 'Priestess', `Expected June 24 blocked daytime risk to be Priestess, got ${blockedBalanced?.arcana}`);
+const blockedCompletionWhy = advisor.getRecommendationWhy(blockedBalanced, { focusMode: 'completion' });
+assert(
+  /Critical path for Orpheus Telos\./.test(blockedCompletionWhy),
+  `Expected completion warning copy for Priestess, got: ${blockedCompletionWhy}`
+);
+const strengthBalanced = advisor.getTopModelForDate(plannerPressureSnapshot, {
+  timeSlot: 'day',
+  focusMode: 'balanced'
+});
+assert(strengthBalanced?.arcana === 'Strength', `Expected June 24 daytime pick to be Strength, got ${strengthBalanced?.arcana}`);
+const strengthCompletion = advisor.getTopModelForDate(plannerPressureSnapshot, {
+  timeSlot: 'day',
+  focusMode: 'completion'
+});
+assert(strengthCompletion?.arcana === 'Strength', `Expected June 24 completion pick to stay Strength, got ${strengthCompletion?.arcana}`);
 
 if (failures.length) {
   console.error('Social Link validation failed:\n' + failures.map((entry) => `- ${entry}`).join('\n'));

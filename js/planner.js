@@ -116,6 +116,14 @@ function getRosterMatchForArcana(arcana, snapshot) {
   return snapshot.roster.find((name) => PERSONAS[name] && PERSONAS[name].race === arcana) || null;
 }
 
+function getSocialLinkAdvisor() {
+  return window.socialLinkAdvisor || null;
+}
+
+function getSocialLinkFocusMode() {
+  return window.p3rApp?.getSocialLinkFocusMode ? window.p3rApp.getSocialLinkFocusMode() : 'balanced';
+}
+
 function getLinkExtra(arcana) {
   if (typeof SOCIAL_LINK_EXTRAS === 'undefined') {
     return null;
@@ -446,7 +454,7 @@ function buildWarnings(snapshot, context) {
     const top = context.highPressureLinks[0];
     warnings.push({
       tone: 'warning',
-      text: `${top.character} is currently one of your most fragile Social Links (${top.reasons.join(', ')}).`
+      text: `${top.link.character} is currently one of your most fragile Social Links (${top.plannerReason}).`
     });
   }
 
@@ -516,12 +524,12 @@ function choosePrimaryAction(snapshot, context) {
     };
   }
 
-  if (context.dayPick && context.dayPick.score >= 18) {
+  if (context.dayPick) {
     return {
       kicker: 'Best Use of Today',
       title: `Spend time with ${context.dayPick.link.character}`,
       copy: `This is your strongest available daytime link from the current date, stats, and roster.`,
-      reasons: context.dayPick.reasons.length > 0 ? context.dayPick.reasons : ['High current social value.'],
+      reasons: [context.dayPick.plannerReason || 'High current social value.'],
       action: { type: 'social-links', label: 'Open Social Links' }
     };
   }
@@ -573,11 +581,36 @@ function getPlannerModel() {
   const snapshot = getSnapshot();
   const currentFloor = snapshot.profile.currentFloor;
   const currentBlock = getCurrentBlock(currentFloor);
-  const dayPick = getAvailableLinks(snapshot, 'day').find((item) => item.score >= 0) || null;
-  const nightPick = getAvailableLinks(snapshot, 'evening').find((item) => item.score >= 0) || null;
-  const highPressureLinks = getAvailableLinks(snapshot, 'day')
-    .filter((item) => item.reasons.some((reason) => reason.includes('cutoff') || reason.includes('deadline')))
-    .slice(0, 3);
+  const advisor = getSocialLinkAdvisor();
+  const focusMode = getSocialLinkFocusMode();
+  const advisorOptions = {
+    date: snapshot.profile.gameDate,
+    focusMode
+  };
+  const plannerModels = advisor ? advisor.getModels(snapshot, advisorOptions) : [];
+  const decoratePick = (item) =>
+    item
+      ? {
+          ...item,
+          plannerReason: advisor.getRecommendationWhy(item, { focusMode }) || item.factors.slice(0, 2).join(', ')
+        }
+      : null;
+  const dayPick = advisor ? decoratePick(advisor.getTopModelForDate(snapshot, { ...advisorOptions, timeSlot: 'day' })) : null;
+  const nightPick = advisor ? decoratePick(advisor.getTopModelForDate(snapshot, { ...advisorOptions, timeSlot: 'evening' })) : null;
+  const highPressureLinks = plannerModels
+    .filter(
+      (item) =>
+        item.link &&
+        !item.link.automatic &&
+        item.rank < 10 &&
+        (focusMode === 'completion' ? item.completion.pressure > 0 : item.weeklyPressure > 0)
+    )
+    .sort((left, right) => advisor.compareModels(left, right, { focusMode }))
+    .slice(0, 3)
+    .map((item) => ({
+      ...item,
+      plannerReason: advisor.getRecommendationWhy(item, { focusMode }) || item.factors.slice(0, 2).join(', ')
+    }));
   const statBottlenecks = getStatBottlenecks(snapshot);
   const statFallback = statBottlenecks[0]
     ? {
@@ -654,7 +687,7 @@ function renderWarnings(model) {
     .join('')}</div>`;
 }
 
-function renderSlotAction(label, item, fallback, blockedReason) {
+function renderSlotActionLegacy(label, item, fallback, blockedReason) {
   if (blockedReason) {
     return `<div class="planner-slot-card"><div class="planner-slot-top"><span class="planner-slot-name">${label}</span><span class="planner-slot-chip">Blocked</span></div><div class="planner-slot-main">${escapeHtml(
       blockedReason
@@ -682,6 +715,23 @@ function renderDayNight(model) {
       ${renderSlotAction('Today', model.dayPick, model.statFallback, getBlockedReason(currentDate.month, currentDate.day, 'day'))}
       ${renderSlotAction('Tonight', model.nightPick, model.statFallback, getBlockedReason(currentDate.month, currentDate.day, 'evening'))}
     </div>`;
+}
+
+function renderSlotAction(label, item, fallback, blockedReason) {
+  if (blockedReason) {
+    return `<div class="planner-slot-card"><div class="planner-slot-top"><span class="planner-slot-name">${label}</span><span class="planner-slot-chip">Blocked</span></div><div class="planner-slot-main">${escapeHtml(
+      blockedReason
+    )}</div></div>`;
+  }
+  if (item) {
+    return `<div class="planner-slot-card"><div class="planner-slot-top"><span class="planner-slot-name">${label}</span><span class="planner-slot-chip">${escapeHtml(item.arcana)}</span></div><div class="planner-slot-main">${escapeHtml(item.link.character)}</div><div class="planner-muted">${escapeHtml(item.plannerReason || 'Best current pick.')}</div><button class="planner-action-btn" data-nav="social-links">Open Social Links</button></div>`;
+  }
+  if (fallback) {
+    return `<div class="planner-slot-card"><div class="planner-slot-top"><span class="planner-slot-name">${label}</span><span class="planner-slot-chip">Fallback</span></div><div class="planner-slot-main">Raise ${escapeHtml(
+      capitalize(fallback.stat)
+    )}</div><div class="planner-muted">${escapeHtml(fallback.note)}</div><button class="planner-action-btn" data-nav="social-links">Open Social Links</button></div>`;
+  }
+  return `<div class="planner-slot-card"><div class="planner-slot-top"><span class="planner-slot-name">${label}</span><span class="planner-slot-chip">Stable</span></div><div class="planner-slot-main">Flexible slot</div><div class="planner-muted">No strong pressure signal is active here right now.</div></div>`;
 }
 
 function renderTartarus(model) {
@@ -790,6 +840,9 @@ function initPlanner({ root, store }) {
 
   plannerRoot.addEventListener('click', onPlannerAction);
   plannerStore.subscribe(renderPlanner);
+  if (window.p3rApp?.subscribeToSocialLinkFocusMode) {
+    window.p3rApp.subscribeToSocialLinkFocusMode(renderPlanner);
+  }
   renderPlanner();
 }
 
