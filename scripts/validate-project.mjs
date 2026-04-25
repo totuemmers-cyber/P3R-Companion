@@ -375,9 +375,10 @@ function validateFusionRecommendationLevelGates(context) {
     'Planner boss prep should fall through to Dominion at player level 64'
   );
   assert(
-    pickBossPersona(hangedManPersonas, 69) === 'Loki',
-    'Planner boss prep may recommend Loki at player level 69'
+    canRecommend('Loki', 69),
+    'Loki should only become recommendable at player level 69 or higher'
   );
+  assert(hangedManPersonas.indexOf('Dominion (Wind / Light)') < hangedManPersonas.findIndex((persona) => extractPersonaName(persona) === 'Loki'), 'Hanged Man prep should list attainable coverage before Loki');
   assert(
     pickBossPersona(['Loki (Multi-element)'], 64) === null,
     'Planner boss prep should emit no impossible fusion recommendation when every target is level-locked'
@@ -388,6 +389,51 @@ function validateFusionRecommendationLevelGates(context) {
   });
 
   console.log('Validated fusion recommendation level gates.');
+}
+
+function validateFullMoonGuideAccuracy(context) {
+  const PERSONAS = getGlobal(context, 'PERSONAS');
+  const BOSS_STRATS = getGlobal(context, 'BOSS_STRATS');
+  const extractPersonaName = (value) => String(value || '').split(' (')[0].trim();
+  const strategyText = (strategy) =>
+    [
+      strategy?.quickTip,
+      ...(strategy?.phases || []).flatMap((phase) => [phase.name, phase.tips])
+    ]
+      .filter(Boolean)
+      .join(' ');
+  const assertNoText = (strategyName, pattern, message) => {
+    assert(!pattern.test(strategyText(BOSS_STRATS[strategyName])), message);
+  };
+
+  Object.entries(BOSS_STRATS).forEach(([name, strategy]) => {
+    (strategy.personas || []).forEach((persona) => {
+      const personaName = extractPersonaName(persona);
+      assert(Boolean(PERSONAS[personaName]), `${name} references missing guide persona: ${personaName}`);
+    });
+  });
+
+  assertNoText('Priestess A', /Priestess is weak to Fire/i, 'Priestess guide should not claim the boss is Fire-weak');
+  assertNoText('Hierophant A', /Weak to Strike|Strike weakness/i, 'Hierophant guide should not claim a Strike weakness');
+  assertNoText('Lovers A', /Weak to Wind and Pierce|Exploit Wind/i, 'Lovers guide should not claim Wind/Pierce weakness');
+  assertNoText('Chariot A', /Weak to Strike and Wind|resists all physical/i, 'Chariot guide should not claim unsupported weakness or physical immunity');
+  assertNoText('Hermit A', /Weak to Wind|Exploit Wind/i, 'Hermit guide should not claim a Wind weakness');
+  assertNoText('Strength A', /Weak to Ice|Ice weakness/i, 'Strength guide should not claim an Ice weakness');
+  assertNoText('Chidori', /Weak to Wind and Ice|Exploit Wind weakness/i, 'Chidori guide should not claim Wind/Ice weakness');
+
+  Object.entries(BOSS_STRATS).forEach(([name, strategy]) => {
+    const recLevel = strategy.recLevel || 0;
+    if (!recLevel || recLevel >= 80) {
+      return;
+    }
+    const hasAvailablePersona = (strategy.personas || []).some((persona) => {
+      const personaData = PERSONAS[extractPersonaName(persona)];
+      return personaData && personaData.lvl <= recLevel;
+    });
+    assert(hasAvailablePersona, `${name} should have at least one Persona suggestion at or below recommended level`);
+  });
+
+  console.log('Validated Full Moon boss guide accuracy rules.');
 }
 
 function validateStoreRoundtrip(context) {
@@ -565,6 +611,7 @@ validateRequests(dataContext);
 validateTartarusObjectives(dataContext);
 validateStaleDeadlineFiltering(dataContext);
 validateFusionRecommendationLevelGates(dataContext);
+validateFullMoonGuideAccuracy(dataContext);
 validateStoreRoundtrip(dataContext);
 validateBrowserEntrypoints();
 

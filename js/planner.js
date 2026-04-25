@@ -1106,20 +1106,6 @@ function getPlannerModel() {
   };
 }
 
-function renderStateStrip(model) {
-  const currentBlockLabel = model.currentBlock ? `${model.currentBlock.name} (${model.currentBlock.floors})` : 'Outside Tartarus';
-  return `
-    <div class="planner-state-pill"><span class="planner-state-label">Date</span><span class="planner-state-value">${escapeHtml(
-      formatDate(model.snapshot.profile.gameDate)
-    )}</span></div>
-    <div class="planner-state-pill"><span class="planner-state-label">Level</span><span class="planner-state-value">Lv ${model.snapshot.profile.playerLevel}</span></div>
-    <div class="planner-state-pill"><span class="planner-state-label">Current Floor</span><span class="planner-state-value">${model.snapshot.profile.currentFloor}F</span></div>
-    <div class="planner-state-pill"><span class="planner-state-label">Current Block</span><span class="planner-state-value">${escapeHtml(
-      currentBlockLabel
-    )}</span></div>
-  `;
-}
-
 function renderPrimaryAction(model) {
   const action = model.primaryAction;
   return `<h2>Best Next Action</h2>
@@ -1324,7 +1310,6 @@ function renderActionRow(action, completeId) {
 function renderPlanner() {
   const model = getPlannerModel();
 
-  plannerRoot.querySelector('#planner-state-strip').innerHTML = renderStateStrip(model);
   plannerRoot.querySelector('#planner-today-route').innerHTML = renderTodayRoute(model);
   plannerRoot.querySelector('#planner-primary-action').innerHTML = renderPrimaryAction(model);
   plannerRoot.querySelector('#planner-warnings').innerHTML = renderWarnings(model);
@@ -1400,7 +1385,7 @@ function initPlanner({ root, store }) {
       selector: '#planner-run-state',
       title: 'Run State',
       subtitle: 'Shared inputs for planning, Tartarus readiness, and Social Link routing.',
-      fields: ['date', 'level', 'floor', 'academics', 'charm', 'courage'],
+      fields: ['date', 'level', 'floor', 'block', 'academics', 'charm', 'courage'],
       note: 'These controls update the same save-backed state used across every section.'
     });
   }

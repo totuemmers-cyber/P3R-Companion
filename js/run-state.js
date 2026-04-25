@@ -44,6 +44,14 @@ function renderReadonlyItem(label, value) {
   )}</span><span class="run-state-readonly-value">${escapeHtml(value)}</span></div>`;
 }
 
+function getCurrentBlockLabel(floor) {
+  if (typeof BLOCKS === 'undefined') {
+    return 'Unknown';
+  }
+  const block = BLOCKS.find((entry) => floor >= entry.fMin && floor <= entry.fMax);
+  return block ? `${block.name} (${block.floors})` : 'Outside Tartarus';
+}
+
 function renderEditableField(label, field, controlHtml) {
   return `<label class="run-state-field"><span class="run-state-label">${escapeHtml(
     label
@@ -103,6 +111,11 @@ function renderFields(profile, fields, readOnly) {
           )
         );
       }
+      return;
+    }
+
+    if (field === 'block') {
+      parts.push(renderReadonlyItem('Current Block', getCurrentBlockLabel(profile.currentFloor)));
       return;
     }
 

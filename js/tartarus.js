@@ -233,6 +233,61 @@ function getCurrentPlayerLevel() {
   return getCurrentProfile().playerLevel || 1;
 }
 
+function extractStrategyPersonaName(value) {
+  return String(value || '').split(' (')[0].trim();
+}
+
+function getStrategyPersonaLevel(value) {
+  const name = extractStrategyPersonaName(value);
+  return PERSONAS[name]?.lvl || null;
+}
+
+function renderStrategyPersonaBadge(persona) {
+  const level = getStrategyPersonaLevel(persona);
+  const levelText = level ? ` Lv ${level}` : '';
+  return `<span class="strat-badge strat-persona">${escapeHtml(persona)}${escapeHtml(levelText)}</span>`;
+}
+
+function renderLockedStrategyPersonaBadge(persona, currentLevel) {
+  const level = getStrategyPersonaLevel(persona);
+  const suffix = level ? ` Lv ${level} / current Lv ${currentLevel}` : ' level unknown';
+  return `<span class="strat-badge strat-persona strat-persona-locked">${escapeHtml(persona)}${escapeHtml(
+    ` (${suffix})`
+  )}</span>`;
+}
+
+function renderStrategyPersonaRows(personas, availableLabel = 'Personas') {
+  if (!personas || personas.length === 0) {
+    return '';
+  }
+
+  const currentLevel = getCurrentPlayerLevel();
+  const available = [];
+  const locked = [];
+
+  personas.forEach((persona) => {
+    const level = getStrategyPersonaLevel(persona);
+    if (!level || level <= currentLevel) {
+      available.push(persona);
+    } else {
+      locked.push(persona);
+    }
+  });
+
+  let html = '';
+  if (available.length > 0) {
+    html += `<div class="strat-row"><span class="strat-label">${escapeHtml(availableLabel)}:</span> ${available
+      .map(renderStrategyPersonaBadge)
+      .join(' ')}</div>`;
+  }
+  if (locked.length > 0) {
+    html += `<div class="strat-row strat-row-locked"><span class="strat-label">Later Options:</span> ${locked
+      .map((persona) => renderLockedStrategyPersonaBadge(persona, currentLevel))
+      .join(' ')}</div>`;
+  }
+  return html;
+}
+
 function getLevelReadiness(currentLevel, recommendedLevel) {
   if (!recommendedLevel || !currentLevel) {
     return null;
@@ -818,9 +873,7 @@ function renderDetailRow(shadow) {
         .join(' ')}</div>`;
     }
     if (strategy.personas) {
-      html += `<div class="strat-row"><span class="strat-label">Personas:</span> ${strategy.personas
-        .map((persona) => `<span class="strat-badge strat-persona">${escapeHtml(persona)}</span>`)
-        .join(' ')}</div>`;
+      html += renderStrategyPersonaRows(strategy.personas, 'Personas');
     }
     if (strategy.items) {
       html += `<div class="strat-row"><span class="strat-label">Items:</span> ${strategy.items
@@ -1433,9 +1486,7 @@ function renderFullMoon() {
           .join(' ')}</div>`;
       }
       if (primaryStrategy.personas) {
-        html += `<div class="strat-row"><span class="strat-label">Bring Personas:</span> ${primaryStrategy.personas
-          .map((persona) => `<span class="strat-badge strat-persona">${escapeHtml(persona)}</span>`)
-          .join(' ')}</div>`;
+        html += renderStrategyPersonaRows(primaryStrategy.personas, 'Bring Personas');
       }
       if (primaryStrategy.items) {
         html += `<div class="strat-row"><span class="strat-label">Stock Items:</span> ${primaryStrategy.items
