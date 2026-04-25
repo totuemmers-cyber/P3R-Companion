@@ -391,6 +391,123 @@ function validateFusionRecommendationLevelGates(context) {
   console.log('Validated fusion recommendation level gates.');
 }
 
+function validateRosterOpportunityLevelGates(context) {
+  const PERSONAS = getGlobal(context, 'PERSONAS');
+  const SPECIAL_RECIPES = getGlobal(context, 'SPECIAL_RECIPES');
+  const ARCANA_CHART = getGlobal(context, 'ARCANA_CHART');
+  const ARCANA_LIST = getGlobal(context, 'ARCANA_LIST');
+  const source = readRepoFile('js/velvet.js');
+  const specialPersonas = new Set(Object.keys(SPECIAL_RECIPES));
+  const resultsByArcana = {};
+  const ingredientsByArcana = {};
+  const personaList = Object.entries(PERSONAS)
+    .map(([name, data]) => ({ name, ...data }))
+    .sort((left, right) => left.lvl - right.lvl || left.name.localeCompare(right.name));
+
+  personaList.forEach((persona) => {
+    if (!ingredientsByArcana[persona.race]) {
+      ingredientsByArcana[persona.race] = [];
+    }
+    ingredientsByArcana[persona.race].push(persona);
+    if (!specialPersonas.has(persona.name)) {
+      if (!resultsByArcana[persona.race]) {
+        resultsByArcana[persona.race] = [];
+      }
+      resultsByArcana[persona.race].push(persona);
+    }
+  });
+
+  const getResultArcana = (a1, a2) => (a1 === a2 ? a1 : ARCANA_CHART[a1]?.[a2] || null);
+  const checkTwoIngredientSpecial = (names) => {
+    const nameSet = new Set(names);
+    return Object.entries(SPECIAL_RECIPES).find(
+      ([, ingredients]) => ingredients.length === names.length && ingredients.every((ingredient) => nameSet.has(ingredient))
+    )?.[0] || null;
+  };
+  const fuseSameArcana = (p1, p2) => {
+    const candidates = (resultsByArcana[p1.race] || []).filter(
+      (candidate) => candidate.lvl !== p1.lvl && candidate.lvl !== p2.lvl
+    );
+    const sumLvl = p1.lvl + p2.lvl;
+    let index = -1;
+    for (let cursor = candidates.length - 1; cursor >= 0; cursor -= 1) {
+      if (sumLvl + 2 >= 2 * candidates[cursor].lvl) {
+        index = cursor;
+        break;
+      }
+    }
+    if (index < 0) {
+      return null;
+    }
+    if (candidates[index].lvl === p2.lvl) {
+      index -= 1;
+    }
+    return index >= 0 ? candidates[index] : null;
+  };
+  const fuseDyad = (p1, p2) => {
+    const special = checkTwoIngredientSpecial([p1.name, p2.name]);
+    if (special) {
+      return { name: special, ...PERSONAS[special] };
+    }
+    if (p1.race === p2.race) {
+      return fuseSameArcana(p1, p2);
+    }
+    const resultArcana = getResultArcana(p1.race, p2.race);
+    const candidates = resultsByArcana[resultArcana] || [];
+    const sumLvl = p1.lvl + p2.lvl;
+    let index = 0;
+    for (let cursor = 0; cursor < candidates.length; cursor += 1) {
+      if (sumLvl >= 2 * candidates[cursor].lvl) {
+        index = cursor + 1;
+      }
+    }
+    if (index >= candidates.length) {
+      index = candidates.length - 1;
+    }
+    if (candidates[index]?.name === p1.name || candidates[index]?.name === p2.name) {
+      index += 1;
+    }
+    return index < candidates.length ? candidates[index] : null;
+  };
+
+  assert(source.includes('SOON_LEVEL_WINDOW = 5'), 'Roster opportunities should preview the next 5 levels by default');
+  assert(source.includes('fusion.level <= currentLevel'), 'Ready roster opportunities must be gated at current player level');
+  assert(
+    source.includes('fusion.level > currentLevel && fusion.level <= currentLevel + SOON_LEVEL_WINDOW'),
+    'Soon roster opportunities must be above current level and within the preview window'
+  );
+
+  const entries = [];
+  for (let i = 0; i < personaList.length; i += 1) {
+    for (let j = i + 1; j < personaList.length; j += 1) {
+      const result = fuseDyad(personaList[i], personaList[j]);
+      if (result) {
+        entries.push({ a: personaList[i].name, b: personaList[j].name, result: result.name, level: result.lvl });
+      }
+    }
+  }
+
+  const currentLevel = 64;
+  const ready = entries.filter((entry) => entry.level <= currentLevel);
+  const soon = entries.filter((entry) => entry.level > currentLevel && entry.level <= currentLevel + 5);
+
+  assert(ready.length > 0, 'Expected at least one ready roster opportunity fixture');
+  assert(soon.length > 0, 'Expected at least one soon roster opportunity fixture');
+  ready.forEach((entry) => {
+    assert(entry.level <= currentLevel, `${entry.result} should not appear under Ready Now above level ${currentLevel}`);
+  });
+  soon.forEach((entry) => {
+    assert(entry.level > currentLevel && entry.level <= currentLevel + 5, `${entry.result} should only appear under Soon within the preview window`);
+  });
+  entries.forEach((entry) => {
+    assert(Boolean(PERSONAS[entry.a]), `Roster opportunity references missing ingredient: ${entry.a}`);
+    assert(Boolean(PERSONAS[entry.b]), `Roster opportunity references missing ingredient: ${entry.b}`);
+    assert(Boolean(PERSONAS[entry.result]), `Roster opportunity references missing result: ${entry.result}`);
+  });
+
+  console.log('Validated roster opportunity level gates.');
+}
+
 function validateFullMoonGuideAccuracy(context) {
   const PERSONAS = getGlobal(context, 'PERSONAS');
   const BOSS_STRATS = getGlobal(context, 'BOSS_STRATS');
@@ -611,6 +728,7 @@ validateRequests(dataContext);
 validateTartarusObjectives(dataContext);
 validateStaleDeadlineFiltering(dataContext);
 validateFusionRecommendationLevelGates(dataContext);
+validateRosterOpportunityLevelGates(dataContext);
 validateFullMoonGuideAccuracy(dataContext);
 validateStoreRoundtrip(dataContext);
 validateBrowserEntrypoints();

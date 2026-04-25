@@ -24,6 +24,9 @@ const ELEM_NAMES = {
   spe: 'Special'
 };
 const ATTACK_ELEMS = ['fir', 'ice', 'ele', 'win', 'lig', 'dar', 'sla', 'str', 'pie', 'alm'];
+const MAX_READY_OPPORTUNITIES = 5;
+const MAX_SOON_OPPORTUNITIES = 5;
+const SOON_LEVEL_WINDOW = 5;
 
 const specialPersonas = new Set(Object.keys(SPECIAL_RECIPES));
 const personaList = Object.entries(PERSONAS)
@@ -53,6 +56,8 @@ let fuseBName = null;
 let allFusions = [];
 let allFusionsSortKey = 'score';
 let allFusionsSortDir = -1;
+let rosterOpportunities = { ready: [], soon: [] };
+let rosterOpportunityMode = 'ready';
 let compSortKey = 'lvl';
 let compSortDir = 1;
 let selectedPersona = null;
@@ -1042,6 +1047,8 @@ function scoreFusion(fusion) {
   if (activeSL.some((entry) => entry.arcana === result.race) && !getRosterArray().some((name) => PERSONAS[name].race === result.race)) {
     score += 8;
   }
+  const lost = analyzeLostCoverage(fusion);
+  score -= (lost.lostResists.length + lost.lostAttacks.length) * 4;
   return score;
 }
 
@@ -1083,6 +1090,23 @@ function getRecommendationReason(fusion) {
       reasons.push(`Brings ${skillName}`);
     }
   });
+  const activeLink = getActiveSocialLinks().find(
+    (entry) => entry.arcana === result.race && !getRosterArray().some((name) => PERSONAS[name]?.race === result.race)
+  );
+  if (activeLink) {
+    reasons.push(`Covers active ${result.race} Social Link`);
+  }
+  const a = PERSONAS[fusion.a];
+  const b = PERSONAS[fusion.b];
+  if (a && b) {
+    const levelDelta = result.lvl - Math.max(a.lvl, b.lvl);
+    if (levelDelta >= 3) {
+      reasons.push(`Lv +${levelDelta} upgrade`);
+    }
+  }
+  if (fusion.isNew) {
+    reasons.push('New compendium entry');
+  }
   Object.entries(analyzeLostCoverage(fusion).resummon).forEach(([name, whys]) => {
     reasons.push(`<span class="rec-warning">Resummon ${name} for ${whys.join(', ')}</span>`);
   });
@@ -1158,11 +1182,10 @@ function autoPopulateFusion(a, b) {
   updateFusionResult();
 }
 
-function computeAllFusions() {
-  refreshAnalysisCache();
+function buildRosterFusionEntries() {
   const roster = getRosterArray().map((name) => ({ name, ...PERSONAS[name] }));
   const rosterSet = getRosterSet();
-  allFusions = [];
+  const entries = [];
   for (let i = 0; i < roster.length; i += 1) {
     for (let j = i + 1; j < roster.length; j += 1) {
       const result = fuseDyad(roster[i], roster[j]);
@@ -1177,10 +1200,73 @@ function computeAllFusions() {
         level: PERSONAS[result.name]?.lvl || 0,
         isNew: !rosterSet.has(result.name)
       };
-      entry.score = scoreFusion(entry);
-      allFusions.push(entry);
+      entries.push(entry);
     }
   }
+  return entries;
+}
+
+function getRosterOpportunityScore(fusion, currentLevel) {
+  const lost = analyzeLostCoverage(fusion);
+  let score = scoreFusion(fusion);
+  score += fusion.isNew ? 6 : -12;
+  score -= Math.max(0, fusion.level - currentLevel);
+  score -= (lost.lostResists.length + lost.lostAttacks.length) * 2;
+  return score;
+}
+
+function selectTopOpportunities(entries, limit) {
+  const picked = [];
+  const seenResults = new Set();
+  entries
+    .filter((fusion) => fusion.opportunityScore > 0)
+    .sort(
+      (left, right) =>
+        right.opportunityScore - left.opportunityScore ||
+        right.score - left.score ||
+        Number(right.isNew) - Number(left.isNew) ||
+        right.level - left.level ||
+        left.result.localeCompare(right.result)
+    )
+    .forEach((fusion) => {
+      if (picked.length >= limit || seenResults.has(fusion.result)) {
+        return;
+      }
+      seenResults.add(fusion.result);
+      picked.push(fusion);
+    });
+  return picked;
+}
+
+function computeRosterOpportunities() {
+  refreshAnalysisCache();
+  const currentLevel = getCurrentPlayerLevel();
+  const scored = buildRosterFusionEntries().map((fusion) => {
+    const score = scoreFusion(fusion);
+    return {
+      ...fusion,
+      score,
+      opportunityScore: getRosterOpportunityScore({ ...fusion, score }, currentLevel)
+    };
+  });
+  rosterOpportunities = {
+    ready: selectTopOpportunities(
+      scored.filter((fusion) => fusion.level <= currentLevel),
+      MAX_READY_OPPORTUNITIES
+    ),
+    soon: selectTopOpportunities(
+      scored.filter((fusion) => fusion.level > currentLevel && fusion.level <= currentLevel + SOON_LEVEL_WINDOW),
+      MAX_SOON_OPPORTUNITIES
+    )
+  };
+}
+
+function computeAllFusions() {
+  refreshAnalysisCache();
+  allFusions = buildRosterFusionEntries().map((entry) => ({
+    ...entry,
+    score: scoreFusion(entry)
+  }));
   renderAllFusions();
   renderRecommendedFusions();
   velvetRoot.querySelector('#all-fusions-wrap').style.display = '';
@@ -1211,25 +1297,58 @@ function renderAllFusions() {
 
 function renderRecommendedFusions() {
   const card = velvetRoot.querySelector('#rec-fusions-card');
-  if (!allFusions.length) {
-    card.style.display = 'none';
+  const list = velvetRoot.querySelector('#rec-fusions');
+  const rosterCount = getRosterArray().length;
+  if (!card || !list) {
     return;
   }
-  refreshAnalysisCache();
-  const top = allFusions
-    .map((fusion) => ({ ...fusion, score: scoreFusion(fusion) }))
-    .sort((left, right) => right.score - left.score)
-    .filter((fusion) => fusion.score > 0)
-    .slice(0, 5);
-  if (!top.length) {
-    card.style.display = 'none';
-    return;
-  }
+  computeRosterOpportunities();
   card.style.display = '';
-  velvetRoot.querySelector('#rec-fusions').innerHTML = top
+  if (!rosterCount) {
+    velvetRoot.querySelectorAll('.roster-opp-tab').forEach((button) => {
+      button.classList.toggle('active', button.dataset.rosterOppMode === rosterOpportunityMode);
+    });
+    list.innerHTML = '<div class="rec-empty">Add Personas to your roster to see fusion opportunities.</div>';
+    return;
+  }
+  if (rosterCount < 2) {
+    velvetRoot.querySelectorAll('.roster-opp-tab').forEach((button) => {
+      button.classList.toggle('active', button.dataset.rosterOppMode === rosterOpportunityMode);
+    });
+    list.innerHTML = '<div class="rec-empty">Add one more Persona to compare roster fusions.</div>';
+    return;
+  }
+  if (rosterOpportunityMode === 'ready' && !rosterOpportunities.ready.length && rosterOpportunities.soon.length) {
+    rosterOpportunityMode = 'soon';
+  }
+  if (!rosterOpportunities.ready.length && !rosterOpportunities.soon.length) {
+    list.innerHTML = '<div class="rec-empty">No useful roster fusions stand out right now.</div>';
+    velvetRoot.querySelectorAll('.roster-opp-tab').forEach((button) => {
+      button.classList.toggle('active', button.dataset.rosterOppMode === rosterOpportunityMode);
+    });
+    return;
+  }
+  const currentLevel = getCurrentPlayerLevel();
+  const mode = rosterOpportunityMode === 'soon' ? 'soon' : 'ready';
+  const top = rosterOpportunities[mode];
+  velvetRoot.querySelectorAll('.roster-opp-tab').forEach((button) => {
+    button.classList.toggle('active', button.dataset.rosterOppMode === mode);
+  });
+  if (!top.length) {
+    list.innerHTML =
+      mode === 'soon'
+        ? '<div class="rec-empty">No locked targets within the next 5 levels.</div>'
+        : '<div class="rec-empty">No ready fusions from this roster at your current level.</div>';
+    return;
+  }
+  list.innerHTML = top
     .map(
-      (fusion) =>
-        `<div class="rec-item" data-action="populate-fusion" data-a="${escapeHtml(fusion.a)}" data-b="${escapeHtml(fusion.b)}"><span class="rec-score" style="${getScoreColor(fusion.score)}">${fusion.score}</span><span class="rec-name">${fusion.result}</span><span class="rec-from">${fusion.a} + ${fusion.b}</span><span class="rec-reason">${getRecommendationReason(fusion)}</span></div>`
+      (fusion) => {
+        const locked = mode === 'soon';
+        const levelText = locked ? `Lv ${fusion.level} / current Lv ${currentLevel}` : `Lv ${fusion.level}`;
+        const reason = getRecommendationReason(fusion) || (fusion.isNew ? 'New compendium entry' : 'Useful inheritance check');
+        return `<div class="rec-item${locked ? ' rec-locked' : ''}"><span class="rec-score" style="${getScoreColor(fusion.score)}">${fusion.score}</span><div class="rec-main"><div class="rec-title-row"><span class="rec-name">${fusion.result}</span><span class="rec-meta">${levelText}</span><span class="rec-meta">${fusion.arcana}</span>${fusion.isNew ? '<span class="new-badge">NEW</span>' : ''}${locked ? '<span class="rec-meta rec-locked-label">Locked</span>' : ''}</div><div class="rec-from">${fusion.a} + ${fusion.b}</div><div class="rec-reason">${reason}</div></div><button class="btn btn-sm rec-action" data-action="populate-fusion" data-a="${escapeHtml(fusion.a)}" data-b="${escapeHtml(fusion.b)}">${locked ? 'Preview' : 'Load'}</button></div>`;
+      }
     )
     .join('');
 }
@@ -1527,9 +1646,7 @@ function switchTab(tab) {
   if (tab === 'fusion') {
     closeCompDetailDrawer();
     renderSpecialFusions();
-    if (allFusions.length) {
-      renderRecommendedFusions();
-    }
+    renderRecommendedFusions();
   } else if (tab === 'compendium') {
     renderCompendium();
   }
@@ -1538,6 +1655,7 @@ function switchTab(tab) {
 function rerenderFromStore() {
   renderRoster();
   renderSpecialFusions();
+  renderRecommendedFusions();
   if (fuseAName && !getRosterSet().has(fuseAName)) {
     fuseAName = null;
   }
@@ -1585,6 +1703,12 @@ function initVelvet({ root, store }) {
 
   velvetRoot.querySelectorAll('.tab-btn').forEach((button) => {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
+  });
+  velvetRoot.querySelectorAll('.roster-opp-tab').forEach((button) => {
+    button.addEventListener('click', () => {
+      rosterOpportunityMode = button.dataset.rosterOppMode === 'soon' ? 'soon' : 'ready';
+      renderRecommendedFusions();
+    });
   });
 
   const arcanaOptions = ARCANA_LIST.map((arcana) => `<option value="${arcana}">${arcana}</option>`).join('');
@@ -1719,6 +1843,7 @@ function initVelvet({ root, store }) {
   renderRoster();
   renderCompendium();
   renderSpecialFusions();
+  renderRecommendedFusions();
 }
 
 window.openVelvetFusionTarget = openFusionPlannerTarget;

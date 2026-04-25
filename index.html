@@ -306,8 +306,14 @@
     <!-- FUSION LAB TAB -->
     <div class="tab-content" id="tab-fusion">
       <div class="card" id="rec-fusions-card" style="display:none">
-        <h2>Recommended Fusions</h2>
-        <div id="rec-fusions" class="rec-fusions"></div>
+        <div class="roster-opp-header">
+          <h2>Roster Opportunities</h2>
+          <div class="roster-opp-tabs" role="tablist" aria-label="Roster opportunity mode">
+            <button class="roster-opp-tab active" type="button" data-roster-opp-mode="ready">Ready Now</button>
+            <button class="roster-opp-tab" type="button" data-roster-opp-mode="soon">Soon</button>
+          </div>
+        </div>
+        <div id="rec-fusions" class="rec-fusions roster-opportunities"></div>
       </div>
       <div class="card" id="chain-planner-card" style="display:none">
         <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.8rem;flex-wrap:wrap">

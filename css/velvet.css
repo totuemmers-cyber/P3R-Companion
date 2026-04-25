@@ -516,18 +516,54 @@
   padding: 0.1rem 0.5rem; border-radius: 4px; text-align: center; min-width: 38px; display: inline-block;
 }
 
-/* Recommended Fusions */
-#velvet .rec-fusions { display: flex; flex-direction: column; gap: 0.5rem; }
-#velvet .rec-item {
-  display: flex; align-items: center; gap: 0.8rem; padding: 0.5rem 0.8rem;
-  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-  border-radius: 8px; cursor: pointer; transition: all 0.2s; flex-wrap: wrap;
+/* Roster Opportunities */
+#velvet .roster-opp-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  margin-bottom: 0.8rem; flex-wrap: wrap;
 }
-#velvet .rec-item:hover { border-color: var(--accent-gold); background: var(--bg-card-hover); }
-#velvet .rec-score { font-family: var(--font-app); font-weight: 700; font-size: 1rem; min-width: 32px; font-variant-numeric: tabular-nums; }
-#velvet .rec-name { font-weight: 600; color: var(--accent-gold); min-width: 100px; }
-#velvet .rec-from { font-size: 0.8rem; color: var(--text-muted); }
-#velvet .rec-reason { font-size: 0.8rem; color: var(--accent-cyan); flex: 1; }
+#velvet .roster-opp-header h2 { margin: 0; }
+#velvet .roster-opp-tabs {
+  display: inline-flex; gap: 0.25rem; padding: 0.2rem;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: rgba(255,255,255,0.035);
+}
+#velvet .roster-opp-tab {
+  border: 0; border-radius: 6px; padding: 0.35rem 0.65rem;
+  background: transparent; color: var(--text-muted);
+  font-family: var(--font-app); font-size: 0.78rem; cursor: pointer;
+}
+#velvet .roster-opp-tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+#velvet .roster-opp-tab.active { color: var(--accent-gold); background: rgba(255,213,79,0.12); }
+#velvet .rec-fusions { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.55rem; }
+#velvet .rec-item {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 0.65rem; align-items: center;
+  min-height: 74px; padding: 0.55rem 0.7rem;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  border-radius: 8px; transition: border-color 0.2s, background 0.2s;
+}
+#velvet .rec-item:hover { border-color: rgba(255,213,79,0.55); background: var(--bg-card-hover); }
+#velvet .rec-item.rec-locked { border-color: rgba(68,216,255,0.18); }
+#velvet .rec-score {
+  font-family: var(--font-app); font-weight: 700; font-size: 0.9rem; min-width: 34px;
+  font-variant-numeric: tabular-nums; padding: 0.15rem 0.35rem; border-radius: 4px; text-align: center;
+}
+#velvet .rec-main { min-width: 0; }
+#velvet .rec-title-row { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+#velvet .rec-name { font-weight: 700; color: var(--accent-gold); }
+#velvet .rec-meta {
+  font-size: 0.72rem; color: var(--text-muted); padding: 0.05rem 0.3rem;
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 4px;
+}
+#velvet .rec-from { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; }
+#velvet .rec-reason { font-size: 0.78rem; color: var(--accent-cyan); margin-top: 0.2rem; line-height: 1.35; }
+#velvet .rec-action {
+  align-self: center; white-space: nowrap; font-size: 0.72rem;
+}
+#velvet .rec-empty {
+  grid-column: 1 / -1; color: var(--text-muted); font-size: 0.85rem;
+  padding: 0.2rem 0;
+}
+#velvet .rec-locked-label { color: var(--accent-cyan); }
 
 /* Fusion Comparison */
 #velvet .comparison-panel { margin-top: 1rem; animation: resultAppear 0.3s ease-out; }
