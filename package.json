@@ -2,6 +2,6 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node scripts/validate-social-links.mjs"
+    "test": "node scripts/validate-project.mjs"
   }
 }

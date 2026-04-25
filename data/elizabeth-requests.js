@@ -167,7 +167,13 @@ function deriveVelvetTarget(title) {
 
 function deriveSkillTarget(title) {
   const skillMatch = title.match(/^Create a Persona with (.+)$/i);
-  return skillMatch ? skillMatch[1].trim() : null;
+  if (!skillMatch) {
+    return null;
+  }
+  const skill = skillMatch[1].trim();
+  return {
+    'Auto-Maraku': 'Auto Maraku'
+  }[skill] || skill;
 }
 
 function deriveCategory(title, solution) {
