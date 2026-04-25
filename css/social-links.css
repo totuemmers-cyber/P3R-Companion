@@ -264,11 +264,19 @@
   border-radius: 6px;
   background: rgba(0,0,0,0.2);
   border: 1px solid rgba(255,255,255,0.05);
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
   transition: border-color 0.2s, background 0.2s;
 }
 .sl-progress-item:hover {
   border-color: var(--accent-border);
   background: rgba(68,216,255,0.05);
+}
+.sl-progress-item:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
 }
 .sl-progress-item.maxed {
   border-color: rgba(0,230,118,0.25);

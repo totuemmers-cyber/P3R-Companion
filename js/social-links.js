@@ -1405,7 +1405,7 @@ function slRenderProgressGrid() {
     if (link.automatic) {
       cssClass += ' automatic';
     }
-    return `<div class="${cssClass}"><div class="sl-progress-top"><span class="sl-progress-arcana">${arcana}</span><span class="sl-progress-rank">${rank >= 10 ? 'MAX' : `Rk ${rank}`}</span></div><div class="sl-progress-char">${link.character}</div><div class="sl-progress-bar"><div class="sl-progress-fill" style="width:${pct}%"></div></div></div>`;
+    return `<button class="${cssClass}" type="button" data-sl-progress-arcana="${arcana}" aria-label="Open ${link.character} details"><div class="sl-progress-top"><span class="sl-progress-arcana">${arcana}</span><span class="sl-progress-rank">${rank >= 10 ? 'MAX' : `Rk ${rank}`}</span></div><div class="sl-progress-char">${link.character}</div><div class="sl-progress-bar"><div class="sl-progress-fill" style="width:${pct}%"></div></div></button>`;
   }).join('');
 }
 
@@ -2006,6 +2006,12 @@ function initSocialLinks({ root, store }) {
     const focusButton = event.target.closest('[data-sl-focus]');
     if (focusButton) {
       slFocusArcana(focusButton.dataset.slFocus);
+      return;
+    }
+
+    const progressCard = event.target.closest('[data-sl-progress-arcana]');
+    if (progressCard) {
+      slFocusArcana(progressCard.dataset.slProgressArcana);
       return;
     }
 
