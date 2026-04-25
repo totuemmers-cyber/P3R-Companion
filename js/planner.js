@@ -93,6 +93,14 @@ function parseMonthDayLabel(label) {
   if (!label || typeof label !== 'string') {
     return null;
   }
+  const numericParts = label.replace(',', '').split('/');
+  if (numericParts.length === 2) {
+    const month = Number(numericParts[0]);
+    const day = Number(numericParts[1]);
+    if (Number.isFinite(month) && Number.isFinite(day)) {
+      return { month, day };
+    }
+  }
   const parts = label.replace(',', '').split(/\s+/);
   if (parts.length < 2) {
     return null;
@@ -351,6 +359,51 @@ function getUrgentObjective(snapshot) {
     .sort((left, right) => right.urgency - left.urgency || left.floor - right.floor)[0] || null;
 }
 
+function getUrgentRequest(snapshot) {
+  if (typeof ELIZABETH_REQUESTS === 'undefined') {
+    return null;
+  }
+  const currentDate = snapshot.profile.gameDate;
+  return ELIZABETH_REQUESTS
+    .map((request) => {
+      if (snapshot.objectives?.[request.id]) {
+        return null;
+      }
+      const availableDate = request.available ? parseMonthDayLabel(request.available) : null;
+      if (availableDate && compareDates(currentDate, availableDate) < 0) {
+        const opensIn = daysBetween(currentDate, availableDate);
+        if (opensIn > 3) {
+          return null;
+        }
+        return {
+          ...request,
+          daysLeft: opensIn,
+          urgency: 18 - opensIn,
+          statusLabel: `opens in ${opensIn} day${opensIn === 1 ? '' : 's'}`
+        };
+      }
+      const deadlineDate = request.deadline ? parseMonthDayLabel(request.deadline) : null;
+      if (!deadlineDate) {
+        return null;
+      }
+      const daysLeft = daysBetween(currentDate, deadlineDate);
+      if (daysLeft > 7) {
+        return null;
+      }
+      return {
+        ...request,
+        daysLeft,
+        urgency: daysLeft < 0 ? 95 : 70 - Math.max(daysLeft, 0),
+        statusLabel:
+          daysLeft < 0
+            ? `expired on ${request.deadline}`
+            : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`
+      };
+    })
+    .filter(Boolean)
+    .sort((left, right) => right.urgency - left.urgency || left.number - right.number)[0] || null;
+}
+
 function getNextFullMoon(snapshot) {
   const currentDate = snapshot.profile.gameDate;
   return (
@@ -578,6 +631,180 @@ function capitalize(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+function getActionSystem(action) {
+  if (!action) {
+    return 'Planner';
+  }
+  if (action.type === 'tartarus-floor') {
+    return 'Tartarus';
+  }
+  if (action.type === 'velvet-target') {
+    return 'Velvet Room';
+  }
+  if (action.type === 'social-links') {
+    return 'Social Links';
+  }
+  if (action.type === 'requests') {
+    return 'Requests';
+  }
+  return 'Planner';
+}
+
+function createQueueItem({ system, tone = 'normal', title, copy, meta, action, score }) {
+  return {
+    system,
+    tone,
+    title,
+    copy,
+    meta,
+    action,
+    score
+  };
+}
+
+function buildActionQueue(snapshot, context, primaryAction) {
+  const currentFloor = snapshot.profile.currentFloor;
+  const queue = [
+    createQueueItem({
+      system: getActionSystem(primaryAction.action),
+      tone: primaryAction.kicker === 'Highest Priority' ? 'critical' : 'featured',
+      title: primaryAction.title,
+      copy: primaryAction.copy,
+      meta: primaryAction.kicker,
+      action: primaryAction.action,
+      score: 100
+    })
+  ];
+
+  if (context.urgentRequest) {
+    queue.push(
+      createQueueItem({
+        system: 'Requests',
+        tone: context.urgentRequest.daysLeft < 0 ? 'critical' : 'warning',
+        title: `Request #${context.urgentRequest.number}: ${context.urgentRequest.title}`,
+        copy: `${context.urgentRequest.statusLabel}. Reward: ${context.urgentRequest.reward}.`,
+        meta: context.urgentRequest.systemLabel || context.urgentRequest.categoryLabel,
+        action: { type: 'requests', label: 'Open Requests' },
+        score: context.urgentRequest.urgency
+      })
+    );
+  }
+
+  if (context.urgentObjective) {
+    queue.push(
+      createQueueItem({
+        system: 'Tartarus',
+        tone: context.urgentObjective.daysLeft < 0 ? 'critical' : 'warning',
+        title: context.urgentObjective.title,
+        copy: `${context.urgentObjective.daysLeft < 0 ? 'Deadline missed' : `${context.urgentObjective.daysLeft} day${context.urgentObjective.daysLeft === 1 ? '' : 's'} left`} for ${context.urgentObjective.floor}F. Reward: ${context.urgentObjective.reward}.`,
+        meta: 'Deadline objective',
+        action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: context.urgentObjective.floor },
+        score: context.urgentObjective.urgency
+      })
+    );
+  } else if (context.nearestObjective) {
+    queue.push(
+      createQueueItem({
+        system: 'Tartarus',
+        title: context.nearestObjective.title,
+        copy: `Next tracked floor objective is on ${context.nearestObjective.floor}F in ${context.currentBlock?.name || 'Tartarus'}.`,
+        meta: 'Floor objective',
+        action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: context.nearestObjective.floor },
+        score: 45
+      })
+    );
+  }
+
+  if (context.dayPick) {
+    queue.push(
+      createQueueItem({
+        system: 'Social Links',
+        title: `Day: ${context.dayPick.link.character}`,
+        copy: context.dayPick.plannerReason || 'Best current daytime social-link value.',
+        meta: `${context.dayPick.arcana} Rank ${context.dayPick.rank}/10`,
+        action: { type: 'social-links', label: 'Open Social Links' },
+        score: 58
+      })
+    );
+  }
+
+  if (context.nightPick) {
+    queue.push(
+      createQueueItem({
+        system: 'Social Links',
+        title: `Night: ${context.nightPick.link.character}`,
+        copy: context.nightPick.plannerReason || 'Best current evening social-link value.',
+        meta: `${context.nightPick.arcana} Rank ${context.nightPick.rank}/10`,
+        action: { type: 'social-links', label: 'Open Social Links' },
+        score: 54
+      })
+    );
+  } else if (context.statFallback) {
+    queue.push(
+      createQueueItem({
+        system: 'Social Stats',
+        title: `Raise ${capitalize(context.statFallback.stat)}`,
+        copy: context.statFallback.note,
+        meta: `${context.statFallback.character} gate`,
+        action: { type: 'social-links', label: 'Open Social Links' },
+        score: 50
+      })
+    );
+  }
+
+  if (context.fusionOpportunity) {
+    queue.push(
+      createQueueItem({
+        system: 'Velvet Room',
+        title: context.fusionOpportunity.title,
+        copy: context.fusionOpportunity.copy,
+        meta: context.fusionOpportunity.targetName || 'Fusion prep',
+        action: context.fusionOpportunity.targetName
+          ? { type: 'velvet-target', label: 'Open Fusion Planner', target: context.fusionOpportunity.targetName }
+          : null,
+        score: 48
+      })
+    );
+  }
+
+  if (context.nextGatekeeper) {
+    queue.push(
+      createQueueItem({
+        system: 'Tartarus',
+        title: `${context.nextGatekeeper.name} on ${context.nextGatekeeper.floor}F`,
+        copy: getLevelReadiness(snapshot.profile.playerLevel, context.nextGatekeeper.lvl)?.text || 'Next gatekeeper checkpoint is ahead.',
+        meta: 'Gatekeeper prep',
+        action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: currentFloor },
+        score: 42
+      })
+    );
+  } else if (context.nextFullMoon) {
+    queue.push(
+      createQueueItem({
+        system: 'Tartarus',
+        title: `Prep ${context.nextFullMoon.boss}`,
+        copy: `${context.nextFullMoon.date} is the next Full Moon checkpoint.`,
+        meta: 'Full Moon prep',
+        action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: currentFloor },
+        score: 38
+      })
+    );
+  }
+
+  const seen = new Set();
+  return queue
+    .sort((left, right) => right.score - left.score)
+    .filter((item) => {
+      const key = `${item.system}:${item.title}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 6);
+}
+
 function getPlannerModel() {
   const snapshot = getSnapshot();
   const currentFloor = snapshot.profile.currentFloor;
@@ -622,6 +849,7 @@ function getPlannerModel() {
   const nextGatekeeper = currentBlock ? getNextGatekeeper(currentFloor, currentBlock.id) : null;
   const nextFullMoon = getNextFullMoon(snapshot);
   const urgentObjective = getUrgentObjective(snapshot);
+  const urgentRequest = getUrgentRequest(snapshot);
   const nearestObjective = currentBlock ? getNearestObjective(snapshot, currentFloor, currentBlock.id) : null;
   const fusionOpportunity = getFusionOpportunity(snapshot, dayPick, nextFullMoon);
   const context = {
@@ -633,18 +861,21 @@ function getPlannerModel() {
     nextGatekeeper,
     nextFullMoon,
     urgentObjective,
+    urgentRequest,
     nearestObjective,
     fusionOpportunity
   };
+  const primaryAction = choosePrimaryAction(snapshot, {
+    ...context,
+    currentBlock: currentBlock || { name: 'Tartarus' }
+  });
 
   return {
     snapshot,
     ...context,
     warnings: buildWarnings(snapshot, context),
-    primaryAction: choosePrimaryAction(snapshot, {
-      ...context,
-      currentBlock: currentBlock || { name: 'Tartarus' }
-    })
+    primaryAction,
+    actionQueue: buildActionQueue(snapshot, context, primaryAction)
   };
 }
 
@@ -686,6 +917,32 @@ function renderWarnings(model) {
         )}</div>`
     )
     .join('')}</div>`;
+}
+
+function renderActionQueue(model) {
+  if (!model.actionQueue.length) {
+    return '<h2>Next Action Queue</h2><div class="planner-empty">No queued actions yet. Use the detailed Planner cards below for flexible routing.</div>';
+  }
+  return `<div class="planner-action-queue-head">
+      <div>
+        <h2>Next Action Queue</h2>
+        <div class="planner-muted">A bundled route across Social Links, Requests, Tartarus, and Velvet Room.</div>
+      </div>
+      <span class="planner-action-queue-count">${model.actionQueue.length} live picks</span>
+    </div>
+    <div class="planner-action-queue">${model.actionQueue
+      .map(
+        (item, index) => `<article class="planner-action-item planner-action-item-${escapeHtml(item.tone)}">
+          <div class="planner-action-rank">${index + 1}</div>
+          <div class="planner-action-body">
+            <div class="planner-action-meta"><span>${escapeHtml(item.system)}</span>${item.meta ? `<span>${escapeHtml(item.meta)}</span>` : ''}</div>
+            <div class="planner-action-title">${escapeHtml(item.title)}</div>
+            <div class="planner-action-copy">${escapeHtml(item.copy)}</div>
+          </div>
+          <div class="planner-action-cta">${renderActionButton(item.action)}</div>
+        </article>`
+      )
+      .join('')}</div>`;
 }
 
 function renderSlotActionLegacy(label, item, fallback, blockedReason) {
@@ -795,6 +1052,7 @@ function renderPlanner() {
   plannerRoot.querySelector('#planner-state-strip').innerHTML = renderStateStrip(model);
   plannerRoot.querySelector('#planner-primary-action').innerHTML = renderPrimaryAction(model);
   plannerRoot.querySelector('#planner-warnings').innerHTML = renderWarnings(model);
+  plannerRoot.querySelector('#planner-action-queue').innerHTML = renderActionQueue(model);
   plannerRoot.querySelector('#planner-day-night').innerHTML = renderDayNight(model);
   plannerRoot.querySelector('#planner-tartarus').innerHTML = renderTartarus(model);
   plannerRoot.querySelector('#planner-fusion').innerHTML = renderFusion(model);
@@ -824,6 +1082,10 @@ function onPlannerAction(event) {
   const nav = button.dataset.nav;
   if (nav === 'social-links') {
     window.p3rApp.openSocialLinks();
+    return;
+  }
+  if (nav === 'requests') {
+    window.p3rApp.openRequests();
     return;
   }
   if (nav === 'tartarus-floor') {

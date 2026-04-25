@@ -105,6 +105,114 @@
   background:rgba(14,24,36,0.56);
 }
 
+#planner .planner-action-queue-card{
+  overflow:hidden;
+  border-color:rgba(156,236,255,0.22);
+  background:
+    linear-gradient(135deg, rgba(68,216,255,0.1), rgba(14,24,36,0.78) 42%, rgba(156,236,255,0.07)),
+    radial-gradient(circle at 8% 0%, rgba(68,216,255,0.18), transparent 34%);
+}
+#planner .planner-action-queue-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:1rem;
+  margin-bottom:0.9rem;
+}
+#planner .planner-action-queue-head h2{
+  margin-bottom:0.25rem;
+}
+#planner .planner-action-queue-count{
+  flex:0 0 auto;
+  padding:0.35rem 0.6rem;
+  border-radius:999px;
+  border:1px solid rgba(156,236,255,0.2);
+  background:rgba(156,236,255,0.08);
+  color:var(--accent-secondary);
+  font-size:0.72rem;
+  font-weight:800;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+#planner .planner-action-queue{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:0.75rem;
+}
+#planner .planner-action-item{
+  position:relative;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:0.75rem;
+  min-height:100%;
+  padding:0.9rem;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(4,10,20,0.42);
+}
+#planner .planner-action-item-featured{
+  border-color:rgba(68,216,255,0.28);
+  background:rgba(68,216,255,0.08);
+}
+#planner .planner-action-item-warning{
+  border-color:rgba(255,193,7,0.24);
+  background:rgba(255,193,7,0.06);
+}
+#planner .planner-action-item-critical{
+  border-color:rgba(255,82,82,0.32);
+  background:rgba(255,82,82,0.08);
+}
+#planner .planner-action-rank{
+  width:2rem;
+  height:2rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  background:rgba(68,216,255,0.13);
+  border:1px solid rgba(68,216,255,0.26);
+  color:var(--planner-accent);
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+#planner .planner-action-body{
+  min-width:0;
+}
+#planner .planner-action-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.35rem;
+  margin-bottom:0.35rem;
+}
+#planner .planner-action-meta span{
+  padding:0.18rem 0.45rem;
+  border-radius:999px;
+  background:rgba(255,255,255,0.05);
+  color:var(--text-dim);
+  font-size:0.68rem;
+  font-weight:800;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+#planner .planner-action-title{
+  color:var(--text-bright);
+  font-size:1rem;
+  font-weight:800;
+  line-height:1.25;
+  margin-bottom:0.3rem;
+}
+#planner .planner-action-copy{
+  color:var(--text-dim);
+  font-size:0.84rem;
+  line-height:1.4;
+}
+#planner .planner-action-cta{
+  grid-column:1 / -1;
+}
+#planner .planner-action-cta .planner-action-btn{
+  margin-top:0.1rem;
+}
+
 #planner .planner-primary-kicker{
   font-size:0.72rem;
   font-weight:700;
@@ -244,6 +352,9 @@
 @media (max-width: 720px){
   #planner .planner-main{
     padding:0 1rem 1.5rem;
+  }
+  #planner .planner-action-queue-head{
+    flex-direction:column;
   }
   #planner .planner-state-strip{
     grid-template-columns:1fr;
