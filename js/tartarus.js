@@ -143,7 +143,6 @@ const floorScoutSections = {
   monad: false,
   gatekeepers: false,
   loot: false,
-  grind: false,
   loadout: false
 };
 
@@ -1105,50 +1104,6 @@ function renderFloorTreasureAlert(floor) {
   return html;
 }
 
-function getNearbyGrindSpots(floor, blockId) {
-  const spots = {};
-  ALL_SHADOWS.forEach((shadow) => {
-    if (shadow.type !== 'regular' || !shadow.floorMin || !shadow.floorMax || !shadow.exp) {
-      return;
-    }
-    const key = `${shadow.block}:${shadow.floorMin}-${shadow.floorMax}`;
-    if (!spots[key]) {
-      spots[key] = {
-        block: shadow.block,
-        fMin: shadow.floorMin,
-        fMax: shadow.floorMax,
-        totalExp: 0,
-        count: 0,
-        avgLvl: 0
-      };
-    }
-    spots[key].totalExp += shadow.exp;
-    spots[key].count += 1;
-    spots[key].avgLvl += shadow.lvl;
-  });
-
-  return Object.values(spots)
-    .map((spot) => {
-      const block = BLOCKS.find((entry) => entry.id === spot.block);
-      const distance = floor < spot.fMin ? spot.fMin - floor : floor > spot.fMax ? floor - spot.fMax : 0;
-      return {
-        ...spot,
-        avgLvl: Math.round(spot.avgLvl / spot.count),
-        distance,
-        blockName: block ? block.name : spot.block,
-        blockColor: block ? block.color : '#fff',
-        sameBlock: spot.block === blockId
-      };
-    })
-    .sort(
-      (left, right) =>
-        Number(right.sameBlock) - Number(left.sameBlock) ||
-        left.distance - right.distance ||
-        right.totalExp - left.totalExp
-    )
-    .slice(0, 3);
-}
-
 function renderMajorCheckCard(title, tone, bodyHtml) {
   return `<section class="major-check major-check-${escapeHtml(tone)}"><div class="major-check-title">${escapeHtml(
     title
@@ -1509,22 +1464,6 @@ function renderFloorScout(floor) {
     });
   }
 
-  const nearbyGrindSpots = getNearbyGrindSpots(floor, block.id);
-  if (nearbyGrindSpots.length > 0) {
-    let grindBody = '<div class="floor-support-note">Nearby ranges with strong EXP value from your current position.</div>';
-    nearbyGrindSpots.forEach((spot, index) => {
-      const distanceLabel = spot.distance === 0 ? 'Current range' : `${spot.distance} floor${spot.distance === 1 ? '' : 's'} away`;
-      grindBody += `<div class="grind-spot"><div class="grind-rank">#${index + 1}</div><div class="grind-info"><div class="grind-block" style="color:${spot.blockColor}">${spot.blockName} F${spot.fMin}-${spot.fMax}</div><div class="grind-meta">${spot.totalExp} EXP · Avg Lv${spot.avgLvl} · ${spot.count} shadows · ${distanceLabel}</div></div></div>`;
-    });
-    html += renderFloorScoutSection({
-      key: 'grind',
-      title: 'Nearby grind spots',
-      summary: nearbyGrindSpots[0].distance === 0 ? 'current range included' : 'nearest ranges',
-      tone: 'grind',
-      bodyHtml: grindBody
-    });
-  }
-
   const rosterSet = getRosterSet();
   if (rosterSet.size > 0 && shadows.length > 0) {
     html += renderFloorScoutSection({
@@ -1627,58 +1566,6 @@ function renderFullMoon() {
       card.classList.toggle('expanded');
     });
   });
-}
-
-function renderGrindingGuide(playerLevel) {
-  const info = tartRoot.querySelector('#grindInfo');
-  if (!playerLevel || playerLevel < 1) {
-    info.innerHTML =
-      '<div style="color:var(--text-dim);font-size:0.85rem">Enter your level to see best grinding spots.</div>';
-    return;
-  }
-
-  const spots = {};
-  ALL_SHADOWS.forEach((shadow) => {
-    if (!shadow.block || !shadow.floorMin || !shadow.floorMax || !shadow.exp || shadow.type === 'fullmoon') {
-      return;
-    }
-    const key = `${shadow.block}:${shadow.floorMin}-${shadow.floorMax}`;
-    if (!spots[key]) {
-      spots[key] = {
-        block: shadow.block,
-        fMin: shadow.floorMin,
-        fMax: shadow.floorMax,
-        totalExp: 0,
-        count: 0,
-        avgLvl: 0
-      };
-    }
-    spots[key].totalExp += shadow.exp;
-    spots[key].count += 1;
-    spots[key].avgLvl += shadow.lvl;
-  });
-
-  const top = Object.values(spots)
-    .map((spot) => {
-      const block = BLOCKS.find((entry) => entry.id === spot.block);
-      spot.avgLvl = Math.round(spot.avgLvl / spot.count);
-      const levelDiff = Math.abs(spot.avgLvl - playerLevel);
-      spot.efficiency = Math.round(spot.totalExp / (1 + levelDiff * 0.15));
-      spot.blockName = block ? block.name : spot.block;
-      spot.blockColor = block ? block.color : '#fff';
-      return spot;
-    })
-    .sort((left, right) => right.efficiency - left.efficiency)
-    .slice(0, 5);
-
-  info.innerHTML =
-    top
-      .map(
-        (spot, index) =>
-          `<div class="grind-spot"><div class="grind-rank">#${index + 1}</div><div class="grind-info"><div class="grind-block" style="color:${spot.blockColor}">${spot.blockName} F${spot.fMin}-${spot.fMax}</div><div class="grind-meta">${spot.totalExp} EXP · Avg Lv${spot.avgLvl} · ${spot.count} shadows</div></div></div>`
-      )
-      .join('') ||
-    '<div style="color:var(--text-dim);font-size:0.85rem">No grinding data available.</div>';
 }
 
 let lootIndex = null;

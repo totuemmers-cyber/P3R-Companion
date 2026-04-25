@@ -250,7 +250,6 @@
 #tartarus .floor-scout-section-monad{background:linear-gradient(180deg,rgba(123,31,162,0.12),rgba(123,31,162,0.04));border-color:rgba(123,31,162,0.24)}
 #tartarus .floor-scout-section-gatekeeper{background:linear-gradient(180deg,rgba(255,23,68,0.1),rgba(255,23,68,0.03));border-color:rgba(255,23,68,0.24)}
 #tartarus .floor-scout-section-loot{background:linear-gradient(180deg,rgba(76,175,80,0.1),rgba(76,175,80,0.03));border-color:rgba(76,175,80,0.22)}
-#tartarus .floor-scout-section-grind{background:linear-gradient(180deg,rgba(255,213,79,0.12),rgba(255,213,79,0.03));border-color:rgba(255,213,79,0.22)}
 #tartarus .floor-scout-section-support{background:linear-gradient(180deg,rgba(0,229,255,0.08),rgba(255,255,255,0.02))}
 #tartarus .floor-scout-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:0.8rem;padding:0.75rem 0.85rem;background:transparent;border:none;color:var(--text);text-align:left;cursor:pointer}
 #tartarus .floor-scout-toggle:hover{background:rgba(255,255,255,0.03)}
@@ -259,7 +258,6 @@
 #tartarus .floor-scout-section-monad .floor-scout-toggle-title{color:#e1b7f0}
 #tartarus .floor-scout-section-gatekeeper .floor-scout-toggle-title{color:#ff8ca3}
 #tartarus .floor-scout-section-loot .floor-scout-toggle-title{color:#8de39c}
-#tartarus .floor-scout-section-grind .floor-scout-toggle-title{color:#ffe082}
 #tartarus .floor-scout-toggle-summary{font-size:0.74rem;color:var(--text-dim);letter-spacing:0.03em}
 #tartarus .floor-scout-toggle-chevron{flex-shrink:0;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:rgba(255,255,255,0.06);font-size:1rem;font-weight:700;color:var(--text-bright)}
 #tartarus .floor-scout-section-body{padding:0 0.85rem 0.75rem}
@@ -424,14 +422,6 @@
 #tartarus .moon-quick-tip{font-size:0.78rem;color:var(--text-dim);font-style:italic;margin-top:0.2rem}
 #tartarus .moon-shadows-label{font-size:0.8rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.8rem;padding-top:0.5rem;border-top:1px solid rgba(0,229,255,0.08)}
 #tartarus .moon-phases{margin:0.5rem 0}
-
-/* Grinding guide */
-#tartarus .grind-spot{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0;border-bottom:1px solid rgba(0,229,255,0.06)}
-#tartarus .grind-spot:last-child{border-bottom:none}
-#tartarus .grind-rank{font-family:var(--font-app);font-size:0.85rem;font-weight:700;color:var(--cyan);min-width:28px;font-variant-numeric:tabular-nums}
-#tartarus .grind-info{flex:1;min-width:0}
-#tartarus .grind-block{font-weight:600;font-size:0.85rem}
-#tartarus .grind-meta{font-size:0.75rem;color:var(--text-dim)}
 
 /* Loot finder */
 #tartarus .loot-item-group{padding:0.5rem 0;border-bottom:1px solid rgba(0,229,255,0.08)}
@@ -630,8 +620,7 @@
   background:linear-gradient(180deg,rgba(255,90,120,0.09),rgba(255,255,255,0.016));
 }
 
-#tartarus .major-check-fullmoon,
-#tartarus .floor-scout-section-grind{
+#tartarus .major-check-fullmoon{
   border-color:rgba(255,211,106,0.26);
   background:linear-gradient(180deg,rgba(255,211,106,0.085),rgba(255,255,255,0.016));
 }
@@ -735,7 +724,6 @@
 #tartarus .loadout-reason,
 #tartarus .strat-label,
 #tartarus .moon-quick-tip,
-#tartarus .grind-meta,
 #tartarus .drop-chance{
   font-size:var(--text-small);
 }
