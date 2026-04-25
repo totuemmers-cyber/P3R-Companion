@@ -687,9 +687,9 @@ button:focus-visible,
 
 /* === Accessibility sizing polish === */
 :root{
-  --text-micro:0.76rem;
-  --text-small:0.82rem;
-  --control-min-hit:40px;
+  --text-micro:0.8rem;
+  --text-small:0.86rem;
+  --control-min-hit:42px;
 }
 
 .app-nav .app-title span{
@@ -719,7 +719,7 @@ button:focus-visible,
 }
 
 .input-clear-btn{
-  width:1.45rem;
-  height:1.45rem;
+  width:1.6rem;
+  height:1.6rem;
   font-size:1.08rem;
 }

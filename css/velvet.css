@@ -1252,6 +1252,11 @@
 #velvet .chain-meta,
 #velvet .chain-badge-special,
 #velvet .planner-status,
+#velvet .resist-badge .r-elem,
+#velvet .skill-tag .s-lvl,
+#velvet .skill-tag .s-innate,
+#velvet .elem-badge .eb-label,
+#velvet .elem-badge .eb-skill,
 .inherit-badge,
 .roster-sl-badge,
 .sl-cov-char,
@@ -1277,6 +1282,11 @@
 #velvet .chain-badge-special,
 .roster-sl-badge{
   padding:0.12rem 0.45rem;
+}
+
+#velvet .resist-badge{
+  min-width:46px;
+  padding:0.18rem 0.52rem;
 }
 
 #velvet .btn{

@@ -1707,6 +1707,9 @@
 .sl-rec-score,
 .sl-rec-meta,
 .sl-rec-badge,
+.sl-day-badge,
+.sl-rank-label,
+.sl-rank-dot,
 .sl-link-meta,
 .sl-link-status,
 .sl-link-rank,
@@ -1760,4 +1763,14 @@
 
 .sl-calendar-day{
   min-height:180px;
+}
+
+.sl-day-badge{
+  width:30px;
+  height:24px;
+}
+
+.sl-rank-dot{
+  width:24px;
+  height:24px;
 }
