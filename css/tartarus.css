@@ -16,7 +16,7 @@
 #tartarus .nav-tab:hover,#tartarus .nav-tab.active{color:var(--text-bright);border-color:var(--cyan);box-shadow:0 0 12px rgba(0,229,255,0.2);transform:translateY(-1px)}
 #tartarus .nav-tab.active{background:rgba(0,229,255,0.1)}
 
-#tartarus .controls{max-width:1400px;margin:0 auto;padding:0.75rem 1rem;display:grid;gap:0.75rem}
+#tartarus .controls{width:100%;max-width:none;margin:0;padding:0.75rem 1rem;display:grid;gap:0.75rem}
 #tartarus .controls > .input-clear-wrap{flex:1;min-width:200px}
 #tartarus .controls > .input-clear-wrap > .search-box{width:100%}
 #tartarus .search-box{flex:1;min-width:200px;padding:0.6rem 1rem;border-radius:4px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:var(--font-app);font-size:1rem;outline:none;transition:border-color 0.3s}
@@ -30,12 +30,12 @@
 #tartarus select.filter-select{padding:0.45rem 0.7rem;border-radius:8px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:var(--font-app);font-size:0.85rem;outline:none;cursor:pointer}
 #tartarus select.filter-select option{background:#0d1229;color:var(--text)}
 
-#tartarus .main{max-width:1400px;margin:0 auto;padding:0 1rem 2rem;position:relative}
+#tartarus .main{width:100%;max-width:none;margin:0;padding:0 1rem 2rem;position:relative}
 #tartarus .tartarus-view{display:none}
 #tartarus .tartarus-view.active{display:block}
 #tartarus .dashboard-shell{min-width:0}
 #tartarus .table-wrap{overflow-x:auto}
-#tartarus .floor-dashboard{position:static;top:auto;max-width:980px;margin:0 auto}
+#tartarus .floor-dashboard{position:static;top:auto;width:100%;max-width:none;margin:0}
 #tartarus .tartarus-run-state-card{margin-bottom:1rem}
 #tartarus .floor-dashboard-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.85rem}
 #tartarus .floor-dashboard-note{font-size:0.82rem;color:var(--text-dim);letter-spacing:0.03em}

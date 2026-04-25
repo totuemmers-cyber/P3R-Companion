@@ -93,7 +93,7 @@
 }
 
 /* Main */
-#velvet .main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+#velvet .main { width: 100%; max-width: none; margin: 0; padding: 1.5rem; }
 #velvet .tab-content { display: none; }
 #velvet .tab-content.active { display: block; }
 
