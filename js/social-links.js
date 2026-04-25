@@ -926,6 +926,24 @@ function slFormatActivityMeta(item) {
   return item.arcana;
 }
 
+function slIsAutoLinkedEpisode(item) {
+  return slIsLinkedEpisodeModel(item) && (item.informational || item.episodeKind === 'auto');
+}
+
+function slIsNoTimeLinkedReminder(item) {
+  return slIsLinkedEpisodeModel(item) && !slIsAutoLinkedEpisode(item) && item.linkedEpisode.takesTime === false;
+}
+
+function slLinkedEpisodeKindLabel(item) {
+  if (slIsAutoLinkedEpisode(item)) {
+    return 'Auto story';
+  }
+  if (slIsNoTimeLinkedReminder(item)) {
+    return 'No-time reminder';
+  }
+  return 'Manual';
+}
+
 function slFocusArcana(arcana) {
   const search = slRoot.querySelector('#sl-links-search');
   const statusFilter = slRoot.querySelector('#sl-filter-status');
@@ -1851,8 +1869,11 @@ function slGetCalLinks(date, dayOfWeek, timeSlot) {
     linkedAdvisor.getModels(slGetSnapshot(), { date, timeSlot })
       .filter((model) => {
         const episode = model.linkedEpisode;
-        if (episode.timeSlot === 'auto' || episode.timeSlot !== timeSlot) {
+        if (model.link.timeSlot !== timeSlot) {
           return false;
+        }
+        if (slIsAutoLinkedEpisode(model)) {
+          return model.availability.status === 'auto';
         }
         if (!model.actionableToday && !['blocked', 'missed'].includes(model.availability.status)) {
           return false;
@@ -1875,10 +1896,13 @@ function slGetCalLinks(date, dayOfWeek, timeSlot) {
   const filtered = results.filter((item) => {
     if (mode === 'urgent') {
       if (slIsLinkedEpisodeModel(item)) {
+        if (slIsAutoLinkedEpisode(item)) {
+          return false;
+        }
         return (
           item.linkedEpisode.storyCritical ||
           Boolean(item.linkedEpisode.personaUnlock) ||
-          (item.deadlineInfo.daysLeft >= 0 && item.deadlineInfo.daysLeft <= 3)
+          (item.linkedEpisode.takesTime && item.deadlineInfo.daysLeft >= 0 && item.deadlineInfo.daysLeft <= 3)
         );
       }
       return slIsCompletionFocus()
@@ -1902,7 +1926,7 @@ function slCalLinkHtml(item, timeSlot, options = {}) {
   if (!item.statsMet || item.maxed) {
     cssClass += ' locked';
   }
-  if (item.isRare || item.deadlineInfo.isSoon || item.linkedEpisode?.storyCritical || item.linkedEpisode?.personaUnlock) {
+  if (!slIsAutoLinkedEpisode(item) && (item.isRare || item.deadlineInfo.isSoon || item.linkedEpisode?.storyCritical || item.linkedEpisode?.personaUnlock)) {
     cssClass += ' premium';
   }
   if (options.recommended) {
@@ -1921,6 +1945,8 @@ function slCalLinkHtml(item, timeSlot, options = {}) {
   let flagText = '';
   if (options.recommended) {
     flagText = options.recommendedLabel || (slIsCompletionFocus() ? 'Protect today' : 'Best today');
+  } else if (slIsAutoLinkedEpisode(item)) {
+    flagText = 'Story scene';
   } else if (slIsLinkedEpisodeModel(item) && item.linkedEpisode.storyCritical) {
     flagText = 'Story';
   } else if (slIsLinkedEpisodeModel(item) && item.linkedEpisode.personaUnlock) {
@@ -1933,7 +1959,7 @@ function slCalLinkHtml(item, timeSlot, options = {}) {
     flagText = 'Rare';
   }
 
-  return `<div class="${cssClass}"><span class="sl-cal-link-dot ${timeSlot}"></span><span class="sl-cal-link-name">${item.link.character}${slIsLinkedEpisodeModel(item) ? ' LE' : ''}</span><span class="sl-cal-link-rank">${rankLabel}</span>${flagText ? `<span class="sl-cal-link-flag">${flagText}</span>` : ''}</div>`;
+  return `<div class="${cssClass}"><span class="sl-cal-link-dot ${slIsAutoLinkedEpisode(item) ? 'auto' : timeSlot}"></span><span class="sl-cal-link-name">${item.link.character}${slIsLinkedEpisodeModel(item) ? ' LE' : ''}</span><span class="sl-cal-link-rank">${rankLabel}</span>${flagText ? `<span class="sl-cal-link-flag">${flagText}</span>` : ''}</div>`;
 }
 
 function slRenderCalendar() {
@@ -1965,7 +1991,7 @@ function slRenderCalendar() {
     const eveningLinks = blockedEvening ? [] : slGetCalLinks(date, dayOfWeek, 'evening');
     const premiumDay = [...dayLinks, ...eveningLinks].some((item) =>
       slIsLinkedEpisodeModel(item)
-        ? item.linkedEpisode.storyCritical || item.linkedEpisode.personaUnlock || item.deadlineInfo.isSoon
+        ? !slIsAutoLinkedEpisode(item) && (item.linkedEpisode.storyCritical || item.linkedEpisode.personaUnlock || item.deadlineInfo.isSoon)
         : slIsCompletionFocus()
         ? item.completion.criticalPath || item.deadlineInfo.isSoon
         : item.weeklyPressure > 0 && (item.isRare || item.deadlineInfo.isSoon)
@@ -2060,20 +2086,21 @@ function slRenderLinkedEpisodes() {
   const completed = snapshot.linkedEpisodes?.completed || {};
   const skipped = snapshot.linkedEpisodes?.skipped || {};
   const models = advisor.getModels(snapshot, { date: slState.gameDate });
-  const requiredModels = models.filter((model) => !model.linkedEpisode.optional);
+  const requiredModels = models.filter((model) => !model.linkedEpisode.optional && !slIsAutoLinkedEpisode(model));
   const completedCount = requiredModels.filter((model) => completed[model.id]).length;
-  const missedCount = models.filter((model) => model.availability.status === 'missed' || model.availability.status === 'blocked').length;
-  const urgentCount = models.filter(
+  const missedCount = models.filter((model) => !slIsAutoLinkedEpisode(model) && (model.availability.status === 'missed' || model.availability.status === 'blocked')).length;
+  const actionNeededCount = models.filter(
     (model) =>
       !completed[model.id] &&
       !skipped[model.id] &&
-      (model.linkedEpisode.storyCritical || (model.deadlineInfo.daysLeft >= 0 && model.deadlineInfo.daysLeft <= 3))
+      !slIsAutoLinkedEpisode(model) &&
+      (model.linkedEpisode.storyCritical || (model.linkedEpisode.takesTime && model.deadlineInfo.daysLeft >= 0 && model.deadlineInfo.daysLeft <= 3))
   ).length;
   const unlockCount = models.filter((model) => model.linkedEpisode.personaUnlock && completed[model.id]).length;
 
   summary.innerHTML = [
     ['Required complete', `${completedCount}/${requiredModels.length}`],
-    ['Urgent now', urgentCount],
+    ['Action needed soon', actionNeededCount],
     ['Missed or blocked', missedCount],
     ['Fusion unlocks', `${unlockCount}/${advisor.personaUnlocks.length}`]
   ]
@@ -2097,7 +2124,9 @@ function slRenderLinkedEpisodes() {
             ? 'complete'
             : isSkipped
               ? 'skipped'
-              : model.availability.status === 'missed' || model.availability.status === 'blocked'
+              : slIsAutoLinkedEpisode(model)
+                ? 'upcoming'
+                : model.availability.status === 'missed' || model.availability.status === 'blocked'
                 ? 'missed'
                 : model.actionableToday
                   ? 'available'
@@ -2106,17 +2135,22 @@ function slRenderLinkedEpisodes() {
             ? 'Complete'
             : isSkipped
               ? 'Skipped'
+              : slIsAutoLinkedEpisode(model)
+                ? model.availability.status === 'auto'
+                  ? 'Auto story today'
+                  : 'Auto story'
               : model.actionableToday
-                ? (episode.takesTime ? 'Available' : 'Reminder')
+                ? (episode.takesTime ? 'Available now' : 'No-time reminder')
                 : model.availability.status === 'missed' || model.availability.status === 'blocked'
                   ? 'Missed'
                   : model.availability.reason || 'Upcoming';
           const badges = [
-            `<span class="sl-linked-badge ${episode.timeSlot}">${episode.timeSlot === 'day' ? 'Day' : episode.timeSlot === 'evening' ? 'Evening' : 'Auto'}</span>`,
-            episode.takesTime ? '' : '<span class="sl-linked-badge no-time">No time</span>',
+            `<span class="sl-linked-badge ${model.link.timeSlot}">${model.link.timeSlot === 'day' ? 'Day' : 'Evening'}</span>`,
+            `<span class="sl-linked-badge ${slIsAutoLinkedEpisode(model) ? 'auto' : slIsNoTimeLinkedReminder(model) ? 'reminder' : 'manual'}">${slLinkedEpisodeKindLabel(model)}</span>`,
+            episode.takesTime || slIsAutoLinkedEpisode(model) ? '' : '<span class="sl-linked-badge no-time">No time</span>',
             episode.storyCritical ? '<span class="sl-linked-badge story">Story critical</span>' : '',
             episode.personaUnlock ? `<span class="sl-linked-badge unlock">Unlocks ${episode.personaUnlock}</span>` : '',
-            model.deadlineInfo.daysLeft >= 0 && model.deadlineInfo.daysLeft <= 3 ? '<span class="sl-linked-badge urgent">Urgent</span>' : ''
+            !slIsAutoLinkedEpisode(model) && episode.takesTime && model.deadlineInfo.daysLeft >= 0 && model.deadlineInfo.daysLeft <= 3 ? '<span class="sl-linked-badge deadline">Deadline soon</span>' : ''
           ].filter(Boolean).join('');
 
           return `<article class="sl-linked-episode ${statusClass}" data-linked-episode-card="${episode.id}">

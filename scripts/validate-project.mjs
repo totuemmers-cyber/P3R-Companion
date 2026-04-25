@@ -286,9 +286,13 @@ function validateLinkedEpisodes(context) {
 
   const ids = new Set(episodes.map((episode) => episode.id));
   const validSlots = new Set(['day', 'evening', 'auto']);
+  const validEventTypes = new Set(['manual', 'reminder', 'auto']);
   episodes.forEach((episode) => {
     assert(typeof episode.character === 'string' && episode.character.length > 0, `${episode.id} has no character`);
     assert(validSlots.has(episode.timeSlot), `${episode.id} has invalid timeSlot: ${episode.timeSlot}`);
+    if (episode.eventType) {
+      assert(validEventTypes.has(episode.eventType), `${episode.id} has invalid eventType: ${episode.eventType}`);
+    }
     assert(Boolean(episode.startDate) && Boolean(episode.deadline), `${episode.id} must have startDate and deadline`);
     assert(compareGameDates(episode.startDate, episode.deadline) <= 0, `${episode.id} startDate is after deadline`);
     assert(typeof episode.location === 'string' && episode.location.length > 0, `${episode.id} has no location`);
@@ -319,6 +323,15 @@ function validateLinkedEpisodes(context) {
   assert(flowers?.deadline.month === 11 && flowers.deadline.day === 20, 'Junpei flowers follow-up should run through 11/20');
   assert(flowers?.timeSlot === 'evening' && flowers?.storyCritical && flowers?.optional, 'Junpei flowers follow-up should be optional evening storyCritical reminder');
   assert(flowers?.takesTime === false, 'Junpei flowers follow-up should not consume time');
+
+  const ryoji1 = byId['ryoji-01'];
+  assert(ryoji1?.eventType === 'auto' && ryoji1?.takesTime === false, 'ryoji-01 should be an automatic story-linked scene, not a manual activity');
+  assert(ryoji1?.timeSlot === 'day' && ryoji1?.startDate.month === 11 && ryoji1.startDate.day === 9, 'ryoji-01 should remain a Nov 9 daytime story marker');
+  assert(/No manual Social Link action/i.test(ryoji1?.notes || ''), 'ryoji-01 notes should clarify there is no manual Social Link action');
+  const ryoji2 = byId['ryoji-02'];
+  assert(ryoji2?.eventType === 'manual' && ryoji2?.takesTime === true, 'ryoji-02 should remain the manual classroom Linked Episode');
+  const ryoji5 = byId['ryoji-05'];
+  assert(ryoji5?.eventType === 'auto' && ryoji5?.takesTime === false, 'ryoji-05 should be an automatic ending-gated reward event');
 
   const linkedGates = Object.entries(FUSION_UNLOCKS.gatedPersonas || {})
     .filter(([, gate]) => gate.type === 'linkedEpisode');
@@ -392,6 +405,41 @@ function validateLinkedEpisodeAdvisor() {
   });
   assert(flowerPick?.id === 'junpei-chidori-flowers', `Expected Junpei flower follow-up to lead evening reminders after episode 3, got ${flowerPick?.id || flowerPick?.arcana}`);
   assert(/White Flowers.*January events/.test(advisor.getActivityRecommendationWhy(flowerPick, { focusMode: 'balanced' })), 'Flower follow-up copy should mention White Flowers and January events');
+
+  const ryojiNov9 = makeSnapshot({
+    month: 11,
+    day: 9
+  });
+  const ryojiNov9Model = linkedAdvisor.getModels(ryojiNov9, {
+    date: ryojiNov9.profile.gameDate,
+    timeSlot: 'day'
+  }).find((model) => model.id === 'ryoji-01');
+  assert(ryojiNov9Model?.episodeKind === 'auto', 'ryoji-01 model should be marked as an automatic story scene');
+  assert(ryojiNov9Model?.availability.status === 'auto', `ryoji-01 should be an automatic Nov 9 story marker, got ${ryojiNov9Model?.availability.status}`);
+  assert(!ryojiNov9Model?.actionableToday && !ryojiNov9Model?.availableToday, 'ryoji-01 should not be actionable or available as a manual time pick');
+  assert(/No manual Social Link action/.test(ryojiNov9Model?.nextStep || ''), 'ryoji-01 next step should clarify no manual Social Link action is available');
+  assert(!ryojiNov9Model.tags.some((tag) => /Urgent|Deadline soon/i.test(tag)), 'ryoji-01 should not carry urgent/deadline action tags');
+  const ryojiNov9Actionable = linkedAdvisor.getActionableModels(ryojiNov9, {
+    date: ryojiNov9.profile.gameDate,
+    timeSlot: 'day'
+  });
+  assert(!ryojiNov9Actionable.some((model) => model.id === 'ryoji-01'), 'ryoji-01 should not be returned by linked getActionableModels');
+  const nov9DayPick = advisor.getTopActivityModelForDate(ryojiNov9, {
+    date: ryojiNov9.profile.gameDate,
+    timeSlot: 'day',
+    focusMode: 'balanced'
+  });
+  assert(nov9DayPick?.id !== 'ryoji-01', 'ryoji-01 should not win Nov 9 daytime recommendations');
+
+  const ryojiNov12 = makeSnapshot({
+    month: 11,
+    day: 12
+  });
+  const ryojiNov12Actionable = linkedAdvisor.getActionableModels(ryojiNov12, {
+    date: ryojiNov12.profile.gameDate,
+    timeSlot: 'day'
+  });
+  assert(ryojiNov12Actionable.some((model) => model.id === 'ryoji-02'), 'Ryoji Nov 12 classroom Linked Episode should remain actionable after the automatic Nov 9 scene');
 
   const missedJunpei3 = makeSnapshot({
     month: 12,

@@ -58,6 +58,31 @@ function formatEpisodeNumber(episode) {
   return typeof episode === 'number' ? `Episode ${episode}` : String(episode);
 }
 
+function getEpisodeKind(episode) {
+  if (episode.eventType === 'auto' || episode.timeSlot === 'auto') {
+    return 'auto';
+  }
+  if (episode.eventType === 'reminder' || episode.takesTime === false) {
+    return 'reminder';
+  }
+  return 'manual';
+}
+
+function isAutoStoryEpisode(episode) {
+  return getEpisodeKind(episode) === 'auto';
+}
+
+function isManualReminder(episode) {
+  return getEpisodeKind(episode) === 'reminder';
+}
+
+function getDisplayTimeSlot(episode) {
+  if (episode.timeSlot === 'auto') {
+    return 'evening';
+  }
+  return episode.timeSlot;
+}
+
 function isDateInWindow(episode, date) {
   return compareDates(date, episode.startDate) >= 0 && compareDates(date, episode.deadline) <= 0;
 }
@@ -102,6 +127,10 @@ function isRequiredChainBroken(episode, snapshot, date) {
       previousId = previous.requiredPreviousId;
       continue;
     }
+    if (isAutoStoryEpisode(previous) && compareDates(date, previous.deadline) > 0) {
+      previousId = previous.requiredPreviousId;
+      continue;
+    }
     if (isSkipped(previousId, snapshot)) {
       return { blocked: true, reason: `${previous.character} ${formatEpisodeNumber(previous.episode)} was skipped.` };
     }
@@ -127,6 +156,9 @@ function getAvailability(episode, snapshot, date = snapshot.profile.gameDate, ti
   if (compareDates(date, episode.startDate) < 0) {
     return { status: 'upcoming', actionable: false, available: false, reason: `Opens ${formatDate(episode.startDate)}.` };
   }
+  if (isAutoStoryEpisode(episode) && isExpired(episode, date)) {
+    return { status: 'auto_past', actionable: false, available: false, reason: 'Automatic story-linked scene has passed.' };
+  }
   if (isExpired(episode, date)) {
     return { status: 'missed', actionable: false, available: false, reason: `Expired ${formatDate(episode.deadline)}.` };
   }
@@ -136,11 +168,17 @@ function getAvailability(episode, snapshot, date = snapshot.profile.gameDate, ti
   if (chain.reason) {
     return { status: 'locked_previous', actionable: false, available: false, reason: chain.reason };
   }
-  if (timeSlot && episode.timeSlot !== 'auto' && episode.timeSlot !== timeSlot) {
+  const displayTimeSlot = getDisplayTimeSlot(episode);
+  if (timeSlot && displayTimeSlot !== timeSlot) {
     return { status: 'wrong_timeslot', actionable: false, available: false, reason: 'Wrong time slot.' };
   }
-  if (timeSlot && episode.timeSlot === 'auto' && timeSlot !== 'evening' && timeSlot !== 'day') {
-    return { status: 'wrong_timeslot', actionable: false, available: false, reason: 'Automatic reminder.' };
+  if (isAutoStoryEpisode(episode)) {
+    return {
+      status: 'auto',
+      actionable: false,
+      available: false,
+      reason: 'Automatic story-linked scene.'
+    };
   }
   return {
     status: episode.takesTime ? 'available' : 'reminder',
@@ -166,6 +204,9 @@ function countRemainingRequiredEpisodes(episode, snapshot) {
 }
 
 function getPressure(episode, availability, deadlineInfo, snapshot, date) {
+  if (isAutoStoryEpisode(episode)) {
+    return 0;
+  }
   let pressure = 0;
   const daysToOpen = daysBetween(date, episode.startDate);
   if (availability.status === 'missed' || availability.status === 'blocked') {
@@ -231,17 +272,19 @@ function getNextStep(episode, availability) {
   if (availability.status === 'skipped') {
     return 'Marked skipped.';
   }
-  if (availability.reason) {
-    return availability.reason;
-  }
   if (episode.id === 'junpei-03') {
     return "Start Junpei's Chidori route today.";
   }
   if (episode.id === 'junpei-chidori-flowers') {
     return "Buy White Flowers and give them to Junpei before Nov 20 to unlock Chidori's January events.";
   }
-  if (episode.timeSlot === 'auto') {
-    return `${formatEpisodeNumber(episode.episode)} occurs automatically at ${episode.location}.`;
+  if (isAutoStoryEpisode(episode)) {
+    return episode.character === 'Ryoji'
+      ? 'Automatic Ryoji story-linked scene today. No manual Social Link action is available.'
+      : `Automatic story-linked scene at ${episode.location}. No manual action required.`;
+  }
+  if (availability.reason) {
+    return availability.reason;
   }
   if (episode.takesTime) {
     return `Meet ${episode.character} at ${episode.location}.`;
@@ -251,16 +294,25 @@ function getNextStep(episode, availability) {
 
 function getTags(episode, availability, deadlineInfo) {
   const tags = ['Linked Episode'];
+  if (isAutoStoryEpisode(episode)) {
+    tags.push('Auto story');
+  } else if (isManualReminder(episode)) {
+    tags.push('No-time reminder');
+  } else if (availability.actionable) {
+    tags.push('Available now');
+  } else {
+    tags.push('Manual');
+  }
   if (episode.storyCritical) {
     tags.push('Story critical');
   }
-  if (deadlineInfo.daysLeft >= 0 && deadlineInfo.daysLeft <= 3) {
-    tags.push('Urgent');
+  if (!isAutoStoryEpisode(episode) && episode.takesTime && deadlineInfo.daysLeft >= 0 && deadlineInfo.daysLeft <= 3) {
+    tags.push('Deadline soon');
   }
   if (episode.personaUnlock) {
     tags.push(`Unlocks ${episode.personaUnlock}`);
   }
-  if (!episode.takesTime) {
+  if (!episode.takesTime && !isAutoStoryEpisode(episode)) {
     tags.push('No time');
   }
   if (availability.status === 'blocked' || availability.status === 'missed') {
@@ -276,9 +328,12 @@ function buildModel(episode, snapshot, date = snapshot.profile.gameDate, timeSlo
   const todayPriority = getTodayPriority(episode, availability, deadlineInfo, snapshot, date);
   const remainingWindows = estimateRemainingOpportunities(episode, snapshot, date);
   const requiredSlots = episode.optional || !episode.takesTime ? 0 : 1;
+  const episodeKind = getEpisodeKind(episode);
   const completionState = isCompleted(episode.id, snapshot)
     ? 'done'
-    : availability.status === 'blocked' || availability.status === 'missed'
+    : isAutoStoryEpisode(episode)
+      ? 'info'
+      : availability.status === 'blocked' || availability.status === 'missed'
       ? 'missed'
       : deadlineInfo.daysLeft >= 0 && deadlineInfo.daysLeft <= 3
         ? 'must_act_now'
@@ -294,9 +349,9 @@ function buildModel(episode, snapshot, date = snapshot.profile.gameDate, timeSlo
       character: episode.character,
       description: episode.notes || '',
       location: episode.location,
-      timeSlot: episode.timeSlot === 'auto' ? 'evening' : episode.timeSlot,
+      timeSlot: getDisplayTimeSlot(episode),
       ranks: [],
-      automatic: episode.timeSlot === 'auto',
+      automatic: isAutoStoryEpisode(episode),
       availableDays: episode.availableDays || [],
       unlockDate: episode.startDate,
       endDate: episode.deadline,
@@ -332,10 +387,12 @@ function buildModel(episode, snapshot, date = snapshot.profile.gameDate, timeSlo
       slack: remainingWindows - requiredSlots,
       daysUntilUnlock: Math.max(0, daysBetween(date, episode.startDate)),
       pressure,
-      criticalPath: episode.storyCritical || deadlineInfo.isSoon || Boolean(episode.personaUnlock),
+      criticalPath: !isAutoStoryEpisode(episode) && (episode.storyCritical || (episode.takesTime && deadlineInfo.isSoon) || Boolean(episode.personaUnlock)),
       actionableNow: availability.actionable,
       state: completionState
-    }
+    },
+    episodeKind,
+    informational: isAutoStoryEpisode(episode)
   };
   model.tags = getTags(episode, availability, deadlineInfo);
   model.nextStep = getNextStep(episode, availability);
@@ -355,9 +412,14 @@ function getChecklist(episode, snapshot, date) {
   ];
   if (episode.requiredPreviousId) {
     const previous = getEpisode(episode.requiredPreviousId);
+    const automaticPreviousPassed = previous && isAutoStoryEpisode(previous) && compareDates(date, previous.deadline) > 0;
     items.push({
-      label: previous ? `${previous.character} ${formatEpisodeNumber(previous.episode)} complete` : 'Previous episode complete',
-      met: isCompleted(episode.requiredPreviousId, snapshot)
+      label: previous
+        ? automaticPreviousPassed
+          ? `${previous.character} ${formatEpisodeNumber(previous.episode)} automatic scene passed`
+          : `${previous.character} ${formatEpisodeNumber(previous.episode)} complete`
+        : 'Previous episode complete',
+      met: isCompleted(episode.requiredPreviousId, snapshot) || automaticPreviousPassed
     });
   }
   return items;
@@ -365,16 +427,19 @@ function getChecklist(episode, snapshot, date) {
 
 function getFactors(episode, deadlineInfo) {
   const factors = [];
+  if (isAutoStoryEpisode(episode)) {
+    factors.push('Automatic story-linked scene');
+  }
   if (episode.storyCritical) {
     factors.push('Story-sensitive route warning');
   }
   if (episode.personaUnlock) {
     factors.push(`Final reward unlocks ${episode.personaUnlock}`);
   }
-  if (deadlineInfo.daysLeft >= 0) {
+  if (!isAutoStoryEpisode(episode) && deadlineInfo.daysLeft >= 0) {
     factors.push(deadlineInfo.daysLeft === 0 ? 'Last day' : `${deadlineInfo.daysLeft} days left`);
   }
-  if (!episode.takesTime) {
+  if (!episode.takesTime && !isAutoStoryEpisode(episode)) {
     factors.push('No time slot consumed');
   }
   return factors;
@@ -428,7 +493,10 @@ function getActionableModels(snapshot, options = {}) {
       if (model.linkedEpisode.timeSlot === 'auto') {
         return false;
       }
-      if (model.linkedEpisode.timeSlot !== timeSlot) {
+      if (model.informational) {
+        return false;
+      }
+      if (model.link.timeSlot !== timeSlot) {
         return false;
       }
       if (!model.linkedEpisode.takesTime && !model.linkedEpisode.storyCritical) {
@@ -455,6 +523,9 @@ function getBlockedImportantModel(snapshot, options = {}) {
       if (episode.timeSlot !== timeSlot) {
         return false;
       }
+      if (model.informational) {
+        return false;
+      }
       return model.weeklyPressure > 0 && (model.deadlineInfo.isSoon || episode.storyCritical || episode.personaUnlock);
     })
     .sort(compareModels)[0] || null;
@@ -462,6 +533,11 @@ function getBlockedImportantModel(snapshot, options = {}) {
 
 function getRecommendationWhy(model) {
   const episode = model.linkedEpisode;
+  if (isAutoStoryEpisode(episode)) {
+    return episode.character === 'Ryoji'
+      ? 'Automatic Ryoji story-linked scene. No manual Social Link action is available.'
+      : 'Automatic story-linked scene. No manual action required.';
+  }
   if (episode.id === 'junpei-03') {
     return "Start Junpei's Chidori route today.";
   }
