@@ -38,6 +38,10 @@
 #tartarus .floor-dashboard{position:static;top:auto;width:100%;max-width:none;margin:0}
 #tartarus .floor-dashboard-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.85rem}
 #tartarus .floor-dashboard-note{font-size:0.82rem;color:var(--text-dim);letter-spacing:0.03em}
+#tartarus .floor-profile-source{display:flex;flex-direction:column;align-items:flex-end;gap:0.15rem;min-width:max-content;padding:0.45rem 0.6rem;border-radius:8px;background:rgba(0,229,255,0.055);border:1px solid rgba(0,229,255,0.14)}
+#tartarus .floor-profile-source span{font-size:0.68rem;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em}
+#tartarus .floor-profile-source strong{font-size:0.9rem;color:var(--text-bright);line-height:1.15}
+#tartarus .floor-input-hidden{display:none}
 #tartarus .shadow-intel-panel{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:1.1rem;box-shadow:0 16px 36px rgba(0,0,0,0.2)}
 #tartarus .shadow-intel-panel h2{font-family:var(--font-app);font-size:1.1rem;font-weight:700;color:var(--cyan);margin:0;letter-spacing:0.05em}
 #tartarus .shadow-intel-note{font-size:0.8rem;color:var(--text-dim);margin-top:0.2rem}
@@ -201,6 +205,43 @@
 }
 #tartarus .floor-block-focus strong{color:var(--cyan)}
 #tartarus .floor-block-focus span{color:var(--text-dim)}
+#tartarus .treasure-alert{
+  margin:0.8rem 0 0.9rem;
+  padding:0.85rem;
+  border-radius:8px;
+  border:1px solid rgba(255,213,79,0.28);
+  background:
+    linear-gradient(180deg,rgba(255,213,79,0.16),rgba(255,213,79,0.045)),
+    rgba(0,0,0,0.18);
+  box-shadow:0 0 0 1px rgba(255,213,79,0.05),0 12px 28px rgba(0,0,0,0.18);
+}
+#tartarus .treasure-alert-rare{
+  border-color:rgba(66,233,143,0.3);
+  background:
+    linear-gradient(180deg,rgba(66,233,143,0.12),rgba(66,233,143,0.035)),
+    rgba(0,0,0,0.18);
+  box-shadow:0 0 0 1px rgba(66,233,143,0.05),0 12px 28px rgba(0,0,0,0.18);
+}
+#tartarus .treasure-alert-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.55rem}
+#tartarus .treasure-alert-kicker{font-size:var(--text-micro);font-weight:800;color:#ffe082;text-transform:uppercase;letter-spacing:0.08em}
+#tartarus .treasure-alert-rare .treasure-alert-kicker{color:#8de39c}
+#tartarus .treasure-alert-title{margin-top:0.12rem;color:var(--text-bright);font-size:0.98rem;font-weight:800;line-height:1.2}
+#tartarus .treasure-alert-count{flex:0 0 auto;padding:0.22rem 0.45rem;border-radius:5px;background:rgba(0,0,0,0.24);border:1px solid rgba(255,255,255,0.08);color:var(--text-dim);font-size:var(--text-micro);font-weight:700;white-space:nowrap}
+#tartarus .treasure-alert-summary{color:var(--text);font-size:0.82rem;line-height:1.35;margin-bottom:0.65rem}
+#tartarus .treasure-alert-grid{display:grid;gap:0.5rem}
+#tartarus .treasure-alert-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0.45rem 0.6rem;align-items:start;padding:0.58rem 0.62rem;border-radius:7px;border:1px solid rgba(255,255,255,0.08);background:rgba(3,7,18,0.4)}
+#tartarus .treasure-alert-item-key,
+#tartarus .treasure-alert-item-unique{border-color:rgba(255,213,79,0.24);background:rgba(255,213,79,0.07)}
+#tartarus .treasure-alert-item-rare{border-color:rgba(66,233,143,0.22);background:rgba(66,233,143,0.055)}
+#tartarus .treasure-alert-item-name{color:var(--text-bright);font-size:0.9rem;font-weight:800;line-height:1.25}
+#tartarus .treasure-alert-item-meta{margin-top:0.16rem;color:var(--text-dim);font-size:var(--text-small);line-height:1.3}
+#tartarus .treasure-alert-note{grid-column:1 / -1;color:var(--text-dim);font-size:var(--text-small);line-height:1.35}
+#tartarus .treasure-alert-footnote{margin-top:0.55rem;color:var(--text-dim);font-size:var(--text-small);line-height:1.35}
+#tartarus .treasure-badge{padding:0.18rem 0.42rem;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.055);color:var(--text);font-size:var(--text-micro);font-weight:800;white-space:nowrap}
+#tartarus .treasure-badge-key,
+#tartarus .treasure-badge-unique{border-color:rgba(255,213,79,0.32);background:rgba(255,213,79,0.15);color:#ffe082}
+#tartarus .treasure-badge-rare{border-color:rgba(66,233,143,0.3);background:rgba(66,233,143,0.12);color:#8de39c}
+#tartarus .treasure-badge-valuable{border-color:rgba(68,216,255,0.26);background:rgba(68,216,255,0.11);color:var(--cyan)}
 #tartarus .floor-shadow-link{appearance:none;background:none;border:none;padding:0;color:var(--text-bright);font:inherit;font-weight:600;cursor:pointer}
 #tartarus .floor-shadow-link:hover{color:var(--cyan)}
 #tartarus .floor-enemy-level{color:var(--text-dim);font-size:0.82rem}

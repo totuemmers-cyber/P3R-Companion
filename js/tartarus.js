@@ -166,6 +166,20 @@ const OBJECTIVE_TYPE_LABELS = {
   'missing-person': 'Missing Person'
 };
 
+const CHEST_IMPORTANCE_LABELS = {
+  key: 'Key reward',
+  unique: 'Unique',
+  rare: 'Rare',
+  valuable: 'Valuable'
+};
+
+const CHEST_TYPE_LABELS = {
+  fixed: 'Fixed chest',
+  locked: 'Locked chest',
+  'monad-passage': 'Monad Passage',
+  'boss-floor-locked': 'Boss-floor chest'
+};
+
 const MONAD_SECTION_BANDS = [
   { floorMin: 70, floorMax: 94, label: 'Yabbashah 70F-94F', section: 'Yabbashah I' },
   { floorMin: 95, floorMax: 118, label: 'Yabbashah 95F-118F', section: 'Yabbashah II' },
@@ -660,6 +674,11 @@ function syncFloorInputFromProfile() {
     return;
   }
   const targetFloor = getCurrentProfile().currentFloor;
+  const targetBlock = BLOCKS.find((block) => targetFloor >= block.fMin && targetFloor <= block.fMax);
+  const floorProfileLabel = tartRoot.querySelector('#floorProfileLabel');
+  if (floorProfileLabel) {
+    floorProfileLabel.textContent = targetBlock ? `${targetFloor}F | ${targetBlock.name}` : `${targetFloor}F`;
+  }
   if (document.activeElement === floorInput && floorInput.value && Number(floorInput.value) !== targetFloor) {
     return;
   }
@@ -1026,6 +1045,66 @@ function getFloorLootEntries(shadows) {
     .sort((left, right) => left.item.localeCompare(right.item));
 }
 
+function getFloorChestLootEntries(floor) {
+  if (typeof TARTARUS_CHEST_LOOT === 'undefined' || !Array.isArray(TARTARUS_CHEST_LOOT)) {
+    return [];
+  }
+  const importanceRank = { key: 0, unique: 1, rare: 2, valuable: 3 };
+  return TARTARUS_CHEST_LOOT.filter((entry) => entry.floor === floor).sort(
+    (left, right) =>
+      (importanceRank[left.importance] ?? 9) - (importanceRank[right.importance] ?? 9) ||
+      left.item.localeCompare(right.item)
+  );
+}
+
+function renderFloorTreasureAlert(floor) {
+  const chestEntries = getFloorChestLootEntries(floor);
+  if (chestEntries.length === 0) {
+    return '';
+  }
+
+  const hasKeyReward = chestEntries.some((entry) => entry.importance === 'key' || entry.importance === 'unique');
+  const title = hasKeyReward ? 'Important treasure on this floor' : 'Rare treasure on this floor';
+  const summary = chestEntries
+    .slice(0, 3)
+    .map((entry) => entry.item)
+    .join(', ');
+  let html = `<section class="treasure-alert treasure-alert-${hasKeyReward ? 'key' : 'rare'}" aria-label="${escapeHtml(
+    title
+  )}">`;
+  html += '<div class="treasure-alert-heading">';
+  html += `<div><div class="treasure-alert-kicker">Treasure alert</div><div class="treasure-alert-title">${escapeHtml(
+    title
+  )}</div></div>`;
+  html += `<div class="treasure-alert-count">${chestEntries.length} fixed reward${chestEntries.length === 1 ? '' : 's'}</div>`;
+  html += '</div>';
+  html += `<div class="treasure-alert-summary">${escapeHtml(summary)}${chestEntries.length > 3 ? '...' : ''}</div>`;
+  html += '<div class="treasure-alert-grid">';
+  chestEntries.forEach((entry) => {
+    const importanceLabel = CHEST_IMPORTANCE_LABELS[entry.importance] || entry.importance;
+    const typeLabel = CHEST_TYPE_LABELS[entry.chestType] || entry.chestType;
+    const fragmentLabel = Number.isInteger(entry.fragmentCost) ? `${entry.fragmentCost} Twilight Fragment` : null;
+    html += `<div class="treasure-alert-item treasure-alert-item-${escapeHtml(entry.importance)}">`;
+    html += '<div class="treasure-alert-item-main">';
+    html += `<div class="treasure-alert-item-name">${escapeHtml(entry.item)}</div>`;
+    html += `<div class="treasure-alert-item-meta">${escapeHtml(entry.category)} | ${escapeHtml(typeLabel)}${
+      fragmentLabel ? ` | ${escapeHtml(fragmentLabel)}` : ''
+    }</div>`;
+    html += '</div>';
+    html += `<span class="treasure-badge treasure-badge-${escapeHtml(entry.importance)}">${escapeHtml(
+      importanceLabel
+    )}</span>`;
+    if (entry.sourceNote) {
+      html += `<div class="treasure-alert-note">${escapeHtml(entry.sourceNote)}</div>`;
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<div class="treasure-alert-footnote">Fixed and verified chest rewards only. Random chest pools are not listed as guaranteed floor loot.</div>';
+  html += '</section>';
+  return html;
+}
+
 function getNearbyGrindSpots(floor, blockId) {
   const spots = {};
   ALL_SHADOWS.forEach((shadow) => {
@@ -1279,6 +1358,7 @@ function renderFloorScout(floor) {
   if (blockExtra) {
     html += `<div class="floor-block-focus"><strong>Section focus:</strong> ${escapeHtml(blockExtra.focus)}${blockExtra.prep ? ` <span>${escapeHtml(blockExtra.prep)}</span>` : ''}</div>`;
   }
+  html += renderFloorTreasureAlert(floor);
   const shadows = ALL_SHADOWS.filter(
     (shadow) =>
       shadow.block === block.id &&
@@ -1410,7 +1490,7 @@ function renderFloorScout(floor) {
 
   const lootEntries = getFloorLootEntries(shadows);
   if (lootEntries.length > 0) {
-    let lootBody = '<div class="floor-support-note">Tracked drops from enemies on this floor.</div>';
+    let lootBody = '<div class="floor-support-note">Tracked enemy drops from enemies on this floor. Fixed chest rewards appear in the Treasure Alert above.</div>';
     lootEntries.slice(0, 8).forEach((entry) => {
       lootBody += `<div class="loot-item-group"><div class="loot-item-name">${escapeHtml(entry.item)}</div>`;
       entry.sources.slice(0, 3).forEach((source) => {
@@ -1422,7 +1502,7 @@ function renderFloorScout(floor) {
     });
     html += renderFloorScoutSection({
       key: 'loot',
-      title: 'Loot on this floor',
+      title: 'Enemy drops on this floor',
       summary: `${lootEntries.length} tracked item${lootEntries.length === 1 ? '' : 's'}`,
       tone: 'loot',
       bodyHtml: lootBody

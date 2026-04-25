@@ -60,12 +60,12 @@ const TARTARUS_OBJECTIVES = [
     id: 'old-document-06',
     type: 'old-document',
     title: 'Retrieve the sixth Old Document',
-    block: 'yabbashah',
+    block: 'tziah',
     floor: 144,
     available: '9/10',
     deadline: null,
     reward: '¥100,000',
-    note: 'Final Yabbashah document before Tziah.'
+    note: 'First Tziah document after the block opens.'
   },
   {
     id: 'old-document-07',

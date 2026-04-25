@@ -49,6 +49,7 @@ function loadDataContext() {
     'data/social-links-verified.js',
     'data/linked-episodes.js',
     'data/tartarus-extra.js',
+    'data/tartarus-chest-loot.js',
     'data/personas-extra.js',
     'data/fusion-unlocks.js',
     'data/social-links-extra.js',
@@ -261,6 +262,7 @@ function validateRequests(context) {
 
 function validateTartarusObjectives(context) {
   const objectives = getGlobal(context, 'TARTARUS_OBJECTIVES');
+  const blocks = getGlobal(context, 'BLOCKS');
   assert(Array.isArray(objectives) && objectives.length > 20, 'TARTARUS_OBJECTIVES should contain high-value objectives');
   assertUnique(objectives, 'TARTARUS_OBJECTIVES', (objective) => objective.id);
 
@@ -269,6 +271,11 @@ function validateTartarusObjectives(context) {
     assert(typeof objective.type === 'string' && objective.type.length > 0, `${objective.id} has no type`);
     assert(VALID_BLOCKS.has(objective.block), `${objective.id} has invalid block: ${objective.block}`);
     assert(Number.isInteger(objective.floor) && objective.floor >= 1 && objective.floor <= 264, `${objective.id} has invalid floor`);
+    const block = blocks.find((candidate) => candidate.id === objective.block);
+    assert(Boolean(block), `${objective.id} references missing block data: ${objective.block}`);
+    if (block) {
+      assert(objective.floor >= block.fMin && objective.floor <= block.fMax, `${objective.id} floor ${objective.floor} is outside ${objective.block}`);
+    }
     assert(Boolean(parseDateLabel(objective.available)), `${objective.id} has invalid available date: ${objective.available}`);
     assert(objective.deadline === null || Boolean(parseDateLabel(objective.deadline)), `${objective.id} has invalid deadline: ${objective.deadline}`);
     assert(typeof objective.reward === 'string' && objective.reward.length > 0, `${objective.id} has no reward`);
@@ -276,6 +283,42 @@ function validateTartarusObjectives(context) {
   });
 
   console.log(`Validated ${objectives.length} Tartarus objectives.`);
+}
+
+function validateTartarusChestLoot(context) {
+  const chestLoot = getGlobal(context, 'TARTARUS_CHEST_LOOT');
+  const validImportance = new Set(['key', 'unique', 'rare', 'valuable']);
+  const validChestTypes = new Set(['fixed', 'locked', 'monad-passage', 'boss-floor-locked']);
+
+  assert(Array.isArray(chestLoot) && chestLoot.length >= 25, 'TARTARUS_CHEST_LOOT should contain fixed and rare chest rewards');
+  assertUnique(chestLoot, 'TARTARUS_CHEST_LOOT', (entry) => entry.id);
+
+  chestLoot.forEach((entry) => {
+    assert(typeof entry.id === 'string' && entry.id.length > 0, 'Chest loot entry has no id');
+    assert(Number.isInteger(entry.floor) && entry.floor >= 2 && entry.floor <= 264, `${entry.id} has invalid floor: ${entry.floor}`);
+    assert(VALID_BLOCKS.has(entry.block), `${entry.id} has invalid block: ${entry.block}`);
+    const block = getGlobal(context, 'BLOCKS').find((candidate) => candidate.id === entry.block);
+    assert(Boolean(block), `${entry.id} references missing block data: ${entry.block}`);
+    if (block) {
+      assert(entry.floor >= block.fMin && entry.floor <= block.fMax, `${entry.id} floor ${entry.floor} is outside ${entry.block}`);
+    }
+    assert(typeof entry.item === 'string' && entry.item.length > 0, `${entry.id} has no item`);
+    assert(typeof entry.category === 'string' && entry.category.length > 0, `${entry.id} has no category`);
+    assert(validChestTypes.has(entry.chestType), `${entry.id} has invalid chestType: ${entry.chestType}`);
+    assert(validImportance.has(entry.importance), `${entry.id} has invalid importance: ${entry.importance}`);
+    assert(entry.fragmentCost === null || Number.isInteger(entry.fragmentCost), `${entry.id} has invalid fragmentCost`);
+    assert(typeof entry.sourceNote === 'string' && entry.sourceNote.length > 0, `${entry.id} has no sourceNote`);
+  });
+
+  const byId = Object.fromEntries(chestLoot.map((entry) => [entry.id, entry]));
+  assert(byId['old-document-01']?.floor === 22 && byId['old-document-01']?.importance === 'key', 'Old Document 01 should be a key chest alert on 22F');
+  assert(byId.juzumaru?.floor === 36 && byId.juzumaru?.importance === 'rare', 'Juzumaru should be a rare chest alert on 36F');
+  assert(byId['onimaru-kunitsuna']?.floor === 54 && byId['onimaru-kunitsuna']?.importance === 'rare', 'Onimaru Kunitsuna should be a rare chest alert on 54F');
+  assert(byId['memoir-02']?.floor === 91 && byId['memoir-02']?.importance === 'unique', 'Memoir 02 should be a unique chest alert on 91F');
+  assert(byId['book-of-samech']?.floor === 91 && byId['book-of-samech']?.importance === 'unique', 'Book of Samech should be a unique chest alert on 91F');
+  assert(byId.excalibur?.floor === 247 && byId.excalibur?.importance === 'rare', 'Excalibur should be a rare chest alert on 247F');
+
+  console.log(`Validated ${chestLoot.length} Tartarus chest loot alerts.`);
 }
 
 function validateLinkedEpisodes(context) {
@@ -1057,6 +1100,7 @@ function validateBrowserEntrypoints() {
     'data/social-links-verified.js',
     'data/linked-episodes.js',
     'data/tartarus-extra.js',
+    'data/tartarus-chest-loot.js',
     'data/personas-extra.js',
     'data/fusion-unlocks.js',
     'data/social-links-extra.js',
@@ -1114,6 +1158,7 @@ validatePersonas(dataContext);
 validateEnemies(dataContext);
 validateRequests(dataContext);
 validateTartarusObjectives(dataContext);
+validateTartarusChestLoot(dataContext);
 validateLinkedEpisodes(dataContext);
 validateLinkedEpisodeAdvisor();
 validateStaleDeadlineFiltering(dataContext);
