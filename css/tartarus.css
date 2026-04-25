@@ -402,3 +402,269 @@
 
 @media(max-width:900px){#tartarus .floor-dashboard-header{flex-direction:column;align-items:stretch}#tartarus .floor-scout{position:static}#tartarus .shadow-intel-panel{padding:0.9rem}#tartarus .moon-outcome-grid{grid-template-columns:1fr}#tartarus .floor-ops-support-grid{grid-template-columns:1fr}#tartarus .shadow-intel-controls-primary,#tartarus .shadow-intel-controls-secondary{gap:0.55rem}}
 @media(max-width:768px){#tartarus .header h1{font-size:2rem;letter-spacing:0.15em}#tartarus .controls{padding:0.5rem 0}#tartarus .shadow-table{font-size:0.8rem}#tartarus .shadow-table th,#tartarus .shadow-table td{padding:0.3rem}#tartarus .nav-tabs{justify-content:stretch}#tartarus .nav-tab{flex:1 1 calc(50% - 0.45rem)}#tartarus .shadow-intel-controls-primary > .input-clear-wrap,#tartarus .shadow-intel-type-group,#tartarus .shadow-intel-controls-secondary .filter-group{flex:1 1 100%}}
+
+/* === Tartarus overhaul === */
+#tartarus{
+  --cyan-dim:rgba(68,216,255,0.16);
+  --cyan-glow:rgba(68,216,255,0.38);
+}
+
+#tartarus .header{
+  position:relative;
+  overflow:hidden;
+  text-align:left;
+  padding:2.15rem clamp(1rem,2.4vw,2.4rem) 1.15rem;
+  border-bottom:1px solid rgba(68,216,255,0.18);
+  background:
+    linear-gradient(90deg,rgba(68,216,255,0.13),transparent 35%),
+    linear-gradient(180deg,rgba(255,255,255,0.025),transparent);
+}
+
+#tartarus .header::before{
+  content:'TTR / FLOOR OPS / SHADOW INTEL';
+  position:absolute;
+  right:clamp(1rem,3vw,3rem);
+  top:1rem;
+  color:rgba(68,216,255,0.2);
+  font-size:0.72rem;
+  font-weight:800;
+  letter-spacing:0.18em;
+}
+
+#tartarus .header::after{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-1px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(68,216,255,0.72),rgba(255,211,106,0.36),transparent);
+}
+
+#tartarus .header h1{
+  font-size:clamp(2.3rem,4vw,4.4rem);
+  line-height:0.9;
+  letter-spacing:0.14em;
+}
+
+#tartarus .header .subtitle{
+  letter-spacing:0.16em;
+  margin-top:0.55rem;
+}
+
+#tartarus .nav-tabs{
+  justify-content:flex-start;
+  padding:1rem clamp(1rem,2.4vw,2.4rem);
+}
+
+#tartarus .main,
+#tartarus .fullmoon-section{
+  padding:0 clamp(1rem,2.4vw,2.4rem) 2.4rem;
+}
+
+#tartarus .floor-scout,
+#tartarus .shadow-intel-panel,
+#tartarus .moon-card{
+  overflow:hidden;
+  background:var(--panel-bg);
+  border-color:var(--panel-border);
+  border-radius:var(--ui-card-radius);
+  box-shadow:var(--panel-shadow);
+}
+
+#tartarus .shadow-intel-panel,
+#tartarus .moon-card{
+  position:relative;
+}
+
+#tartarus .floor-scout{
+  position:sticky;
+  top:5rem;
+}
+
+#tartarus .floor-scout::before,
+#tartarus .shadow-intel-panel::before,
+#tartarus .moon-card::before{
+  content:'';
+  position:absolute;
+  inset:0 0 auto;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(68,216,255,0.58),transparent);
+  opacity:0.72;
+}
+
+#tartarus .floor-dashboard-header h2,
+#tartarus .shadow-intel-panel h2,
+#tartarus .floor-scout h2{
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+}
+
+#tartarus .floor-input,
+#tartarus .search-box,
+#tartarus select.filter-select,
+#tartarus input.filter-select{
+  background:rgba(3,7,18,0.52);
+  border-color:rgba(255,255,255,0.1);
+  border-radius:8px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.035);
+}
+
+#tartarus .floor-input{
+  min-height:44px;
+  font-size:1.1rem;
+}
+
+#tartarus .shadow-intel-controls{
+  border-radius:10px;
+  padding:0.9rem;
+  margin-top:0.25rem;
+  border:1px solid rgba(255,255,255,0.06);
+  background:
+    linear-gradient(180deg,rgba(68,216,255,0.07),rgba(255,255,255,0.018)),
+    rgba(0,0,0,0.12);
+}
+
+#tartarus .filter-btn{
+  border-radius:999px;
+  background:rgba(255,255,255,0.045);
+  border-color:rgba(255,255,255,0.09);
+}
+
+#tartarus .filter-btn.active{
+  color:var(--text-bright);
+  background:linear-gradient(180deg,rgba(68,216,255,0.18),rgba(68,216,255,0.065));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+#tartarus .shadow-table{
+  background:rgba(4,9,22,0.72);
+  border-color:rgba(68,216,255,0.22);
+  border-radius:10px;
+  border-collapse:separate;
+  border-spacing:0;
+}
+
+#tartarus .shadow-table th{
+  background:rgba(5,10,24,0.98);
+  color:var(--text-dim);
+  border-bottom-color:rgba(68,216,255,0.17);
+}
+
+#tartarus .shadow-table td{
+  border-bottom-color:rgba(255,255,255,0.045);
+}
+
+#tartarus .shadow-table tbody tr:hover{
+  background:rgba(68,216,255,0.07);
+}
+
+#tartarus .type-badge,
+#tartarus .aff,
+#tartarus .floor-aff,
+#tartarus .skill-tag,
+#tartarus .strat-badge{
+  border-radius:5px;
+}
+
+#tartarus .floor-ops-support-card,
+#tartarus .major-check,
+#tartarus .floor-scout-section,
+#tartarus .strategy-box,
+#tartarus .loadout-section,
+#tartarus .moon-outcome-card,
+#tartarus .detail-card{
+  background:linear-gradient(180deg,rgba(255,255,255,0.052),rgba(255,255,255,0.018));
+  border-color:rgba(255,255,255,0.09);
+}
+
+#tartarus .floor-ops-support-card{
+  border-left:2px solid rgba(68,216,255,0.28);
+}
+
+#tartarus .major-check-gatekeeper,
+#tartarus .floor-scout-section-gatekeeper{
+  border-color:rgba(255,90,120,0.28);
+  background:linear-gradient(180deg,rgba(255,90,120,0.09),rgba(255,255,255,0.016));
+}
+
+#tartarus .major-check-fullmoon,
+#tartarus .floor-scout-section-grind{
+  border-color:rgba(255,211,106,0.26);
+  background:linear-gradient(180deg,rgba(255,211,106,0.085),rgba(255,255,255,0.016));
+}
+
+#tartarus .floor-scout-section-loot{
+  border-color:rgba(66,233,143,0.26);
+  background:linear-gradient(180deg,rgba(66,233,143,0.075),rgba(255,255,255,0.016));
+}
+
+#tartarus .floor-scout-toggle-chevron{
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+#tartarus .floor-ops-empty{
+  padding:0.7rem;
+  border-radius:8px;
+  border:1px dashed rgba(68,216,255,0.18);
+  background:rgba(68,216,255,0.035);
+}
+
+#tartarus .objective-item{
+  border-radius:8px;
+  padding:0.65rem;
+  border-bottom:0;
+}
+
+#tartarus .objective-item:hover{
+  background:rgba(68,216,255,0.045);
+}
+
+#tartarus .objective-status.status-critical{
+  background:rgba(255,90,120,0.14);
+  color:#ff9aac;
+}
+
+#tartarus .objective-status.status-warning{
+  background:rgba(255,211,106,0.14);
+  color:var(--accent-secondary);
+}
+
+#tartarus .objective-status.status-done{
+  background:rgba(66,233,143,0.12);
+  color:var(--success);
+}
+
+#tartarus .moon-card{
+  border-left:3px solid rgba(255,211,106,0.32);
+}
+
+#tartarus .moon-card:hover,
+#tartarus .moon-card.expanded{
+  border-color:rgba(255,211,106,0.45);
+  box-shadow:var(--panel-shadow),0 0 0 1px rgba(255,211,106,0.08);
+}
+
+#tartarus .moon-icon{
+  box-shadow:0 0 18px rgba(255,211,106,0.28);
+}
+
+@media (min-width: 2200px){
+  #tartarus .dashboard-shell{
+    display:grid;
+    grid-template-columns:minmax(360px,0.75fr) minmax(0,1.55fr);
+    gap:1rem;
+    align-items:start;
+  }
+
+  #tartarus .tartarus-run-state-card{
+    margin-bottom:0;
+  }
+}
+
+@media(max-width:900px){
+  #tartarus .floor-scout{
+    position:static;
+  }
+}

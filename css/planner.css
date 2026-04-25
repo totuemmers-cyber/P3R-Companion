@@ -363,3 +363,213 @@
     padding:1rem;
   }
 }
+
+/* === Planner overhaul === */
+#planner{
+  --planner-card:rgba(11,18,39,0.82);
+  --planner-accent-border:rgba(68,216,255,0.27);
+}
+
+#planner .planner-header{
+  position:relative;
+  overflow:hidden;
+  padding:2rem clamp(1rem,2.4vw,2.4rem) 1.1rem;
+  margin-bottom:1.2rem;
+  background:
+    linear-gradient(90deg,rgba(68,216,255,0.11),transparent 32%),
+    linear-gradient(180deg,rgba(255,255,255,0.03),transparent);
+}
+
+#planner .planner-header::before{
+  content:'PLN / RUNSTATE / ROUTE';
+  position:absolute;
+  right:clamp(1rem,3vw,3rem);
+  top:1rem;
+  color:rgba(68,216,255,0.18);
+  font-size:0.72rem;
+  font-weight:800;
+  letter-spacing:0.18em;
+}
+
+#planner .planner-header::after{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-1px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(68,216,255,0.72),rgba(255,211,106,0.42),transparent);
+}
+
+#planner .planner-header h1{
+  font-size:clamp(2rem,3.2vw,3.25rem);
+  line-height:0.95;
+}
+
+#planner .planner-main{
+  padding:0 clamp(1rem,2.4vw,2.4rem) 2.4rem;
+  gap:1.15rem;
+}
+
+#planner .planner-state-pill,
+#planner .planner-card{
+  position:relative;
+  overflow:hidden;
+  background:var(--panel-bg);
+  border-color:var(--panel-border);
+  border-radius:var(--ui-card-radius);
+  box-shadow:var(--panel-shadow);
+}
+
+#planner .planner-state-pill::before,
+#planner .planner-card::before{
+  content:'';
+  position:absolute;
+  inset:0 0 auto;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(68,216,255,0.58),transparent);
+  opacity:0.72;
+}
+
+#planner .planner-state-pill{
+  min-height:92px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+#planner .planner-state-label,
+#planner .planner-action-meta span,
+#planner .planner-action-queue-count{
+  letter-spacing:0.12em;
+}
+
+#planner .planner-state-value{
+  font-size:1.18rem;
+}
+
+#planner .planner-card h2{
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+}
+
+#planner .planner-card h2::before{
+  content:'';
+  width:0.42rem;
+  height:0.42rem;
+  border:1px solid currentColor;
+  transform:rotate(45deg);
+  opacity:0.78;
+}
+
+#planner .planner-card-primary{
+  min-height:220px;
+  background:
+    linear-gradient(135deg,rgba(68,216,255,0.2),rgba(10,17,38,0.86) 46%,rgba(255,211,106,0.08)),
+    var(--panel-bg);
+  border-color:rgba(68,216,255,0.46);
+}
+
+#planner .planner-card-primary::after{
+  content:'';
+  position:absolute;
+  right:-12%;
+  top:1rem;
+  width:48%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,211,106,0.6),transparent);
+  transform:rotate(-18deg);
+}
+
+#planner .planner-card-warnings{
+  background:linear-gradient(180deg,rgba(255,211,106,0.075),rgba(11,18,39,0.78));
+  border-color:rgba(255,211,106,0.22);
+}
+
+#planner .planner-primary-kicker{
+  color:var(--accent-secondary);
+}
+
+#planner .planner-primary-title{
+  font-size:clamp(1.35rem,2vw,2rem);
+  max-width:70ch;
+}
+
+#planner .planner-action-queue-card{
+  border-color:rgba(255,211,106,0.28);
+  background:
+    linear-gradient(115deg,rgba(68,216,255,0.15),rgba(9,15,34,0.86) 45%,rgba(255,211,106,0.11)),
+    var(--panel-bg);
+}
+
+#planner .planner-action-item{
+  border-radius:9px;
+  background:linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02));
+  border-color:rgba(255,255,255,0.09);
+  transition:transform 0.2s ease,border-color 0.2s ease,background 0.2s ease;
+}
+
+#planner .planner-action-item:hover{
+  transform:translateY(-2px);
+  border-color:rgba(68,216,255,0.28);
+  background:linear-gradient(180deg,rgba(68,216,255,0.08),rgba(255,255,255,0.025));
+}
+
+#planner .planner-action-rank{
+  border-radius:8px;
+  background:rgba(68,216,255,0.14);
+  box-shadow:inset 0 0 16px rgba(68,216,255,0.07);
+}
+
+#planner .planner-action-item-warning .planner-action-rank{
+  color:var(--warning);
+  border-color:rgba(255,211,106,0.32);
+  background:rgba(255,211,106,0.11);
+}
+
+#planner .planner-action-item-critical .planner-action-rank{
+  color:var(--danger);
+  border-color:rgba(255,90,120,0.36);
+  background:rgba(255,90,120,0.12);
+}
+
+#planner .planner-reason,
+#planner .planner-warning,
+#planner .planner-slot-card{
+  background:linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.018));
+  border-color:rgba(255,255,255,0.085);
+}
+
+#planner .planner-warning{
+  border-left:3px solid var(--warning);
+}
+
+#planner .planner-warning-critical{
+  border-left-color:var(--danger);
+}
+
+#planner .planner-action-btn{
+  border-radius:8px;
+  background:linear-gradient(180deg,rgba(68,216,255,0.17),rgba(68,216,255,0.065));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+#planner .planner-empty{
+  padding:0.8rem 0.9rem;
+  border-radius:8px;
+  border:1px dashed rgba(68,216,255,0.2);
+  background:rgba(68,216,255,0.045);
+}
+
+@media (min-width: 2200px){
+  #planner .planner-hero-grid{
+    grid-template-columns:minmax(0,1.55fr) minmax(420px,0.85fr);
+  }
+
+  #planner .planner-grid{
+    grid-template-columns:repeat(3,minmax(320px,1fr));
+  }
+}
