@@ -656,6 +656,29 @@
   border-color: var(--accent);
 }
 
+.sl-calendar-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.45rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-color: rgba(68,216,255,0.45) rgba(255,255,255,0.06);
+  scrollbar-width: thin;
+}
+.sl-calendar-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.sl-calendar-scroll::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+}
+.sl-calendar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(68,216,255,0.38);
+  border-radius: 999px;
+}
+.sl-calendar-scroll .sl-calendar-grid {
+  min-width: 100%;
+}
 .sl-calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
