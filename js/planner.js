@@ -507,7 +507,8 @@ function buildWarnings(snapshot, context) {
   if (context.urgentObjective) {
     warnings.push({
       tone: 'warning',
-      text: `${context.urgentObjective.title} expires in ${context.urgentObjective.daysLeft} day${context.urgentObjective.daysLeft === 1 ? '' : 's'}.`
+      text: `${context.urgentObjective.title} expires in ${context.urgentObjective.daysLeft} day${context.urgentObjective.daysLeft === 1 ? '' : 's'}.`,
+      completeId: context.urgentObjective.id
     });
   }
 
@@ -561,7 +562,8 @@ function choosePrimaryAction(snapshot, context) {
         `${context.urgentObjective.daysLeft} day${context.urgentObjective.daysLeft === 1 ? '' : 's'} remain before the deadline.`,
         `Reward: ${context.urgentObjective.reward}.`
       ],
-      action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: context.urgentObjective.floor }
+      action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: context.urgentObjective.floor },
+      completeId: context.urgentObjective.id
     };
   }
 
@@ -655,7 +657,7 @@ function getActionSystem(action) {
   return 'Planner';
 }
 
-function createQueueItem({ system, tone = 'normal', title, copy, meta, action, score }) {
+function createQueueItem({ system, tone = 'normal', title, copy, meta, action, score, completeId = null }) {
   return {
     system,
     tone,
@@ -663,7 +665,8 @@ function createQueueItem({ system, tone = 'normal', title, copy, meta, action, s
     copy,
     meta,
     action,
-    score
+    score,
+    completeId
   };
 }
 
@@ -690,7 +693,8 @@ function buildActionQueue(snapshot, context, primaryAction) {
         copy: `${context.urgentRequest.statusLabel}. Reward: ${context.urgentRequest.reward}.`,
         meta: context.urgentRequest.systemLabel || context.urgentRequest.categoryLabel,
         action: { type: 'requests', label: 'Open Requests' },
-        score: context.urgentRequest.urgency
+        score: context.urgentRequest.urgency,
+        completeId: context.urgentRequest.id
       })
     );
   }
@@ -704,7 +708,8 @@ function buildActionQueue(snapshot, context, primaryAction) {
         copy: `${context.urgentObjective.daysLeft} day${context.urgentObjective.daysLeft === 1 ? '' : 's'} left for ${context.urgentObjective.floor}F. Reward: ${context.urgentObjective.reward}.`,
         meta: 'Deadline objective',
         action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: context.urgentObjective.floor },
-        score: context.urgentObjective.urgency
+        score: context.urgentObjective.urgency,
+        completeId: context.urgentObjective.id
       })
     );
   } else if (context.nearestObjective) {
@@ -715,7 +720,8 @@ function buildActionQueue(snapshot, context, primaryAction) {
         copy: `Next tracked floor objective is on ${context.nearestObjective.floor}F in ${context.currentBlock?.name || 'Tartarus'}.`,
         meta: 'Floor objective',
         action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: context.nearestObjective.floor },
-        score: 45
+        score: 45,
+        completeId: context.nearestObjective.id
       })
     );
   }
@@ -907,7 +913,7 @@ function renderPrimaryAction(model) {
     <div class="planner-reason-list">${action.reasons
       .map((reason) => `<div class="planner-reason">${escapeHtml(reason)}</div>`)
       .join('')}</div>
-    ${renderActionButton(action.action)}`;
+    ${renderActionRow(action.action, action.completeId)}`;
 }
 
 function renderWarnings(model) {
@@ -917,9 +923,10 @@ function renderWarnings(model) {
   return `<h2>Warnings / At Risk</h2><div class="planner-warning-list">${model.warnings
     .map(
       (warning) =>
-        `<div class="planner-warning${warning.tone === 'critical' ? ' planner-warning-critical' : ''}">${escapeHtml(
-          warning.text
-        )}</div>`
+        `<div class="planner-warning${warning.tone === 'critical' ? ' planner-warning-critical' : ''}">
+          <span>${escapeHtml(warning.text)}</span>
+          ${warning.completeId ? renderCompleteButton(warning.completeId) : ''}
+        </div>`
     )
     .join('')}</div>`;
 }
@@ -944,7 +951,7 @@ function renderActionQueue(model) {
             <div class="planner-action-title">${escapeHtml(item.title)}</div>
             <div class="planner-action-copy">${escapeHtml(item.copy)}</div>
           </div>
-          <div class="planner-action-cta">${renderActionButton(item.action)}</div>
+          <div class="planner-action-cta">${renderActionRow(item.action, item.completeId)}</div>
         </article>`
       )
       .join('')}</div>`;
@@ -1051,6 +1058,22 @@ function renderActionButton(action) {
   return `<button class="planner-action-btn" data-nav="${escapeHtml(action.type)}">${escapeHtml(action.label)}</button>`;
 }
 
+function renderCompleteButton(completeId) {
+  if (!completeId) {
+    return '';
+  }
+  return `<button class="planner-action-btn planner-complete-btn" type="button" data-complete-id="${escapeHtml(completeId)}">Mark Done</button>`;
+}
+
+function renderActionRow(action, completeId) {
+  const actionButton = renderActionButton(action);
+  const completeButton = renderCompleteButton(completeId);
+  if (!actionButton && !completeButton) {
+    return '';
+  }
+  return `<div class="planner-action-row">${actionButton}${completeButton}</div>`;
+}
+
 function renderPlanner() {
   const model = getPlannerModel();
 
@@ -1080,6 +1103,18 @@ function scheduleRenderPlanner() {
 }
 
 function onPlannerAction(event) {
+  const completeButton = event.target.closest('[data-complete-id]');
+  if (completeButton) {
+    plannerStore.dispatch({
+      type: 'OBJECTIVE_SET_COMPLETE',
+      payload: {
+        id: completeButton.dataset.completeId,
+        complete: true
+      }
+    });
+    return;
+  }
+
   const button = event.target.closest('[data-nav]');
   if (!button || !window.p3rApp) {
     return;
