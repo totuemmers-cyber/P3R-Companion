@@ -1695,18 +1695,6 @@ function initTartarus({ root, store }) {
   tartStore = store;
   initialized = true;
 
-  if (typeof window.mountRunStatePanel === 'function') {
-    window.mountRunStatePanel({
-      root: tartRoot,
-      store: tartStore,
-      selector: '#tartarus-run-state',
-      title: 'Tartarus Inputs',
-      subtitle: 'Level, floor, and date feed floor focus, gatekeeper readiness, and Full Moon pressure.',
-      fields: ['date', 'level', 'floor'],
-      note: 'These values stay synced with Planner and any other section that uses shared run state.'
-    });
-  }
-
   renderTable();
   renderFullMoon();
   syncFloorInputFromProfile();

@@ -36,7 +36,6 @@
 #tartarus .dashboard-shell{min-width:0}
 #tartarus .table-wrap{overflow-x:auto}
 #tartarus .floor-dashboard{position:static;top:auto;width:100%;max-width:none;margin:0}
-#tartarus .tartarus-run-state-card{margin-bottom:1rem}
 #tartarus .floor-dashboard-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.85rem}
 #tartarus .floor-dashboard-note{font-size:0.82rem;color:var(--text-dim);letter-spacing:0.03em}
 #tartarus .shadow-intel-panel{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:1.1rem;box-shadow:0 16px 36px rgba(0,0,0,0.2)}
@@ -650,19 +649,6 @@
 
 #tartarus .moon-icon{
   box-shadow:0 0 18px rgba(255,211,106,0.28);
-}
-
-@media (min-width: 2200px){
-  #tartarus .dashboard-shell{
-    display:grid;
-    grid-template-columns:minmax(360px,0.75fr) minmax(0,1.55fr);
-    gap:1rem;
-    align-items:start;
-  }
-
-  #tartarus .tartarus-run-state-card{
-    margin-bottom:0;
-  }
 }
 
 @media(max-width:900px){
