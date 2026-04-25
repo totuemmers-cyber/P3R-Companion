@@ -77,6 +77,10 @@ function getRosterArray() {
   return velvetStore.getState().roster.filter((name) => PERSONAS[name]);
 }
 
+function getCurrentPlayerLevel() {
+  return velvetStore?.getState()?.profile?.playerLevel || 1;
+}
+
 function getActiveSocialLinks() {
   const { ranks } = velvetStore.getState().socialLinks;
   return Object.entries(ranks)
@@ -438,8 +442,9 @@ function buildFusionPlanner(targetName) {
     };
   }
 
-  const nextActions = node.path.filter((step) =>
-    step.ingredients.every((ingredient) => roster.has(ingredient))
+  const currentLevel = getCurrentPlayerLevel();
+  const nextActions = node.path.filter(
+    (step) => step.ingredients.every((ingredient) => roster.has(ingredient)) && (step.level || 0) <= currentLevel
   );
   const neededFirst = uniqueValues(
     node.path
@@ -460,6 +465,10 @@ function buildFusionPlanner(targetName) {
 }
 
 function renderPlannerAction(step, label) {
+  const resultLevel = PERSONAS[step.result]?.lvl || 0;
+  if (resultLevel > getCurrentPlayerLevel()) {
+    return `<span class="chain-badge-special">Locked Lv${resultLevel}</span>`;
+  }
   if (step.type !== 'fuse') {
     return '<span class="chain-badge-special">Special Fusion</span>';
   }
@@ -469,9 +478,10 @@ function renderPlannerAction(step, label) {
 function renderPlannerPath(path, targetName) {
   const initialRoster = getRosterSet();
   const available = new Set(initialRoster);
+  const currentLevel = getCurrentPlayerLevel();
   return `<div class="chain-steps">${path
     .map((step, index) => {
-      const readyNow = step.ingredients.every((ingredient) => initialRoster.has(ingredient));
+      const readyNow = step.ingredients.every((ingredient) => initialRoster.has(ingredient)) && (step.level || 0) <= currentLevel;
       const ingredientHtml = step.ingredients
         .map((ingredient) => {
           let stateClass = 'planner-missing';

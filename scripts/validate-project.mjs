@@ -347,6 +347,49 @@ function validateStaleDeadlineFiltering(context) {
   console.log('Validated stale deadline filtering rules.');
 }
 
+function validateFusionRecommendationLevelGates(context) {
+  const PERSONAS = getGlobal(context, 'PERSONAS');
+  const SPECIAL_RECIPES = getGlobal(context, 'SPECIAL_RECIPES');
+  const BOSS_STRATS = getGlobal(context, 'BOSS_STRATS');
+  const extractPersonaName = (value) => String(value || '').split(' (')[0].trim();
+  const canRecommend = (name, level, roster = new Set()) =>
+    Boolean(name && PERSONAS[name] && PERSONAS[name].lvl <= level && !roster.has(name));
+  const pickBossPersona = (personas, level, roster = new Set()) =>
+    (personas || []).map(extractPersonaName).find((name) => canRecommend(name, level, roster)) || null;
+  const pickArcanaPersona = (arcana, level, roster = new Set()) =>
+    Object.entries(PERSONAS)
+      .filter(([name, persona]) => persona.race === arcana && !SPECIAL_RECIPES[name])
+      .map(([name, persona]) => ({ name, lvl: persona.lvl }))
+      .sort((left, right) => left.lvl - right.lvl || left.name.localeCompare(right.name))
+      .find((entry) => entry.lvl <= level && !roster.has(entry.name)) || null;
+
+  assert(PERSONAS.Loki?.lvl === 69, 'Expected Loki to remain a Lv 69 Persona fixture');
+  const hangedManPersonas = BOSS_STRATS['Hanged Man A']?.personas || [];
+  assert(hangedManPersonas.map(extractPersonaName).includes('Loki'), 'Expected Hanged Man prep fixture to include Loki');
+  assert(
+    pickBossPersona(hangedManPersonas, 64) !== 'Loki',
+    'Planner boss prep should not recommend Loki at player level 64'
+  );
+  assert(
+    pickBossPersona(hangedManPersonas, 64) === 'Dominion',
+    'Planner boss prep should fall through to Dominion at player level 64'
+  );
+  assert(
+    pickBossPersona(hangedManPersonas, 69) === 'Loki',
+    'Planner boss prep may recommend Loki at player level 69'
+  );
+  assert(
+    pickBossPersona(['Loki (Multi-element)'], 64) === null,
+    'Planner boss prep should emit no impossible fusion recommendation when every target is level-locked'
+  );
+  Object.values(PERSONAS).forEach((persona) => {
+    const pick = pickArcanaPersona(persona.race, 64);
+    assert(!pick || pick.lvl <= 64, `Planner arcana suggestion for ${persona.race} exceeds player level 64`);
+  });
+
+  console.log('Validated fusion recommendation level gates.');
+}
+
 function validateStoreRoundtrip(context) {
   const PERSONAS = getGlobal(context, 'PERSONAS');
   const ARCANA_LIST = getGlobal(context, 'ARCANA_LIST');
@@ -521,6 +564,7 @@ validateEnemies(dataContext);
 validateRequests(dataContext);
 validateTartarusObjectives(dataContext);
 validateStaleDeadlineFiltering(dataContext);
+validateFusionRecommendationLevelGates(dataContext);
 validateStoreRoundtrip(dataContext);
 validateBrowserEntrypoints();
 

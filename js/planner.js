@@ -461,7 +461,12 @@ function extractPersonaName(rawName) {
 function findSuggestedPersonaForArcana(arcana, snapshot) {
   const roster = getRosterSet(snapshot);
   const candidates = PERSONA_COUNTS_BY_ARCANA[arcana] || [];
-  return candidates.find((entry) => !entry.special && !roster.has(entry.name)) || null;
+  return candidates.find((entry) => !entry.special && entry.lvl <= snapshot.profile.playerLevel && !roster.has(entry.name)) || null;
+}
+
+function isFusionTargetRecommendable(name, snapshot, rosterSet = getRosterSet(snapshot)) {
+  const persona = PERSONAS[name];
+  return Boolean(persona && persona.lvl <= snapshot.profile.playerLevel && !rosterSet.has(name));
 }
 
 function getFusionOpportunity(snapshot, dayPick, nextFullMoon) {
@@ -484,7 +489,7 @@ function getFusionOpportunity(snapshot, dayPick, nextFullMoon) {
 
   const bossPersona = nextFullMoon?.primaryStrategy?.personas
     ?.map(extractPersonaName)
-    .find((name) => name && PERSONAS[name] && !rosterSet.has(name));
+    .find((name) => isFusionTargetRecommendable(name, snapshot, rosterSet));
   if (bossPersona) {
     return {
       title: `Prep ${bossPersona} for the next full moon`,
