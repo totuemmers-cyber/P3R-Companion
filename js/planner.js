@@ -821,6 +821,212 @@ function buildActionQueue(snapshot, context, primaryAction) {
     .slice(0, 6);
 }
 
+function createRouteItem({ label, tone = 'normal', title, copy, action = null, completeId = null }) {
+  return {
+    label,
+    tone,
+    title,
+    copy,
+    action,
+    completeId
+  };
+}
+
+function createSocialRouteItem(label, item) {
+  return createRouteItem({
+    label,
+    title: item.link.character,
+    copy: item.plannerReason || `Best current ${item.link.timeSlot} Social Link pick.`,
+    action: { type: 'social-links', label: 'Open Social Links' }
+  });
+}
+
+function createStatRouteItem(label, fallback) {
+  return createRouteItem({
+    label,
+    title: `Raise ${capitalize(fallback.stat)}`,
+    copy: fallback.note,
+    action: { type: 'social-links', label: 'Open Social Links' }
+  });
+}
+
+function createUrgentObjectiveRouteItem(label, objective) {
+  return createRouteItem({
+    label,
+    tone: objective.daysLeft <= 1 ? 'warning' : 'normal',
+    title: objective.title,
+    copy: `${objective.daysLeft} day${objective.daysLeft === 1 ? '' : 's'} left. Target ${objective.floor}F.`,
+    action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: objective.floor },
+    completeId: objective.id
+  });
+}
+
+function createUrgentRequestRouteItem(label, request) {
+  return createRouteItem({
+    label,
+    tone: 'warning',
+    title: `Request #${request.number}`,
+    copy: `${request.title}. ${request.statusLabel}.`,
+    action: { type: 'requests', label: 'Open Requests' },
+    completeId: request.id
+  });
+}
+
+function createTartarusPrepRouteItem(label, snapshot, context) {
+  if (context.nearestObjective) {
+    return createRouteItem({
+      label,
+      title: context.nearestObjective.title,
+      copy: `Next tracked floor objective is on ${context.nearestObjective.floor}F.`,
+      action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: context.nearestObjective.floor },
+      completeId: context.nearestObjective.id
+    });
+  }
+  if (context.nextGatekeeper) {
+    return createRouteItem({
+      label,
+      title: `${context.nextGatekeeper.name} prep`,
+      copy: getLevelReadiness(snapshot.profile.playerLevel, context.nextGatekeeper.lvl)?.text || `${context.nextGatekeeper.floor}F is the next gatekeeper checkpoint.`,
+      action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: snapshot.profile.currentFloor }
+    });
+  }
+  if (context.nextFullMoon) {
+    return createRouteItem({
+      label,
+      title: `${context.nextFullMoon.boss} prep`,
+      copy: `${context.nextFullMoon.date} is the next Full Moon checkpoint.`,
+      action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: snapshot.profile.currentFloor }
+    });
+  }
+  return null;
+}
+
+function createFusionPrepRouteItem(label, fusionOpportunity) {
+  if (!fusionOpportunity) {
+    return null;
+  }
+  return createRouteItem({
+    label,
+    title: fusionOpportunity.title,
+    copy: fusionOpportunity.lines[0] || fusionOpportunity.copy,
+    action: fusionOpportunity.targetName
+      ? { type: 'velvet-target', label: 'Open Fusion Planner', target: fusionOpportunity.targetName }
+      : null
+  });
+}
+
+function createRosterBonusRouteItem(label, snapshot, pick) {
+  if (!pick || getRosterMatchForArcana(pick.arcana, snapshot)) {
+    return null;
+  }
+  return createRouteItem({
+    label,
+    title: `Bring a ${pick.arcana} persona`,
+    copy: `${pick.link.character} can benefit from the matching arcana bonus.`,
+    action: { type: 'social-links', label: 'Open Social Links' }
+  });
+}
+
+function createFlexibleRouteItem(label) {
+  return createRouteItem({
+    label,
+    title: 'Flexible slot',
+    copy: 'No strong pressure signal is active for this slot.'
+  });
+}
+
+function uniqueRouteItems(items, limit) {
+  const seen = new Set();
+  return items
+    .filter(Boolean)
+    .filter((item) => {
+      const key = `${item.title}:${item.copy}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    })
+    .slice(0, limit);
+}
+
+function buildTodayRoute(snapshot, context, warnings) {
+  const currentDate = snapshot.profile.gameDate;
+  const dayBlockedReason = getBlockedReason(currentDate.month, currentDate.day, 'day');
+  const eveningBlockedReason = getBlockedReason(currentDate.month, currentDate.day, 'evening');
+  const urgentObjectiveFirst = context.urgentObjective && context.urgentObjective.daysLeft <= 3;
+  const usedCompleteIds = new Set();
+
+  const afterSchool =
+    urgentObjectiveFirst
+      ? createUrgentObjectiveRouteItem('After School', context.urgentObjective)
+      : context.dayPick && !dayBlockedReason
+        ? createSocialRouteItem('After School', context.dayPick)
+        : context.urgentRequest
+          ? createUrgentRequestRouteItem('After School', context.urgentRequest)
+          : context.statFallback
+            ? createStatRouteItem('After School', context.statFallback)
+            : dayBlockedReason
+              ? createRouteItem({ label: 'After School', title: 'Blocked', copy: dayBlockedReason })
+              : createFlexibleRouteItem('After School');
+
+  if (afterSchool.completeId) {
+    usedCompleteIds.add(afterSchool.completeId);
+  }
+
+  const evening =
+    context.nightPick && !eveningBlockedReason
+      ? createSocialRouteItem('Evening', context.nightPick)
+      : context.urgentRequest && !usedCompleteIds.has(context.urgentRequest.id)
+        ? createUrgentRequestRouteItem('Evening', context.urgentRequest)
+        : context.statFallback
+          ? createStatRouteItem('Evening', context.statFallback)
+          : createTartarusPrepRouteItem('Evening', snapshot, context) ||
+            (eveningBlockedReason
+              ? createRouteItem({ label: 'Evening', title: 'Blocked', copy: eveningBlockedReason })
+              : createFlexibleRouteItem('Evening'));
+
+  if (evening.completeId) {
+    usedCompleteIds.add(evening.completeId);
+  }
+
+  const optional = uniqueRouteItems(
+    [
+      context.urgentRequest && !usedCompleteIds.has(context.urgentRequest.id)
+        ? createUrgentRequestRouteItem('Optional', context.urgentRequest)
+        : null,
+      context.urgentObjective && !usedCompleteIds.has(context.urgentObjective.id)
+        ? createUrgentObjectiveRouteItem('Optional', context.urgentObjective)
+        : null,
+      createFusionPrepRouteItem('Optional', context.fusionOpportunity),
+      createRosterBonusRouteItem('Optional', snapshot, context.dayPick),
+      createTartarusPrepRouteItem('Optional', snapshot, context)
+    ],
+    2
+  );
+
+  const warningSource = warnings.find(
+    (warning) =>
+      (warning.tone === 'critical' || warning.tone === 'warning') &&
+      (!warning.completeId || !usedCompleteIds.has(warning.completeId))
+  );
+  const warning = warningSource
+    ? createRouteItem({
+        label: 'Warning',
+        tone: warningSource.tone,
+        title: warningSource.tone === 'critical' ? 'Readiness risk' : 'At risk',
+        copy: warningSource.text,
+        completeId: warningSource.completeId || null
+      })
+    : null;
+
+  return {
+    primary: [afterSchool, evening],
+    optional,
+    warning
+  };
+}
+
 function getPlannerModel() {
   const snapshot = getSnapshot();
   const currentFloor = snapshot.profile.currentFloor;
@@ -886,12 +1092,17 @@ function getPlannerModel() {
     currentBlock: currentBlock || { name: 'Tartarus' }
   });
 
+  const warnings = buildWarnings(snapshot, context);
+  const actionQueue = buildActionQueue(snapshot, context, primaryAction);
+  const todayRoute = buildTodayRoute(snapshot, context, warnings);
+
   return {
     snapshot,
     ...context,
-    warnings: buildWarnings(snapshot, context),
+    warnings,
     primaryAction,
-    actionQueue: buildActionQueue(snapshot, context, primaryAction)
+    actionQueue,
+    todayRoute
   };
 }
 
@@ -960,6 +1171,37 @@ function renderActionQueue(model) {
         </article>`
       )
       .join('')}</div>`;
+}
+
+function renderTodayRouteItem(item) {
+  const toneClass = item.tone && item.tone !== 'normal' ? ` planner-route-item-${escapeHtml(item.tone)}` : '';
+  return `<article class="planner-route-item${toneClass}">
+    <div class="planner-route-label">${escapeHtml(item.label)}</div>
+    <div class="planner-route-body">
+      <div class="planner-route-title">${escapeHtml(item.title)}</div>
+      <div class="planner-route-copy">${escapeHtml(item.copy)}</div>
+    </div>
+    ${renderActionRow(item.action, item.completeId)}
+  </article>`;
+}
+
+function renderTodayRoute(model) {
+  const route = model.todayRoute;
+  const optionalHtml = route.optional.length
+    ? `<div class="planner-route-optional">${route.optional.map(renderTodayRouteItem).join('')}</div>`
+    : '';
+  const warningHtml = route.warning ? `<div class="planner-route-warning">${renderTodayRouteItem(route.warning)}</div>` : '';
+
+  return `<div class="planner-route-head">
+      <div>
+        <h2>Today's Route</h2>
+        <div class="planner-muted">${escapeHtml(formatDate(model.snapshot.profile.gameDate))} condensed into the next few decisions.</div>
+      </div>
+      <span class="planner-action-queue-count">2-slot plan</span>
+    </div>
+    <div class="planner-route-grid">${route.primary.map(renderTodayRouteItem).join('')}</div>
+    ${optionalHtml}
+    ${warningHtml}`;
 }
 
 function renderSlotActionLegacy(label, item, fallback, blockedReason) {
@@ -1083,6 +1325,7 @@ function renderPlanner() {
   const model = getPlannerModel();
 
   plannerRoot.querySelector('#planner-state-strip').innerHTML = renderStateStrip(model);
+  plannerRoot.querySelector('#planner-today-route').innerHTML = renderTodayRoute(model);
   plannerRoot.querySelector('#planner-primary-action').innerHTML = renderPrimaryAction(model);
   plannerRoot.querySelector('#planner-warnings').innerHTML = renderWarnings(model);
   plannerRoot.querySelector('#planner-action-queue').innerHTML = renderActionQueue(model);
