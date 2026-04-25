@@ -244,11 +244,13 @@ function validateStoreRoundtrip(context) {
   const PERSONAS = getGlobal(context, 'PERSONAS');
   const ARCANA_LIST = getGlobal(context, 'ARCANA_LIST');
   const storage = new Map();
+  let setItemCalls = 0;
   const localStorageRef = {
     getItem(key) {
       return storage.has(key) ? storage.get(key) : null;
     },
     setItem(key, value) {
+      setItemCalls += 1;
       storage.set(key, String(value));
     }
   };
@@ -272,6 +274,9 @@ function validateStoreRoundtrip(context) {
   const initial = store.getState();
   assert(initial.profile.gameDate.month === 4 && initial.profile.gameDate.day === 7, 'Store default date changed');
   assert(initial.roster.length === 0, 'Store default roster should be empty');
+  const initialPersistCount = setItemCalls;
+  store.saveToStorage();
+  assert(setItemCalls === initialPersistCount, 'Store should skip redundant localStorage writes');
 
   store.dispatch({ type: 'ROSTER_ADD', payload: 'Orpheus' });
   store.dispatch({ type: 'ROSTER_ADD', payload: 'Not A Persona' });

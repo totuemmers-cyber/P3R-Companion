@@ -16,6 +16,10 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function stringifyState(value) {
+  return JSON.stringify(value);
+}
+
 function isPlainObject(value) {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
@@ -216,13 +220,19 @@ function createStore(options) {
   const localStorageRef = options.localStorageRef || window.localStorage;
 
   let state = readPersistedState(localStorageRef, options);
+  let lastPersistedState = null;
 
-  function emit() {
-    listeners.forEach((listener) => listener(getState()));
+  function emit(snapshot = getState()) {
+    listeners.forEach((listener) => listener(snapshot));
   }
 
   function persist() {
-    localStorageRef.setItem(STORE_KEY, JSON.stringify(state));
+    const serialized = stringifyState(state);
+    if (serialized === lastPersistedState) {
+      return;
+    }
+    localStorageRef.setItem(STORE_KEY, serialized);
+    lastPersistedState = serialized;
   }
 
   function getState() {
@@ -232,8 +242,9 @@ function createStore(options) {
   function setState(nextState) {
     state = nextState;
     persist();
-    emit();
-    return getState();
+    const snapshot = getState();
+    emit(snapshot);
+    return snapshot;
   }
 
   function reducer(currentState, action) {
@@ -388,8 +399,9 @@ function createStore(options) {
   function loadFromStorage() {
     state = readPersistedState(localStorageRef, options);
     persist();
-    emit();
-    return getState();
+    const snapshot = getState();
+    emit(snapshot);
+    return snapshot;
   }
 
   function saveToStorage() {

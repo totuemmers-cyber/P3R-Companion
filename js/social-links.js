@@ -8,6 +8,7 @@ let slCompletionCache = new Map();
 let slLastDateKey = '';
 let slLastStateKey = '';
 let initialized = false;
+let renderQueued = false;
 const SL_COMPLETION_FINAL_DATE = { month: 1, day: 30 };
 const SL_COMPLETION_REWARD = 'Orpheus Telos';
 const slUiState = {
@@ -1909,6 +1910,22 @@ function rerenderAll() {
   slRenderCalendar();
 }
 
+function scheduleRerenderAll() {
+  if (renderQueued) {
+    return;
+  }
+  renderQueued = true;
+  const run = () => {
+    renderQueued = false;
+    rerenderAll();
+  };
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(run);
+  } else {
+    setTimeout(run, 0);
+  }
+}
+
 function initSocialLinks({ root, store }) {
   if (initialized) {
     return;
@@ -1929,9 +1946,7 @@ function initSocialLinks({ root, store }) {
       }
       slUiState.focusMode = mode;
       if (initialized) {
-        slRenderDashboard();
-        slRenderMyLinks();
-        slRenderCalendar();
+        scheduleRerenderAll();
       }
     });
   }
@@ -2027,7 +2042,7 @@ function initSocialLinks({ root, store }) {
     slRenderCalendar();
   });
 
-  slStore.subscribe(rerenderAll);
+  slStore.subscribe(scheduleRerenderAll);
   slRenderDashboard();
 }
 

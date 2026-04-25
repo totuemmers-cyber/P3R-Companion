@@ -47,6 +47,7 @@ personaList.forEach((persona) => {
 let velvetRoot;
 let velvetStore;
 let initialized = false;
+let storeRenderQueued = false;
 let fuseAName = null;
 let fuseBName = null;
 let allFusions = [];
@@ -1548,6 +1549,22 @@ function rerenderFromStore() {
   }
 }
 
+function scheduleRerenderFromStore() {
+  if (storeRenderQueued) {
+    return;
+  }
+  storeRenderQueued = true;
+  const run = () => {
+    storeRenderQueued = false;
+    rerenderFromStore();
+  };
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(run);
+  } else {
+    setTimeout(run, 0);
+  }
+}
+
 function initVelvet({ root, store }) {
   if (initialized) {
     return;
@@ -1687,7 +1704,7 @@ function initVelvet({ root, store }) {
     }
   });
 
-  velvetStore.subscribe(rerenderFromStore);
+  velvetStore.subscribe(scheduleRerenderFromStore);
   renderCompDetailEmptyState();
   renderRoster();
   renderCompendium();

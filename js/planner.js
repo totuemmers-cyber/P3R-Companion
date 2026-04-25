@@ -2,6 +2,7 @@
 let plannerRoot;
 let plannerStore;
 let initialized = false;
+let renderQueued = false;
 
 const MONTH_NAME_TO_NUM = {
   April: 4,
@@ -799,6 +800,22 @@ function renderPlanner() {
   plannerRoot.querySelector('#planner-fusion').innerHTML = renderFusion(model);
 }
 
+function scheduleRenderPlanner() {
+  if (renderQueued) {
+    return;
+  }
+  renderQueued = true;
+  const run = () => {
+    renderQueued = false;
+    renderPlanner();
+  };
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(run);
+  } else {
+    setTimeout(run, 0);
+  }
+}
+
 function onPlannerAction(event) {
   const button = event.target.closest('[data-nav]');
   if (!button || !window.p3rApp) {
@@ -839,9 +856,9 @@ function initPlanner({ root, store }) {
   }
 
   plannerRoot.addEventListener('click', onPlannerAction);
-  plannerStore.subscribe(renderPlanner);
+  plannerStore.subscribe(scheduleRenderPlanner);
   if (window.p3rApp?.subscribeToSocialLinkFocusMode) {
-    window.p3rApp.subscribeToSocialLinkFocusMode(renderPlanner);
+    window.p3rApp.subscribeToSocialLinkFocusMode(scheduleRenderPlanner);
   }
   renderPlanner();
 }

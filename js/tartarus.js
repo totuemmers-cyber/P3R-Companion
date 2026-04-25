@@ -20,6 +20,7 @@ const ELEM_NAMES = {
 let tartRoot;
 let tartStore;
 let initialized = false;
+let storeRenderQueued = false;
 
 function setActiveTartarusView(view) {
   tartRoot.querySelectorAll('.nav-tab').forEach((entry) => {
@@ -1602,6 +1603,28 @@ function renderLootGuide(query) {
   info.innerHTML = html;
 }
 
+function renderStoreBackedTartarusViews() {
+  syncFloorInputFromProfile();
+  const floorInput = tartRoot.querySelector('#floorInput');
+  renderFloorScout(Number(floorInput.value));
+}
+
+function scheduleStoreBackedTartarusViews() {
+  if (storeRenderQueued) {
+    return;
+  }
+  storeRenderQueued = true;
+  const run = () => {
+    storeRenderQueued = false;
+    renderStoreBackedTartarusViews();
+  };
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(run);
+  } else {
+    setTimeout(run, 0);
+  }
+}
+
 function initTartarus({ root, store }) {
   if (initialized) {
     return;
@@ -1761,11 +1784,7 @@ function initTartarus({ root, store }) {
     });
   });
 
-  tartStore.subscribe(() => {
-    syncFloorInputFromProfile();
-    const floorInput = tartRoot.querySelector('#floorInput');
-    renderFloorScout(Number(floorInput.value));
-  });
+  tartStore.subscribe(scheduleStoreBackedTartarusViews);
 }
 
 window.openShadowIntelViewExternal = openShadowIntelView;

@@ -9,6 +9,7 @@ const requestState = {
   status: 'all',
   selectedId: null
 };
+let renderQueued = false;
 
 const MONTH_NAME_TO_NUM = {
   April: 4,
@@ -403,6 +404,22 @@ function renderRequests() {
   renderDetail(snapshot);
 }
 
+function scheduleRenderRequests() {
+  if (renderQueued) {
+    return;
+  }
+  renderQueued = true;
+  const run = () => {
+    renderQueued = false;
+    renderRequests();
+  };
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(run);
+  } else {
+    setTimeout(run, 0);
+  }
+}
+
 function onInputChange(event) {
   if (event.target.id === 'requests-search') {
     requestState.query = event.target.value || '';
@@ -484,7 +501,7 @@ function initRequests({ root, store }) {
   requestsRoot.addEventListener('input', onInputChange);
   requestsRoot.addEventListener('change', onInputChange);
   requestsRoot.addEventListener('click', onClick);
-  requestsStore.subscribe(renderRequests);
+  requestsStore.subscribe(scheduleRenderRequests);
   renderRequests();
 }
 

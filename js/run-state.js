@@ -136,6 +136,7 @@ function mountRunStatePanel({
   readOnly = false
 }) {
   const container = root?.querySelector(selector);
+  let renderQueued = false;
   if (!container || container.dataset.runStateMounted === '1') {
     return;
   }
@@ -156,6 +157,22 @@ function mountRunStatePanel({
         ${note ? `<p class="run-state-note">${escapeHtml(note)}</p>` : ''}
       </div>
     `;
+  }
+
+  function scheduleRender() {
+    if (renderQueued) {
+      return;
+    }
+    renderQueued = true;
+    const run = () => {
+      renderQueued = false;
+      render();
+    };
+    if (typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(run);
+    } else {
+      setTimeout(run, 0);
+    }
   }
 
   function onChange(event) {
@@ -214,7 +231,7 @@ function mountRunStatePanel({
 
   container.dataset.runStateMounted = '1';
   container.addEventListener('change', onChange);
-  store.subscribe(render);
+  store.subscribe(scheduleRender);
   render();
 }
 
