@@ -565,6 +565,31 @@
 }
 #velvet .rec-locked-label { color: var(--accent-cyan); }
 
+#velvet .fusion-settings-card { padding: 0.85rem 1rem; }
+#velvet .fusion-settings-card summary {
+  cursor: pointer; color: var(--accent-gold); font-family: 'Cinzel', serif;
+  font-size: 1rem; user-select: none;
+}
+#velvet .fusion-settings-body { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; }
+#velvet .fusion-setting-toggle {
+  display: flex; align-items: center; gap: 0.45rem; color: var(--text-primary);
+  font-size: 0.84rem;
+}
+#velvet .fusion-settings-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.45rem 0.8rem;
+}
+#velvet .fusion-unlock-option {
+  display: grid; grid-template-columns: auto 1fr; gap: 0.45rem; align-items: start;
+  font-size: 0.78rem; color: var(--text-muted); padding: 0.35rem 0.45rem;
+  border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; background: rgba(255,255,255,0.025);
+}
+#velvet .fusion-unlock-option span { color: var(--text-primary); font-weight: 600; }
+#velvet .fusion-locked-note {
+  margin-top: 0.6rem; padding: 0.55rem 0.7rem; border: 1px solid rgba(68,216,255,0.25);
+  border-radius: 8px; color: var(--accent-cyan); font-size: 0.83rem; background: rgba(68,216,255,0.07);
+}
+
 /* Fusion Comparison */
 #velvet .comparison-panel { margin-top: 1rem; animation: resultAppear 0.3s ease-out; }
 #velvet .comparison-panel h4 { font-family: var(--font-app); color: var(--accent-gold); font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; }

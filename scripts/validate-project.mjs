@@ -49,6 +49,7 @@ function loadDataContext() {
     'data/social-links-verified.js',
     'data/tartarus-extra.js',
     'data/personas-extra.js',
+    'data/fusion-unlocks.js',
     'data/social-links-extra.js',
     'data/requests-extra.js',
     'data/elizabeth-requests.js'
@@ -396,8 +397,12 @@ function validateRosterOpportunityLevelGates(context) {
   const SPECIAL_RECIPES = getGlobal(context, 'SPECIAL_RECIPES');
   const ARCANA_CHART = getGlobal(context, 'ARCANA_CHART');
   const ARCANA_LIST = getGlobal(context, 'ARCANA_LIST');
+  const SOCIAL_LINKS = getGlobal(context, 'SOCIAL_LINKS');
+  const FUSION_UNLOCKS = getGlobal(context, 'FUSION_UNLOCKS');
   const source = readRepoFile('js/velvet.js');
   const specialPersonas = new Set(Object.keys(SPECIAL_RECIPES));
+  const dlcPersonas = new Set(FUSION_UNLOCKS.dlcPersonas || []);
+  const gatedPersonas = FUSION_UNLOCKS.gatedPersonas || {};
   const resultsByArcana = {};
   const ingredientsByArcana = {};
   const personaList = Object.entries(PERSONAS)
@@ -418,16 +423,60 @@ function validateRosterOpportunityLevelGates(context) {
   });
 
   const getResultArcana = (a1, a2) => (a1 === a2 ? a1 : ARCANA_CHART[a1]?.[a2] || null);
+  const createFusionState = (overrides = {}) => ({
+    roster: [],
+    fusionSettings: { dlcEnabled: true, manualUnlocks: {} },
+    socialLinks: { ranks: Object.fromEntries(ARCANA_LIST.map((arcana) => [arcana, 0])) },
+    objectives: {},
+    ...overrides
+  });
+  const isPersonaUnlocked = (name, state) => {
+    if (!PERSONAS[name]) {
+      return false;
+    }
+    if ((state.roster || []).includes(name)) {
+      return true;
+    }
+    const settings = state.fusionSettings || { dlcEnabled: true, manualUnlocks: {} };
+    if (dlcPersonas.has(name) && settings.dlcEnabled === false) {
+      return false;
+    }
+    const gate = gatedPersonas[name];
+    if (!gate) {
+      return true;
+    }
+    if (gate.type === 'social') {
+      return (state.socialLinks?.ranks?.[gate.arcana] || 0) >= 10;
+    }
+    if (gate.type === 'socialAll') {
+      return ARCANA_LIST.every((arcana) => {
+        const link = SOCIAL_LINKS[arcana];
+        return !link || link.automatic || (state.socialLinks?.ranks?.[arcana] || 0) >= 10;
+      });
+    }
+    if (gate.type === 'objective') {
+      return Boolean(state.objectives?.[gate.id]);
+    }
+    if (gate.type === 'manual') {
+      return Boolean(settings.manualUnlocks?.[gate.key]);
+    }
+    return true;
+  };
+  const getAvailableResultsByArcana = (arcana, state) =>
+    (resultsByArcana[arcana] || []).filter((persona) => isPersonaUnlocked(persona.name, state));
   const checkTwoIngredientSpecial = (names) => {
     const nameSet = new Set(names);
     return Object.entries(SPECIAL_RECIPES).find(
       ([, ingredients]) => ingredients.length === names.length && ingredients.every((ingredient) => nameSet.has(ingredient))
     )?.[0] || null;
   };
-  const fuseSameArcana = (p1, p2) => {
-    const candidates = (resultsByArcana[p1.race] || []).filter(
-      (candidate) => candidate.lvl !== p1.lvl && candidate.lvl !== p2.lvl
+  const fuseSameArcana = (p1, p2, state) => {
+    const candidates = getAvailableResultsByArcana(p1.race, state).filter(
+      (candidate) => candidate.name !== p1.name && candidate.name !== p2.name
     );
+    if (!candidates.length) {
+      return null;
+    }
     const sumLvl = p1.lvl + p2.lvl;
     let index = -1;
     for (let cursor = candidates.length - 1; cursor >= 0; cursor -= 1) {
@@ -444,30 +493,69 @@ function validateRosterOpportunityLevelGates(context) {
     }
     return index >= 0 ? candidates[index] : null;
   };
-  const fuseDyad = (p1, p2) => {
+  const selectClosestFusionResult = (resultArcana, targetLevel, p1, p2, state) =>
+    getAvailableResultsByArcana(resultArcana, state)
+      .filter((candidate) => candidate.name !== p1.name && candidate.name !== p2.name)
+      .sort(
+        (left, right) =>
+          Math.abs(left.lvl - targetLevel) - Math.abs(right.lvl - targetLevel) ||
+          left.lvl - right.lvl ||
+          left.name.localeCompare(right.name)
+      )[0] || null;
+  const fuseDyad = (p1, p2, state = createFusionState()) => {
     const special = checkTwoIngredientSpecial([p1.name, p2.name]);
     if (special) {
-      return { name: special, ...PERSONAS[special] };
+      return isPersonaUnlocked(special, state) ? { name: special, ...PERSONAS[special] } : null;
     }
     if (p1.race === p2.race) {
-      return fuseSameArcana(p1, p2);
+      return fuseSameArcana(p1, p2, state);
     }
     const resultArcana = getResultArcana(p1.race, p2.race);
-    const candidates = resultsByArcana[resultArcana] || [];
-    const sumLvl = p1.lvl + p2.lvl;
-    let index = 0;
-    for (let cursor = 0; cursor < candidates.length; cursor += 1) {
-      if (sumLvl >= 2 * candidates[cursor].lvl) {
-        index = cursor + 1;
+    if (!resultArcana) {
+      return null;
+    }
+    return selectClosestFusionResult(resultArcana, Math.ceil((p1.lvl + p2.lvl) / 2), p1, p2, state);
+  };
+  const reverseLookup = (targetName, state = createFusionState()) => {
+    const target = PERSONAS[targetName];
+    if (!target || !isPersonaUnlocked(targetName, state)) {
+      return [];
+    }
+    if (SPECIAL_RECIPES[targetName]) {
+      return [{ type: 'special', ingredients: SPECIAL_RECIPES[targetName] }];
+    }
+    const results = [];
+    const seen = new Set();
+    for (let i = 0; i < ARCANA_LIST.length; i += 1) {
+      for (let j = i; j < ARCANA_LIST.length; j += 1) {
+        const a1 = ARCANA_LIST[i];
+        const a2 = ARCANA_LIST[j];
+        const resultArcana = getResultArcana(a1, a2);
+        if (resultArcana !== target.race) {
+          continue;
+        }
+        const list1 = (ingredientsByArcana[a1] || []).filter((persona) => isPersonaUnlocked(persona.name, state));
+        const list2 = a1 === a2
+          ? list1
+          : (ingredientsByArcana[a2] || []).filter((persona) => isPersonaUnlocked(persona.name, state));
+        for (const p1 of list1) {
+          for (const p2 of list2) {
+            if (p1.name === p2.name || (a1 === a2 && p1.lvl >= p2.lvl)) {
+              continue;
+            }
+            const result = fuseDyad(p1, p2, state);
+            if (result?.name === targetName) {
+              const key = `${p1.name}|${p2.name}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                results.push({ type: 'normal', p1: p1.name, p2: p2.name });
+              }
+            }
+          }
+        }
       }
     }
-    if (index >= candidates.length) {
-      index = candidates.length - 1;
-    }
-    if (candidates[index]?.name === p1.name || candidates[index]?.name === p2.name) {
-      index += 1;
-    }
-    return index < candidates.length ? candidates[index] : null;
+    return results;
   };
 
   assert(source.includes('SOON_LEVEL_WINDOW = 5'), 'Roster opportunities should preview the next 5 levels by default');
@@ -477,10 +565,63 @@ function validateRosterOpportunityLevelGates(context) {
     'Soon roster opportunities must be above current level and within the preview window'
   );
 
+  const defaultState = createFusionState();
+  const unlockedSurtState = createFusionState({
+    fusionSettings: { dlcEnabled: true, manualUnlocks: { 'junpei-baseball-glove': true } }
+  });
+  const dlcDisabledState = createFusionState({
+    fusionSettings: { dlcEnabled: false, manualUnlocks: {} }
+  });
+  const dlcDisabledRosterState = createFusionState({
+    roster: ['Vanadis'],
+    fusionSettings: { dlcEnabled: false, manualUnlocks: {} }
+  });
+  const socialUnlockedState = createFusionState({
+    socialLinks: {
+      ranks: {
+        ...createFusionState().socialLinks.ranks,
+        Chariot: 10
+      }
+    }
+  });
+  const objectiveUnlockedState = createFusionState({
+    objectives: { 'elizabeth-request-024': true }
+  });
+  const pairResult = fuseDyad(
+    { name: 'Lachesis', ...PERSONAS.Lachesis },
+    { name: 'Vanadis', ...PERSONAS.Vanadis },
+    defaultState
+  );
+  assert(pairResult?.name === 'Rangda', 'Lachesis + Vanadis should resolve to Rangda, not Surt');
+  assert(
+    fuseDyad({ name: 'Lachesis', ...PERSONAS.Lachesis }, { name: 'Vanadis', ...PERSONAS.Vanadis }, unlockedSurtState)?.name === 'Rangda',
+    'Unlocked Surt should not change the Lachesis + Vanadis dyad away from Rangda'
+  );
+  assert(
+    reverseLookup('Rangda', defaultState).some((entry) => entry.p1 === 'Lachesis' && entry.p2 === 'Vanadis'),
+    'Rangda reverse lookup should include Lachesis + Vanadis'
+  );
+  assert(
+    !reverseLookup('Surt', unlockedSurtState).some((entry) => [entry.p1, entry.p2].includes('Lachesis') && [entry.p1, entry.p2].includes('Vanadis')),
+    'Surt reverse lookup should not include Lachesis + Vanadis'
+  );
+  assert(reverseLookup('Surt', defaultState).length === 0, 'Locked Surt should not expose normal recipes');
+  assert(reverseLookup('Surt', unlockedSurtState).some((entry) => entry.type === 'normal'), 'Unlocked Surt should expose normal recipes');
+  assert(!isPersonaUnlocked('Vanadis', dlcDisabledState), 'DLC-disabled Vanadis should be unavailable by default');
+  assert(isPersonaUnlocked('Vanadis', dlcDisabledRosterState), 'Roster-owned Vanadis should stay usable when DLC is disabled');
+  assert(
+    !reverseLookup('Rangda', dlcDisabledState).some((entry) => [entry.p1, entry.p2].includes('Vanadis')),
+    'DLC-disabled reverse lookup should not reference Vanadis when it is not owned'
+  );
+  assert(!isPersonaUnlocked('Thor', defaultState), 'Social-link-gated Thor should start locked');
+  assert(isPersonaUnlocked('Thor', socialUnlockedState), 'Rank 10 Chariot should unlock Thor');
+  assert(!isPersonaUnlocked('King Frost', defaultState), 'Objective-gated King Frost should start locked');
+  assert(isPersonaUnlocked('King Frost', objectiveUnlockedState), 'Completed Elizabeth request #24 should unlock King Frost');
+
   const entries = [];
   for (let i = 0; i < personaList.length; i += 1) {
     for (let j = i + 1; j < personaList.length; j += 1) {
-      const result = fuseDyad(personaList[i], personaList[j]);
+      const result = fuseDyad(personaList[i], personaList[j], defaultState);
       if (result) {
         entries.push({ a: personaList[i].name, b: personaList[j].name, result: result.name, level: result.lvl });
       }
@@ -587,6 +728,11 @@ function validateStoreRoundtrip(context) {
   const initial = store.getState();
   assert(initial.profile.gameDate.month === 4 && initial.profile.gameDate.day === 7, 'Store default date changed');
   assert(initial.roster.length === 0, 'Store default roster should be empty');
+  assert(initial.fusionSettings.dlcEnabled === true, 'Store should enable DLC fusion settings by default');
+  assert(
+    Object.keys(initial.fusionSettings.manualUnlocks).length === 0,
+    'Store default manual fusion unlocks should be empty'
+  );
   const initialPersistCount = setItemCalls;
   store.saveToStorage();
   assert(setItemCalls === initialPersistCount, 'Store should skip redundant localStorage writes');
@@ -597,6 +743,8 @@ function validateStoreRoundtrip(context) {
   store.dispatch({ type: 'PROFILE_SET_STAT', payload: { stat: 'courage', value: 99 } });
   store.dispatch({ type: 'SOCIALLINKS_SET_RANK', payload: { arcana: 'Magician', value: 12 } });
   store.dispatch({ type: 'OBJECTIVE_SET_COMPLETE', payload: { id: 'old-document-01', complete: true } });
+  store.dispatch({ type: 'FUSION_SET_DLC_ENABLED', payload: false });
+  store.dispatch({ type: 'FUSION_SET_MANUAL_UNLOCK', payload: { key: 'junpei-baseball-glove', unlocked: true } });
 
   const sanitized = store.getState();
   assert(JSON.stringify(sanitized.roster) === JSON.stringify(['Orpheus']), 'Store should reject invalid roster entries');
@@ -604,6 +752,11 @@ function validateStoreRoundtrip(context) {
   assert(sanitized.profile.stats.courage === 6, 'Store should clamp social stat values');
   assert(sanitized.socialLinks.ranks.Magician === 10, 'Store should clamp social-link ranks');
   assert(sanitized.objectives['old-document-01'] === true, 'Store should persist objective completion');
+  assert(sanitized.fusionSettings.dlcEnabled === false, 'Store should persist DLC fusion setting');
+  assert(
+    sanitized.fusionSettings.manualUnlocks['junpei-baseball-glove'] === true,
+    'Store should persist manual fusion unlocks'
+  );
 
   const exported = store.exportSave();
   store.dispatch({ type: 'STATE_RESET' });
@@ -611,6 +764,11 @@ function validateStoreRoundtrip(context) {
   const restored = store.getState();
   assert(JSON.stringify(restored.roster) === JSON.stringify(exported.roster), 'Store import should restore roster');
   assert(restored.profile.playerLevel === exported.profile.playerLevel, 'Store import should restore profile');
+  assert(restored.fusionSettings.dlcEnabled === exported.fusionSettings.dlcEnabled, 'Store import should restore DLC fusion setting');
+  assert(
+    restored.fusionSettings.manualUnlocks['junpei-baseball-glove'] === true,
+    'Store import should restore manual fusion unlocks'
+  );
 
   let rejected = false;
   try {
@@ -673,6 +831,7 @@ function validateBrowserEntrypoints() {
     'data/social-links-verified.js',
     'data/tartarus-extra.js',
     'data/personas-extra.js',
+    'data/fusion-unlocks.js',
     'data/social-links-extra.js',
     'data/requests-extra.js',
     'data/elizabeth-requests.js',

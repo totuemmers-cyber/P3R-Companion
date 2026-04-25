@@ -122,13 +122,31 @@ function sanitizeObjectives(rawObjectives) {
   return nextObjectives;
 }
 
+function sanitizeFusionSettings(rawFusionSettings) {
+  const source = isPlainObject(rawFusionSettings) ? rawFusionSettings : {};
+  const manualUnlocks = isPlainObject(source.manualUnlocks) ? source.manualUnlocks : {};
+  const nextManualUnlocks = {};
+
+  Object.entries(manualUnlocks).forEach(([key, value]) => {
+    if (typeof key === 'string' && key) {
+      nextManualUnlocks[key] = Boolean(value);
+    }
+  });
+
+  return {
+    dlcEnabled: source.dlcEnabled === undefined ? true : Boolean(source.dlcEnabled),
+    manualUnlocks: nextManualUnlocks
+  };
+}
+
 function sanitizeState(rawState, options) {
   const baseState = {
     version: 1,
     roster: [],
     profile: options.createDefaultProfileState(),
     socialLinks: options.createDefaultSocialLinksState(),
-    objectives: {}
+    objectives: {},
+    fusionSettings: sanitizeFusionSettings({})
   };
 
   if (!isPlainObject(rawState)) {
@@ -154,7 +172,8 @@ function sanitizeState(rawState, options) {
       options.createDefaultSocialLinksState,
       options.arcanaOrder
     ),
-    objectives: sanitizeObjectives(rawState.objectives)
+    objectives: sanitizeObjectives(rawState.objectives),
+    fusionSettings: sanitizeFusionSettings(rawState.fusionSettings)
   };
 }
 
@@ -212,6 +231,9 @@ function validateImportedPayload(rawData) {
   }
   if (rawData.objectives !== undefined && !isPlainObject(rawData.objectives)) {
     throw new Error('Invalid save data: objectives must be an object.');
+  }
+  if (rawData.fusionSettings !== undefined && !isPlainObject(rawData.fusionSettings)) {
+    throw new Error('Invalid save data: fusionSettings must be an object.');
   }
 }
 
@@ -372,6 +394,34 @@ function createStore(options) {
           }
         };
       }
+      case 'FUSION_SET_DLC_ENABLED':
+        return {
+          ...currentState,
+          fusionSettings: {
+            ...currentState.fusionSettings,
+            dlcEnabled: Boolean(action.payload)
+          }
+        };
+      case 'FUSION_SET_MANUAL_UNLOCK': {
+        const { key, unlocked } = action.payload || {};
+        if (typeof key !== 'string' || !key) {
+          return currentState;
+        }
+        const currentValue = Boolean(currentState.fusionSettings.manualUnlocks[key]);
+        if (currentValue === Boolean(unlocked)) {
+          return currentState;
+        }
+        return {
+          ...currentState,
+          fusionSettings: {
+            ...currentState.fusionSettings,
+            manualUnlocks: {
+              ...currentState.fusionSettings.manualUnlocks,
+              [key]: Boolean(unlocked)
+            }
+          }
+        };
+      }
       case 'STATE_IMPORT':
         return sanitizeState(action.payload, options);
       case 'STATE_RESET':
@@ -416,6 +466,7 @@ function createStore(options) {
       profile: snapshot.profile,
       socialLinks: snapshot.socialLinks,
       objectives: snapshot.objectives,
+      fusionSettings: snapshot.fusionSettings,
       exportedAt: new Date().toISOString()
     };
   }
@@ -429,7 +480,8 @@ function createStore(options) {
         roster: rawData.roster,
         profile: rawData.profile,
         socialLinks: rawData.socialLinks,
-        objectives: rawData.objectives
+        objectives: rawData.objectives,
+        fusionSettings: rawData.fusionSettings
       }
     });
   }

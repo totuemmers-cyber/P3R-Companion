@@ -28,6 +28,9 @@ const MAX_READY_OPPORTUNITIES = 5;
 const MAX_SOON_OPPORTUNITIES = 5;
 const SOON_LEVEL_WINDOW = 5;
 
+const FUSION_UNLOCK_DATA = typeof FUSION_UNLOCKS !== 'undefined' ? FUSION_UNLOCKS : { dlcPersonas: [], gatedPersonas: {} };
+const DLC_PERSONAS = new Set(FUSION_UNLOCK_DATA.dlcPersonas || []);
+const GATED_PERSONAS = FUSION_UNLOCK_DATA.gatedPersonas || {};
 const specialPersonas = new Set(Object.keys(SPECIAL_RECIPES));
 const personaList = Object.entries(PERSONAS)
   .map(([name, data]) => ({ name, ...data }))
@@ -86,6 +89,77 @@ function getCurrentPlayerLevel() {
   return velvetStore?.getState()?.profile?.playerLevel || 1;
 }
 
+function getFusionSettings() {
+  return velvetStore?.getState()?.fusionSettings || { dlcEnabled: true, manualUnlocks: {} };
+}
+
+function isPersonaUnlocked(name) {
+  if (!PERSONAS[name]) {
+    return false;
+  }
+  if (getRosterSet().has(name)) {
+    return true;
+  }
+  const state = velvetStore?.getState();
+  const settings = state?.fusionSettings || { dlcEnabled: true, manualUnlocks: {} };
+  if (DLC_PERSONAS.has(name) && !settings.dlcEnabled) {
+    return false;
+  }
+  const gate = GATED_PERSONAS[name];
+  if (!gate) {
+    return true;
+  }
+  if (gate.type === 'social') {
+    return (state?.socialLinks?.ranks?.[gate.arcana] || 0) >= 10;
+  }
+  if (gate.type === 'socialAll') {
+    return ARCANA_LIST.every((arcana) => {
+      const link = SOCIAL_LINKS[arcana];
+      return !link || link.automatic || (state?.socialLinks?.ranks?.[arcana] || 0) >= 10;
+    });
+  }
+  if (gate.type === 'objective') {
+    return Boolean(state?.objectives?.[gate.id]);
+  }
+  if (gate.type === 'manual') {
+    return Boolean(settings.manualUnlocks?.[gate.key]);
+  }
+  return true;
+}
+
+function getPersonaUnlockLabel(name) {
+  if (DLC_PERSONAS.has(name) && !getFusionSettings().dlcEnabled) {
+    return 'Enable DLC Personas in Fusion Settings';
+  }
+  return GATED_PERSONAS[name]?.label || '';
+}
+
+function getFusionAvailabilitySignature() {
+  const state = velvetStore?.getState();
+  const settings = state?.fusionSettings || { dlcEnabled: true, manualUnlocks: {} };
+  const manual = Object.entries(settings.manualUnlocks || {})
+    .filter(([, value]) => value)
+    .map(([key]) => key)
+    .sort()
+    .join(',');
+  const ranks = Object.entries(state?.socialLinks?.ranks || {})
+    .filter(([, rank]) => rank >= 10)
+    .map(([arcana]) => arcana)
+    .sort()
+    .join(',');
+  const objectives = Object.entries(state?.objectives || {})
+    .filter(([, complete]) => complete)
+    .map(([id]) => id)
+    .sort()
+    .join(',');
+  const roster = (state?.roster || []).filter((name) => PERSONAS[name]).sort().join(',');
+  return `${settings.dlcEnabled ? 'dlc' : 'base'}|${manual}|${ranks}|${objectives}|${roster}`;
+}
+
+function getAvailableResultsByArcana(arcana) {
+  return (resultsByArcana[arcana] || []).filter((persona) => isPersonaUnlocked(persona.name));
+}
+
 function getActiveSocialLinks() {
   const { ranks } = velvetStore.getState().socialLinks;
   return Object.entries(ranks)
@@ -122,8 +196,8 @@ function checkSpecialRecipe(names) {
 }
 
 function fuseSameArcana(p1, p2) {
-  const candidates = (resultsByArcana[p1.race] || []).filter(
-    (candidate) => candidate.lvl !== p1.lvl && candidate.lvl !== p2.lvl
+  const candidates = getAvailableResultsByArcana(p1.race).filter(
+    (candidate) => candidate.name !== p1.name && candidate.name !== p2.name
   );
   if (!candidates.length) {
     return null;
@@ -145,10 +219,21 @@ function fuseSameArcana(p1, p2) {
   return index >= 0 ? candidates[index] : null;
 }
 
+function selectClosestFusionResult(resultArcana, targetLevel, p1, p2) {
+  return getAvailableResultsByArcana(resultArcana)
+    .filter((candidate) => candidate.name !== p1.name && candidate.name !== p2.name)
+    .sort(
+      (left, right) =>
+        Math.abs(left.lvl - targetLevel) - Math.abs(right.lvl - targetLevel) ||
+        left.lvl - right.lvl ||
+        left.name.localeCompare(right.name)
+    )[0] || null;
+}
+
 function fuseDyad(p1, p2) {
   const special = checkSpecialRecipe([p1.name, p2.name]);
   if (special) {
-    return { name: special, ...PERSONAS[special], special: true };
+    return isPersonaUnlocked(special) ? { name: special, ...PERSONAS[special], special: true } : null;
   }
   if (p1.race === p2.race) {
     return fuseSameArcana(p1, p2);
@@ -157,37 +242,22 @@ function fuseDyad(p1, p2) {
   if (!resultArcana) {
     return null;
   }
-  const candidates = resultsByArcana[resultArcana];
-  if (!candidates || !candidates.length) {
-    return null;
-  }
-  const sumLvl = p1.lvl + p2.lvl;
-  let index = 0;
-  for (let cursor = 0; cursor < candidates.length; cursor += 1) {
-    if (sumLvl >= 2 * candidates[cursor].lvl) {
-      index = cursor + 1;
-    }
-  }
-  if (index >= candidates.length) {
-    index = candidates.length - 1;
-  }
-  if (candidates[index].name === p1.name || candidates[index].name === p2.name) {
-    index += 1;
-  }
-  return index < candidates.length ? candidates[index] : null;
+  const targetLevel = Math.ceil((p1.lvl + p2.lvl) / 2);
+  return selectClosestFusionResult(resultArcana, targetLevel, p1, p2);
 }
 
 function reverseLookup(targetName) {
-  if (reverseLookupCache.has(targetName)) {
-    return reverseLookupCache.get(targetName);
+  const cacheKey = `${targetName}|${getFusionAvailabilitySignature()}`;
+  if (reverseLookupCache.has(cacheKey)) {
+    return reverseLookupCache.get(cacheKey);
   }
   const target = PERSONAS[targetName];
-  if (!target) {
+  if (!target || !isPersonaUnlocked(targetName)) {
     return [];
   }
   if (SPECIAL_RECIPES[targetName]) {
     const specialResults = [{ type: 'special', ingredients: SPECIAL_RECIPES[targetName] }];
-    reverseLookupCache.set(targetName, specialResults);
+    reverseLookupCache.set(cacheKey, specialResults);
     return specialResults;
   }
   const results = [];
@@ -200,8 +270,8 @@ function reverseLookup(targetName) {
       if (resultArcana !== target.race) {
         continue;
       }
-      const list1 = ingredientsByArcana[a1] || [];
-      const list2 = a1 === a2 ? list1 : ingredientsByArcana[a2] || [];
+      const list1 = (ingredientsByArcana[a1] || []).filter((persona) => isPersonaUnlocked(persona.name));
+      const list2 = a1 === a2 ? list1 : (ingredientsByArcana[a2] || []).filter((persona) => isPersonaUnlocked(persona.name));
       for (const p1 of list1) {
         for (const p2 of list2) {
           if (p1.name === p2.name) {
@@ -222,7 +292,7 @@ function reverseLookup(targetName) {
       }
     }
   }
-  reverseLookupCache.set(targetName, results);
+  reverseLookupCache.set(cacheKey, results);
   return results;
 }
 
@@ -305,6 +375,19 @@ function buildPlanNode(targetName, roster, memo, depth = 0, trail = new Set()) {
     };
   }
 
+  if (!roster.has(targetName) && !isPersonaUnlocked(targetName)) {
+    return {
+      status: 'locked',
+      name: targetName,
+      blockers: [targetName],
+      hintIngredients: [],
+      directOwnedCount: 0,
+      ingredientLevelSum: 999,
+      recipeKey: targetName,
+      unlockLabel: getPersonaUnlockLabel(targetName)
+    };
+  }
+
   if (roster.has(targetName)) {
     return {
       status: 'owned',
@@ -365,7 +448,7 @@ function buildPlanNode(targetName, roster, memo, depth = 0, trail = new Set()) {
     );
     const recipeKey = recipe.ingredients.join('|');
 
-    if (childNodes.every((child) => child.status !== 'blocked')) {
+    if (childNodes.every((child) => child.status !== 'blocked' && child.status !== 'locked')) {
       const path = childNodes.flatMap((child) => child.path).concat({
         type: recipe.type,
         result: targetName,
@@ -435,6 +518,17 @@ function buildFusionPlanner(targetName) {
   }
 
   const node = buildPlanNode(targetName, roster, memo);
+  if (node.status === 'locked') {
+    return {
+      status: 'locked',
+      target: targetName,
+      path: [],
+      nextActions: [],
+      neededFirst: [],
+      blockers: node.blockers || [targetName],
+      unlockLabel: node.unlockLabel || getPersonaUnlockLabel(targetName)
+    };
+  }
   if (node.status === 'blocked') {
     return {
       status: 'blocked',
@@ -511,6 +605,10 @@ function renderPlanner(plan) {
 
   if (plan.status === 'owned') {
     return `<div class="planner-shell"><div class="planner-summary planner-summary-owned"><div class="planner-summary-main"><span class="planner-status planner-status-owned">Owned</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>This persona is already in your roster.</p></div>${targetInsight}</div>`;
+  }
+
+  if (plan.status === 'locked') {
+    return `<div class="planner-shell"><div class="planner-summary planner-summary-blocked"><div class="planner-summary-main"><span class="planner-status planner-status-blocked">Locked</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>${escapeHtml(plan.unlockLabel || 'Unlock this Persona before fusion recipes are available.')}</p></div>${targetInsight}</div>`;
   }
 
   if (plan.status === 'blocked') {
@@ -1366,6 +1464,24 @@ function renderSpecialFusions() {
     .join('');
 }
 
+function renderFusionSettings() {
+  const dlcToggle = velvetRoot.querySelector('#fusion-dlc-enabled');
+  const manualContainer = velvetRoot.querySelector('#fusion-manual-unlocks');
+  if (!dlcToggle || !manualContainer) {
+    return;
+  }
+  const settings = getFusionSettings();
+  dlcToggle.checked = settings.dlcEnabled !== false;
+  manualContainer.innerHTML = Object.entries(GATED_PERSONAS)
+    .filter(([, gate]) => gate.type === 'manual')
+    .sort((left, right) => left[0].localeCompare(right[0]))
+    .map(
+      ([name, gate]) =>
+        `<label class="fusion-unlock-option"><input type="checkbox" data-fusion-unlock="${escapeHtml(gate.key)}" ${settings.manualUnlocks?.[gate.key] ? 'checked' : ''}><div><span>${escapeHtml(name)}</span><br>${escapeHtml(gate.label)}</div></label>`
+    )
+    .join('');
+}
+
 function renderCompendium() {
   renderCompendiumSummary();
   const arcana = velvetRoot.querySelector('#comp-arcana').value;
@@ -1523,7 +1639,9 @@ function showCompDetail(name, options = {}) {
     }
 
     let html;
-    if (!results.length) {
+    if (!isPersonaUnlocked(name)) {
+      html = `<div class="fusion-locked-note">Locked: ${escapeHtml(getPersonaUnlockLabel(name) || 'Unlock this Persona before fusion recipes are available.')}</div>`;
+    } else if (!results.length) {
       html = '<p style="color:var(--text-muted);font-size:0.85rem">No fusion recipes found (base persona or treasure demon)</p>';
     } else if (results[0].type === 'special') {
       html = `<div style="margin-bottom:0.5rem;color:var(--accent-gold);font-size:0.85rem">Special Fusion:</div><div style="display:flex;gap:0.3rem;flex-wrap:wrap">${results[0].ingredients
@@ -1646,6 +1764,7 @@ function switchTab(tab) {
   if (tab === 'fusion') {
     closeCompDetailDrawer();
     renderSpecialFusions();
+    renderFusionSettings();
     renderRecommendedFusions();
   } else if (tab === 'compendium') {
     renderCompendium();
@@ -1653,8 +1772,10 @@ function switchTab(tab) {
 }
 
 function rerenderFromStore() {
+  reverseLookupCache.clear();
   renderRoster();
   renderSpecialFusions();
+  renderFusionSettings();
   renderRecommendedFusions();
   if (fuseAName && !getRosterSet().has(fuseAName)) {
     fuseAName = null;
@@ -1792,6 +1913,9 @@ function initVelvet({ root, store }) {
   velvetRoot.querySelector('#roster-clear-btn').addEventListener('click', clearRoster);
   velvetRoot.querySelector('#fusion-reset-btn').addEventListener('click', resetFusion);
   velvetRoot.querySelector('#fusion-calc-btn').addEventListener('click', computeAllFusions);
+  velvetRoot.querySelector('#fusion-dlc-enabled').addEventListener('change', (event) => {
+    velvetStore.dispatch({ type: 'FUSION_SET_DLC_ENABLED', payload: event.target.checked });
+  });
   velvetRoot.querySelector('#chain-planner-close').addEventListener('click', closeChainPlanner);
   velvetRoot.querySelector('#globalSearch').addEventListener('input', (event) => {
     const query = event.target.value.toLowerCase().trim();
@@ -1805,6 +1929,20 @@ function initVelvet({ root, store }) {
         card.style.display = !query || name.includes(query) ? '' : 'none';
       });
     }
+  });
+
+  velvetRoot.addEventListener('change', (event) => {
+    const unlockInput = event.target.closest('[data-fusion-unlock]');
+    if (!unlockInput) {
+      return;
+    }
+    velvetStore.dispatch({
+      type: 'FUSION_SET_MANUAL_UNLOCK',
+      payload: {
+        key: unlockInput.dataset.fusionUnlock,
+        unlocked: unlockInput.checked
+      }
+    });
   });
 
   velvetRoot.addEventListener('click', (event) => {
@@ -1843,6 +1981,7 @@ function initVelvet({ root, store }) {
   renderRoster();
   renderCompendium();
   renderSpecialFusions();
+  renderFusionSettings();
   renderRecommendedFusions();
 }
 
