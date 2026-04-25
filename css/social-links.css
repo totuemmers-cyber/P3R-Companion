@@ -1689,3 +1689,70 @@
     grid-template-columns:repeat(7,minmax(210px,1fr));
   }
 }
+
+/* Accessibility sizing: lift the smallest Social Link labels, badges, and calendar text. */
+#social-links .header h1 span{
+  font-size:0.56em;
+}
+
+#social-links .sl-focus-btn,
+#social-links .sl-status-pill-label,
+.sl-progress-rank,
+.sl-progress-meta,
+.sl-rec-score,
+.sl-rec-meta,
+.sl-rec-badge,
+.sl-link-meta,
+.sl-link-status,
+.sl-link-rank,
+.sl-link-tag,
+.sl-answer-points,
+.sl-calendar-date,
+.sl-cal-day-summary,
+.sl-cal-slot-label,
+.sl-cal-empty,
+.sl-cal-link-flag,
+.sl-checklist summary,
+.sl-checklist-state,
+.sl-cal-mode-btn{
+  font-size:var(--text-micro);
+}
+
+.sl-completion-copy,
+.sl-note,
+.sl-action-copy,
+.sl-risk-copy,
+.sl-unlock-copy,
+.sl-premium-copy,
+.sl-checklist-item,
+.sl-cal-link,
+.sl-cal-legend,
+.sl-planning-copy,
+.sl-links-search,
+.sl-filters select{
+  font-size:var(--text-small);
+}
+
+.sl-focus-btn,
+.sl-time-btn,
+.sl-cal-mode-btn,
+.sl-filter-chip,
+.sl-action-btn,
+#social-links .btn{
+  min-height:var(--control-min-hit);
+}
+
+.sl-checklist-state{
+  min-width:42px;
+  padding:0.12rem 0.4rem;
+}
+
+.sl-cal-link-flag,
+.sl-link-tag,
+.sl-rec-badge{
+  padding:0.16rem 0.48rem;
+}
+
+.sl-calendar-day{
+  min-height:180px;
+}

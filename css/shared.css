@@ -684,3 +684,42 @@ button:focus-visible,
     transition-duration:0.001ms !important;
   }
 }
+
+/* === Accessibility sizing polish === */
+:root{
+  --text-micro:0.76rem;
+  --text-small:0.82rem;
+  --control-min-hit:40px;
+}
+
+.app-nav .app-title span{
+  font-size:0.72em;
+}
+
+.run-state-label,
+.run-state-readonly-label{
+  font-size:var(--text-micro);
+}
+
+.run-state-subtitle,
+.run-state-note,
+.save-hint{
+  font-size:var(--text-small);
+}
+
+.run-state-field select,
+.run-state-field input,
+.save-code-input{
+  min-height:var(--control-min-hit);
+  font-size:0.92rem;
+}
+
+.save-feedback{
+  font-size:var(--text-small);
+}
+
+.input-clear-btn{
+  width:1.45rem;
+  height:1.45rem;
+  font-size:1.08rem;
+}

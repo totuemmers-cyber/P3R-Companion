@@ -573,3 +573,35 @@
     grid-template-columns:repeat(3,minmax(320px,1fr));
   }
 }
+
+/* Accessibility sizing: lift micro labels and chips without changing layout scale. */
+#planner .planner-header h1 span{
+  font-size:0.56em;
+}
+
+#planner .planner-state-label,
+#planner .planner-primary-kicker,
+#planner .planner-action-queue-count,
+#planner .planner-action-meta span,
+#planner .planner-slot-chip{
+  font-size:var(--text-micro);
+}
+
+#planner .planner-muted,
+#planner .planner-empty,
+#planner .planner-action-copy{
+  font-size:var(--text-small);
+}
+
+#planner .planner-action-meta span{
+  padding:0.22rem 0.5rem;
+}
+
+#planner .planner-action-rank{
+  width:2.2rem;
+  height:2.2rem;
+}
+
+#planner .planner-action-btn{
+  min-height:var(--control-min-hit);
+}

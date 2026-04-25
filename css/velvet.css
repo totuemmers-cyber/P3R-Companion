@@ -1246,3 +1246,51 @@
     grid-template-columns:minmax(0,1.45fr) minmax(420px,0.75fr);
   }
 }
+
+/* Accessibility sizing: make compact fusion/compendium metadata more legible. */
+#velvet .chain-num,
+#velvet .chain-meta,
+#velvet .chain-badge-special,
+#velvet .planner-status,
+.inherit-badge,
+.roster-sl-badge,
+.sl-cov-char,
+.sl-cov-persona,
+.sl-cov-missing{
+  font-size:var(--text-micro);
+}
+
+#velvet .planner-empty,
+#velvet .planner-pill,
+.inherit-label-ok,
+.inherit-label-no,
+.inherit-skill,
+.sl-cov-item{
+  font-size:var(--text-small);
+}
+
+#velvet .chain-num{
+  width:26px;
+  height:26px;
+}
+
+#velvet .chain-badge-special,
+.roster-sl-badge{
+  padding:0.12rem 0.45rem;
+}
+
+#velvet .btn{
+  min-height:var(--control-min-hit);
+  font-size:0.88rem;
+}
+
+#velvet .btn-sm{
+  min-height:34px;
+}
+
+#velvet .global-search input,
+#velvet .autocomplete-wrap input,
+#velvet .filters-bar input,
+#velvet .filters-bar select{
+  min-height:var(--control-min-hit);
+}

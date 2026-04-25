@@ -668,3 +668,69 @@
     position:static;
   }
 }
+
+/* Accessibility sizing: preserve dense data views while raising the smallest labels. */
+#tartarus .filter-label,
+#tartarus .shadow-intel-filter-row-label,
+#tartarus .shadow-table th,
+#tartarus .shadow-table th.sorted-asc::after,
+#tartarus .shadow-table th.sorted-desc::after,
+#tartarus .aff,
+#tartarus .aff-n,
+#tartarus .type-badge,
+#tartarus .stat-item .stat-label,
+#tartarus .floor-ops-subtitle,
+#tartarus .major-check-title,
+#tartarus .major-check-meta,
+#tartarus .major-check-tag,
+#tartarus .objective-group-title,
+#tartarus .objective-type,
+#tartarus .objective-status,
+#tartarus .loadout-arcana,
+#tartarus .skill-tag[data-tooltip]:hover::after,
+#tartarus .loot-area{
+  font-size:var(--text-micro);
+}
+
+#tartarus .major-check-copy,
+#tartarus .major-check-line,
+#tartarus .floor-ops-empty,
+#tartarus .floor-scout-toggle-summary,
+#tartarus .floor-monad-note,
+#tartarus .floor-support-note,
+#tartarus .floor-intel-note,
+#tartarus .objective-meta,
+#tartarus .objective-note,
+#tartarus .moon-outcome-text,
+#tartarus .loadout-lvl,
+#tartarus .loadout-reason,
+#tartarus .strat-label,
+#tartarus .moon-quick-tip,
+#tartarus .grind-meta,
+#tartarus .drop-chance{
+  font-size:var(--text-small);
+}
+
+#tartarus .filter-btn,
+#tartarus select.filter-select,
+#tartarus input.filter-select{
+  min-height:var(--control-min-hit);
+  font-size:0.88rem;
+}
+
+#tartarus .aff{
+  width:31px;
+  padding:2px 3px;
+}
+
+#tartarus .type-badge,
+#tartarus .floor-aff,
+#tartarus .skill-tag,
+#tartarus .strat-badge{
+  padding:2px 7px;
+}
+
+#tartarus .floor-scout-toggle-chevron{
+  width:30px;
+  height:30px;
+}

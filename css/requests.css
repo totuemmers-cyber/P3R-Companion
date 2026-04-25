@@ -709,3 +709,44 @@
     grid-template-columns:minmax(0,1.3fr) minmax(440px,0.8fr);
   }
 }
+
+/* Accessibility sizing: small metadata remains compact but easier to read/tap. */
+#requests .requests-header h1 span{
+  font-size:0.56em;
+}
+
+#requests .requests-summary-label,
+#requests .requests-upcoming-date,
+#requests .request-chip,
+#requests .request-item-number,
+#requests .request-detail-label{
+  font-size:var(--text-micro);
+}
+
+#requests .requests-summary-copy,
+#requests .requests-upcoming-name,
+#requests .request-item-copy,
+#requests .request-detail-subtitle,
+#requests .request-detail-copy,
+#requests .requests-empty{
+  font-size:var(--text-small);
+}
+
+#requests .request-chip{
+  padding:0.2rem 0.52rem;
+}
+
+#requests .request-complete-toggle{
+  min-height:var(--control-min-hit);
+  font-size:var(--text-small);
+}
+
+#requests .request-action-btn{
+  min-height:var(--control-min-hit);
+  font-size:0.86rem;
+}
+
+#requests .requests-search,
+#requests .requests-select{
+  min-height:var(--control-min-hit);
+}
