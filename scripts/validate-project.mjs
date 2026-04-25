@@ -77,6 +77,42 @@ function parseDateLabel(value) {
   return { month, day };
 }
 
+function compareGameDates(left, right) {
+  const leftMonth = left.month >= 4 ? left.month : left.month + 12;
+  const rightMonth = right.month >= 4 ? right.month : right.month + 12;
+  return leftMonth * 100 + left.day - (rightMonth * 100 + right.day);
+}
+
+function daysBetweenGameDates(left, right) {
+  const leftYear = left.month >= 4 ? 2009 : 2010;
+  const rightYear = right.month >= 4 ? 2009 : 2010;
+  const leftDate = new Date(leftYear, left.month - 1, left.day);
+  const rightDate = new Date(rightYear, right.month - 1, right.day);
+  return Math.round((rightDate - leftDate) / 86400000);
+}
+
+function isDeadlineStaleForDate(item, completed, currentDate) {
+  if (completed[item.id]) {
+    return false;
+  }
+  const deadlineDate = parseDateLabel(item.deadline);
+  return Boolean(deadlineDate && daysBetweenGameDates(currentDate, deadlineDate) < 0);
+}
+
+function getDeadlineTrackingState(item, completed, currentDate) {
+  if (completed[item.id]) {
+    return 'complete';
+  }
+  if (isDeadlineStaleForDate(item, completed, currentDate)) {
+    return 'stale';
+  }
+  const availableDate = parseDateLabel(item.available);
+  if (availableDate && compareGameDates(currentDate, availableDate) < 0) {
+    return 'upcoming';
+  }
+  return 'active';
+}
+
 function assertUnique(items, label, getKey) {
   const seen = new Set();
   items.forEach((item) => {
@@ -238,6 +274,77 @@ function validateTartarusObjectives(context) {
   });
 
   console.log(`Validated ${objectives.length} Tartarus objectives.`);
+}
+
+function validateStaleDeadlineFiltering(context) {
+  const objectives = getGlobal(context, 'TARTARUS_OBJECTIVES');
+  const requests = context.ELIZABETH_REQUESTS;
+  const currentDate = { month: 11, day: 4 };
+  const completed = {};
+  const urgentObjectiveCandidates = objectives
+    .map((objective) => {
+      if (completed[objective.id] || isDeadlineStaleForDate(objective, completed, currentDate)) {
+        return null;
+      }
+      const availableDate = parseDateLabel(objective.available);
+      if (availableDate && compareGameDates(currentDate, availableDate) < 0) {
+        return null;
+      }
+      const deadlineDate = parseDateLabel(objective.deadline);
+      if (!deadlineDate) {
+        return null;
+      }
+      const daysLeft = daysBetweenGameDates(currentDate, deadlineDate);
+      if (daysLeft <= 10) {
+        return { ...objective, daysLeft };
+      }
+      return null;
+    })
+    .filter(Boolean);
+  const urgentRequestCandidates = requests
+    .map((request) => {
+      if (completed[request.id] || isDeadlineStaleForDate(request, completed, currentDate)) {
+        return null;
+      }
+      const availableDate = parseDateLabel(request.available);
+      if (availableDate && compareGameDates(currentDate, availableDate) < 0) {
+        const opensIn = daysBetweenGameDates(currentDate, availableDate);
+        return opensIn <= 3 ? { ...request, opensIn } : null;
+      }
+      const deadlineDate = parseDateLabel(request.deadline);
+      if (!deadlineDate) {
+        return null;
+      }
+      const daysLeft = daysBetweenGameDates(currentDate, deadlineDate);
+      return daysLeft <= 7 ? { ...request, daysLeft } : null;
+    })
+    .filter(Boolean);
+
+  const ayako = objectives.find((objective) => objective.id === 'missing-ayako-yoshimoto');
+  assert(Boolean(ayako), 'Expected Ayako Yoshimoto rescue objective fixture');
+  assert(isDeadlineStaleForDate(ayako, completed, currentDate), 'Ayako Yoshimoto should be stale on 11/4 when incomplete');
+  assert(!urgentObjectiveCandidates.some((objective) => objective.id === ayako.id), 'Stale Ayako objective should not qualify as urgent on 11/4');
+  ['7/6', '8/5', '9/4', '10/3'].forEach((deadline) => {
+    assert(
+      !urgentObjectiveCandidates.some((objective) => objective.deadline === deadline),
+      `Expired ${deadline} rescue objectives should not qualify as urgent on 11/4`
+    );
+  });
+
+  assert(
+    urgentRequestCandidates.some((request) => request.deadline === '11/30'),
+    'Future November Elizabeth deadlines should still qualify after stale requests are filtered'
+  );
+  assert(
+    requests.some((request) => request.deadline === '12/25' && !isDeadlineStaleForDate(request, completed, currentDate)),
+    'Future December Elizabeth deadlines should not be stale on 11/4'
+  );
+
+  const completedAyako = { [ayako.id]: true };
+  assert(!isDeadlineStaleForDate(ayako, completedAyako, currentDate), 'Completed expired objectives should not be stale');
+  assert(getDeadlineTrackingState(ayako, completedAyako, currentDate) === 'complete', 'Completed expired objectives should stay completed');
+
+  console.log('Validated stale deadline filtering rules.');
 }
 
 function validateStoreRoundtrip(context) {
@@ -413,6 +520,7 @@ validatePersonas(dataContext);
 validateEnemies(dataContext);
 validateRequests(dataContext);
 validateTartarusObjectives(dataContext);
+validateStaleDeadlineFiltering(dataContext);
 validateStoreRoundtrip(dataContext);
 validateBrowserEntrypoints();
 

@@ -85,6 +85,14 @@ function daysBetween(left, right) {
   return Math.round((rightDate - leftDate) / 86400000);
 }
 
+function isDeadlineStale(item, snapshot) {
+  if (snapshot.objectives?.[item.id]) {
+    return false;
+  }
+  const deadlineDate = item.deadline ? parseMonthDayLabel(item.deadline) : null;
+  return Boolean(deadlineDate && daysBetween(snapshot.profile.gameDate, deadlineDate) < 0);
+}
+
 function formatDate(date) {
   return `${MONTH_NAMES[date.month]} ${date.day}`;
 }
@@ -312,6 +320,7 @@ function getNearestObjective(snapshot, floor, blockId) {
         objective.block === blockId &&
         objective.floor >= floor &&
         !snapshot.objectives?.[objective.id] &&
+        !isDeadlineStale(objective, snapshot) &&
         (!availableDate || compareDates(currentDate, availableDate) >= 0)
         );
       }
@@ -329,6 +338,9 @@ function getUrgentObjective(snapshot) {
       if (snapshot.objectives?.[objective.id]) {
         return null;
       }
+      if (isDeadlineStale(objective, snapshot)) {
+        return null;
+      }
       const availableDate = objective.available ? parseMonthDayLabel(objective.available) : null;
       if (availableDate && compareDates(currentDate, availableDate) < 0) {
         return null;
@@ -339,9 +351,7 @@ function getUrgentObjective(snapshot) {
       }
       const daysLeft = daysBetween(currentDate, deadlineDate);
       let urgency = 0;
-      if (daysLeft < 0) {
-        urgency = 100;
-      } else if (daysLeft <= 3) {
+      if (daysLeft <= 3) {
         urgency = 80 - Math.max(daysLeft, 0);
       } else if (daysLeft <= 10) {
         urgency = 40 - daysLeft;
@@ -369,6 +379,9 @@ function getUrgentRequest(snapshot) {
       if (snapshot.objectives?.[request.id]) {
         return null;
       }
+      if (isDeadlineStale(request, snapshot)) {
+        return null;
+      }
       const availableDate = request.available ? parseMonthDayLabel(request.available) : null;
       if (availableDate && compareDates(currentDate, availableDate) < 0) {
         const opensIn = daysBetween(currentDate, availableDate);
@@ -393,11 +406,8 @@ function getUrgentRequest(snapshot) {
       return {
         ...request,
         daysLeft,
-        urgency: daysLeft < 0 ? 95 : 70 - Math.max(daysLeft, 0),
-        statusLabel:
-          daysLeft < 0
-            ? `expired on ${request.deadline}`
-            : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`
+        urgency: 70 - Math.max(daysLeft, 0),
+        statusLabel: `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`
       };
     })
     .filter(Boolean)
@@ -496,11 +506,8 @@ function buildWarnings(snapshot, context) {
 
   if (context.urgentObjective) {
     warnings.push({
-      tone: context.urgentObjective.daysLeft < 0 ? 'critical' : 'warning',
-      text:
-        context.urgentObjective.daysLeft < 0
-          ? `${context.urgentObjective.title} missed its deadline on ${context.urgentObjective.deadline}.`
-          : `${context.urgentObjective.title} expires in ${context.urgentObjective.daysLeft} day${context.urgentObjective.daysLeft === 1 ? '' : 's'}.`
+      tone: 'warning',
+      text: `${context.urgentObjective.title} expires in ${context.urgentObjective.daysLeft} day${context.urgentObjective.daysLeft === 1 ? '' : 's'}.`
     });
   }
 
@@ -551,9 +558,7 @@ function choosePrimaryAction(snapshot, context) {
       title: `Push Tartarus for ${context.urgentObjective.title}`,
       copy: `This objective is your most urgent deadline item and is tied to ${context.urgentObjective.floor}F.`,
       reasons: [
-        context.urgentObjective.daysLeft < 0
-          ? `The deadline already passed on ${context.urgentObjective.deadline}.`
-          : `${context.urgentObjective.daysLeft} day${context.urgentObjective.daysLeft === 1 ? '' : 's'} remain before the deadline.`,
+        `${context.urgentObjective.daysLeft} day${context.urgentObjective.daysLeft === 1 ? '' : 's'} remain before the deadline.`,
         `Reward: ${context.urgentObjective.reward}.`
       ],
       action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: context.urgentObjective.floor }
@@ -680,7 +685,7 @@ function buildActionQueue(snapshot, context, primaryAction) {
     queue.push(
       createQueueItem({
         system: 'Requests',
-        tone: context.urgentRequest.daysLeft < 0 ? 'critical' : 'warning',
+        tone: 'warning',
         title: `Request #${context.urgentRequest.number}: ${context.urgentRequest.title}`,
         copy: `${context.urgentRequest.statusLabel}. Reward: ${context.urgentRequest.reward}.`,
         meta: context.urgentRequest.systemLabel || context.urgentRequest.categoryLabel,
@@ -694,9 +699,9 @@ function buildActionQueue(snapshot, context, primaryAction) {
     queue.push(
       createQueueItem({
         system: 'Tartarus',
-        tone: context.urgentObjective.daysLeft < 0 ? 'critical' : 'warning',
+        tone: 'warning',
         title: context.urgentObjective.title,
-        copy: `${context.urgentObjective.daysLeft < 0 ? 'Deadline missed' : `${context.urgentObjective.daysLeft} day${context.urgentObjective.daysLeft === 1 ? '' : 's'} left`} for ${context.urgentObjective.floor}F. Reward: ${context.urgentObjective.reward}.`,
+        copy: `${context.urgentObjective.daysLeft} day${context.urgentObjective.daysLeft === 1 ? '' : 's'} left for ${context.urgentObjective.floor}F. Reward: ${context.urgentObjective.reward}.`,
         meta: 'Deadline objective',
         action: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: context.urgentObjective.floor },
         score: context.urgentObjective.urgency

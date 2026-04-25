@@ -288,6 +288,14 @@ function daysBetweenDates(left, right) {
   return Math.round((rightDate - leftDate) / 86400000);
 }
 
+function isObjectiveStale(objective) {
+  if (isObjectiveComplete(objective.id)) {
+    return false;
+  }
+  const deadlineDate = parseObjectiveDate(objective.deadline);
+  return Boolean(deadlineDate && daysBetweenDates(getCurrentGameDate(), deadlineDate) < 0);
+}
+
 function formatMonthDay(date) {
   const monthName = Object.keys(MONTH_NAME_TO_NUM).find((entry) => MONTH_NAME_TO_NUM[entry] === date.month);
   return `${monthName || `M${date.month}`} ${date.day}`;
@@ -1126,7 +1134,7 @@ function renderObjectives(floor, block) {
   const currentDate = getCurrentGameDate();
   const objectives = getObjectiveList();
   const floorObjectives = objectives
-    .filter((objective) => objective.floor === floor)
+    .filter((objective) => objective.floor === floor && !isObjectiveStale(objective))
     .sort((left, right) => left.title.localeCompare(right.title));
   const blockObjectives = objectives
     .filter(
@@ -1134,6 +1142,7 @@ function renderObjectives(floor, block) {
         objective.block === block.id &&
         objective.floor >= floor &&
         objective.floor !== floor &&
+        !isObjectiveStale(objective) &&
         getObjectiveState(objective).state !== 'complete'
     )
     .sort((left, right) => left.floor - right.floor || left.title.localeCompare(right.title))
@@ -1144,8 +1153,9 @@ function renderObjectives(floor, block) {
       return (
         status.state !== 'complete' &&
         status.state !== 'upcoming' &&
+        !isObjectiveStale(objective) &&
         objective.deadline &&
-        (status.state === 'urgent' || status.state === 'soon' || status.state === 'expired')
+        (status.state === 'urgent' || status.state === 'soon')
       );
     })
     .sort((left, right) => {

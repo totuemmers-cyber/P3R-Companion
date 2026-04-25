@@ -81,6 +81,14 @@ function isRequestComplete(snapshot, requestId) {
   return Boolean(snapshot.objectives?.[requestId]);
 }
 
+function isRequestStale(request, snapshot) {
+  if (isRequestComplete(snapshot, request.id)) {
+    return false;
+  }
+  const deadlineDate = parseMonthDayLabel(request.deadline);
+  return Boolean(deadlineDate && daysBetween(snapshot.profile.gameDate, deadlineDate) < 0);
+}
+
 function getRequestStatus(request, snapshot) {
   const currentDate = snapshot.profile.gameDate;
   const availableDate = parseMonthDayLabel(request.available);
@@ -122,14 +130,19 @@ function getRequestStatus(request, snapshot) {
 }
 
 function getVisibleRequests(snapshot) {
-  return ELIZABETH_REQUESTS;
+  return ELIZABETH_REQUESTS.filter((request) => !isRequestStale(request, snapshot));
 }
 
 function getUpcomingRequests(snapshot) {
   return ELIZABETH_REQUESTS
     .filter((request) => {
       const availableDate = parseMonthDayLabel(request.available);
-      return availableDate && compareDates(snapshot.profile.gameDate, availableDate) < 0;
+      return (
+        availableDate &&
+        compareDates(snapshot.profile.gameDate, availableDate) < 0 &&
+        !isRequestComplete(snapshot, request.id) &&
+        !isRequestStale(request, snapshot)
+      );
     })
     .sort((left, right) => {
       const leftDate = parseMonthDayLabel(left.available);
@@ -146,7 +159,7 @@ function getFilteredRequests(snapshot) {
     }
 
     const status = getRequestStatus(request, snapshot);
-    if (requestState.status === 'open' && !['open', 'soon', 'expired'].includes(status.state)) {
+    if (requestState.status === 'open' && !['open', 'soon'].includes(status.state)) {
       return false;
     }
     if (requestState.status === 'completed' && status.state !== 'complete') {
@@ -188,15 +201,14 @@ function ensureSelection(requests) {
 function renderSummary(snapshot) {
   const visible = getVisibleRequests(snapshot);
   const completed = visible.filter((request) => isRequestComplete(snapshot, request.id)).length;
-  const openNow = visible.filter((request) => ['open', 'soon', 'expired'].includes(getRequestStatus(request, snapshot).state)).length;
+  const openNow = visible.filter((request) => ['open', 'soon'].includes(getRequestStatus(request, snapshot).state)).length;
   const upcoming = getUpcomingRequests(snapshot);
-  const expired = visible.filter((request) => getRequestStatus(request, snapshot).state === 'expired').length;
 
   requestsRoot.querySelector('#requests-summary').innerHTML = `
     <div class="requests-summary-pill">
       <span class="requests-summary-label">Total Requests</span>
       <span class="requests-summary-value">${visible.length}</span>
-      <span class="requests-summary-copy">The full Elizabeth request catalog is always visible.</span>
+      <span class="requests-summary-copy">Expired unfinished deadline requests are hidden from active tracking.</span>
     </div>
     <div class="requests-summary-pill">
       <span class="requests-summary-label">Open Now</span>
@@ -213,9 +225,7 @@ function renderSummary(snapshot) {
     <div class="requests-summary-pill">
       <span class="requests-summary-label">Coming soon</span>
       <span class="requests-summary-value">${upcoming.length}</span>
-      <span class="requests-summary-copy">${
-        expired > 0 ? `${expired} expired request${expired === 1 ? '' : 's'} still visible.` : 'Later waves stay hidden until they unlock.'
-      }</span>
+      <span class="requests-summary-copy">Later waves stay hidden until they unlock.</span>
     </div>
   `;
 }
