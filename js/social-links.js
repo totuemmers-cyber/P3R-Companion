@@ -1455,8 +1455,8 @@ function slRenderRecommendations() {
     primary.tags.slice(0, 4)
   )}<div class="sl-rec-why">${slGetRecommendationWhy(primary) || primary.factors.slice(0, 2).join(' | ')}</div>${
     primary.rosterMatch
-      ? `<div class="sl-rec-planning">Matching persona: ${primary.rosterMatch}</div>`
-      : '<div class="sl-rec-planning">No matching persona in roster.</div>'
+      ? `<div class="sl-rec-planning sl-rec-planning-ok">Matching persona: ${primary.rosterMatch}</div>`
+      : '<div class="sl-rec-planning sl-rec-planning-gap">No matching persona in roster.</div>'
   }${slBuildGuidePreview(primaryNextRank)}<div class="sl-rec-actions">${slRenderFocusButton(primary.arcana)}</div></section>`;
 
   if (backups.length) {

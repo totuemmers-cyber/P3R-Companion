@@ -404,8 +404,13 @@
 .sl-rec-planning {
   margin-top: 0.25rem;
   font-size: 0.74rem;
-  color: #ff9cc2;
   line-height: 1.4;
+}
+.sl-rec-planning-ok {
+  color: #66bb6a;
+}
+.sl-rec-planning-gap {
+  color: #ff9cc2;
 }
 .sl-rec-rank-badge {
   font-family: var(--font-app);
