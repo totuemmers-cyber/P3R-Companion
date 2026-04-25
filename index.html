@@ -443,6 +443,7 @@
     <nav class="sl-tab-nav">
       <button class="sl-tab-btn active" data-tab="dashboard">Dashboard</button>
       <button class="sl-tab-btn" data-tab="my-links">My Links</button>
+      <button class="sl-tab-btn" data-tab="linked-episodes">Linked Episodes</button>
       <button class="sl-tab-btn" data-tab="calendar">Calendar</button>
     </nav>
   </header>
@@ -557,6 +558,20 @@
       </div>
     </div>
 
+    <!-- LINKED EPISODES TAB -->
+    <div class="sl-tab-content" id="sl-tab-linked-episodes">
+      <div class="card">
+        <div class="sl-card-head">
+          <div>
+            <h2>Linked Episodes</h2>
+            <p class="sl-note">Base-game Linked Episodes are time-limited story activities with separate completion tracking.</p>
+          </div>
+        </div>
+        <div id="sl-linked-summary" class="sl-status-summary"></div>
+      </div>
+      <div id="sl-linked-episodes-grid" class="sl-linked-grid"></div>
+    </div>
+
     <!-- CALENDAR TAB -->
     <div class="sl-tab-content" id="sl-tab-calendar">
       <div class="card">
@@ -590,6 +605,7 @@
 <script src="data/personas.js"></script>
 <script src="data/social-links.js"></script>
 <script src="data/social-links-verified.js"></script>
+<script src="data/linked-episodes.js"></script>
 <script src="data/tartarus-extra.js"></script>
 <script src="data/personas-extra.js"></script>
 <script src="data/fusion-unlocks.js"></script>
@@ -599,6 +615,7 @@
 <script src="js/store.js"></script>
 <script src="js/run-state.js"></script>
 <script src="js/social-link-rules.js"></script>
+<script src="js/linked-episode-advisor.js"></script>
 <script src="js/social-link-advisor.js"></script>
 <script src="js/planner.js"></script>
 <script src="js/requests.js"></script>

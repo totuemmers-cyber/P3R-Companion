@@ -47,6 +47,7 @@ function loadDataContext() {
     'data/personas.js',
     'data/social-links.js',
     'data/social-links-verified.js',
+    'data/linked-episodes.js',
     'data/tartarus-extra.js',
     'data/personas-extra.js',
     'data/fusion-unlocks.js',
@@ -277,6 +278,164 @@ function validateTartarusObjectives(context) {
   console.log(`Validated ${objectives.length} Tartarus objectives.`);
 }
 
+function validateLinkedEpisodes(context) {
+  const episodes = getGlobal(context, 'LINKED_EPISODES');
+  const FUSION_UNLOCKS = getGlobal(context, 'FUSION_UNLOCKS');
+  assert(Array.isArray(episodes) && episodes.length >= 30, 'LINKED_EPISODES should contain base-game linked episode records');
+  assertUnique(episodes, 'LINKED_EPISODES', (episode) => episode.id);
+
+  const ids = new Set(episodes.map((episode) => episode.id));
+  const validSlots = new Set(['day', 'evening', 'auto']);
+  episodes.forEach((episode) => {
+    assert(typeof episode.character === 'string' && episode.character.length > 0, `${episode.id} has no character`);
+    assert(validSlots.has(episode.timeSlot), `${episode.id} has invalid timeSlot: ${episode.timeSlot}`);
+    assert(Boolean(episode.startDate) && Boolean(episode.deadline), `${episode.id} must have startDate and deadline`);
+    assert(compareGameDates(episode.startDate, episode.deadline) <= 0, `${episode.id} startDate is after deadline`);
+    assert(typeof episode.location === 'string' && episode.location.length > 0, `${episode.id} has no location`);
+    assert(typeof episode.reward === 'string', `${episode.id} has invalid reward`);
+    assert(typeof episode.optional === 'boolean', `${episode.id} optional must be boolean`);
+    assert(typeof episode.takesTime === 'boolean', `${episode.id} takesTime must be boolean`);
+    assert(typeof episode.storyCritical === 'boolean', `${episode.id} storyCritical must be boolean`);
+    if (episode.requiredPreviousId) {
+      assert(ids.has(episode.requiredPreviousId), `${episode.id} references missing previous episode: ${episode.requiredPreviousId}`);
+    }
+    (episode.availableDays || []).forEach((day) => {
+      assert(Number.isInteger(day) && day >= 0 && day <= 6, `${episode.id} has invalid available day: ${day}`);
+    });
+    (episode.availableDates || []).forEach((date) => {
+      assert(Boolean(date?.month && date?.day), `${episode.id} has invalid available date`);
+    });
+  });
+
+  const byId = Object.fromEntries(episodes.map((episode) => [episode.id, episode]));
+  const junpei3 = byId['junpei-03'];
+  assert(junpei3?.startDate.month === 11 && junpei3.startDate.day === 7, 'junpei-03 should open on 11/7');
+  assert(junpei3?.deadline.month === 11 && junpei3.deadline.day === 13, 'junpei-03 should run through 11/13');
+  assert(junpei3?.timeSlot === 'day' && junpei3?.storyCritical, 'junpei-03 should be a storyCritical daytime episode');
+  assert(/Classroom/i.test(junpei3?.location || ''), 'junpei-03 should point to the Classroom');
+
+  const flowers = byId['junpei-chidori-flowers'];
+  assert(flowers?.startDate.month === 11 && flowers.startDate.day === 8, 'Junpei flowers follow-up should open on 11/8');
+  assert(flowers?.deadline.month === 11 && flowers.deadline.day === 20, 'Junpei flowers follow-up should run through 11/20');
+  assert(flowers?.timeSlot === 'evening' && flowers?.storyCritical && flowers?.optional, 'Junpei flowers follow-up should be optional evening storyCritical reminder');
+  assert(flowers?.takesTime === false, 'Junpei flowers follow-up should not consume time');
+
+  const linkedGates = Object.entries(FUSION_UNLOCKS.gatedPersonas || {})
+    .filter(([, gate]) => gate.type === 'linkedEpisode');
+  linkedGates.forEach(([persona, gate]) => {
+    assert(ids.has(gate.id), `${persona} linked episode gate references missing id: ${gate.id}`);
+    const episode = byId[gate.id];
+    assert(episode?.personaUnlock === persona, `${persona} gate should match final linked episode personaUnlock`);
+    assert(typeof gate.legacyKey === 'string' && gate.legacyKey.length > 0, `${persona} linked episode gate needs a legacyKey fallback`);
+  });
+  ['Surt', 'Horus', 'Byakko', 'Michael', 'Hell Biker', 'Saturnus'].forEach((persona) => {
+    assert(linkedGates.some(([name]) => name === persona), `${persona} should be gated by final linked episode completion`);
+  });
+
+  console.log(`Validated ${episodes.length} Linked Episodes.`);
+}
+
+function validateLinkedEpisodeAdvisor() {
+  const context = createContext();
+  [
+    'data/personas.js',
+    'data/social-links.js',
+    'data/social-links-verified.js',
+    'data/linked-episodes.js',
+    'js/social-link-rules.js',
+    'js/linked-episode-advisor.js',
+    'js/social-link-advisor.js'
+  ].forEach((path) => runScript(context, path));
+  const SOCIAL_LINKS = getGlobal(context, 'SOCIAL_LINKS');
+  const ARCANA_LIST = getGlobal(context, 'ARCANA_LIST');
+  const LINKED_EPISODES = getGlobal(context, 'LINKED_EPISODES');
+  const advisor = context.socialLinkAdvisor;
+  const linkedAdvisor = context.linkedEpisodeAdvisor;
+  const makeSnapshot = ({ month, day, completed = {}, skipped = {}, ranks = {} }) => ({
+    roster: ['Nekomata', 'Apsaras', 'Angel'],
+    profile: {
+      gameDate: { month, day },
+      playerLevel: 70,
+      currentFloor: 164,
+      stats: { academics: 6, charm: 6, courage: 6 }
+    },
+    socialLinks: {
+      ranks: Object.fromEntries(ARCANA_LIST.map((arcana) => [arcana, ranks[arcana] || 0]))
+    },
+    objectives: {},
+    linkedEpisodes: { completed, skipped },
+    fusionSettings: { dlcEnabled: true, manualUnlocks: {} }
+  });
+
+  const beforeChidori = makeSnapshot({
+    month: 11,
+    day: 7,
+    completed: { 'junpei-01': true, 'junpei-02': true }
+  });
+  const nov7DayPick = advisor.getTopActivityModelForDate(beforeChidori, {
+    date: beforeChidori.profile.gameDate,
+    timeSlot: 'day',
+    focusMode: 'balanced'
+  });
+  assert(nov7DayPick?.id === 'junpei-03', `Expected Junpei episode 3 to lead daytime recommendations on 11/7, got ${nov7DayPick?.id || nov7DayPick?.arcana}`);
+  assert(/Chidori route/.test(advisor.getActivityRecommendationWhy(nov7DayPick, { focusMode: 'balanced' })), 'Junpei 11/7 copy should mention the Chidori route');
+
+  const afterJunpei3 = makeSnapshot({
+    month: 11,
+    day: 8,
+    completed: { 'junpei-01': true, 'junpei-02': true, 'junpei-03': true }
+  });
+  const flowerPick = advisor.getTopActivityModelForDate(afterJunpei3, {
+    date: afterJunpei3.profile.gameDate,
+    timeSlot: 'evening',
+    focusMode: 'balanced'
+  });
+  assert(flowerPick?.id === 'junpei-chidori-flowers', `Expected Junpei flower follow-up to lead evening reminders after episode 3, got ${flowerPick?.id || flowerPick?.arcana}`);
+  assert(/White Flowers.*January events/.test(advisor.getActivityRecommendationWhy(flowerPick, { focusMode: 'balanced' })), 'Flower follow-up copy should mention White Flowers and January events');
+
+  const missedJunpei3 = makeSnapshot({
+    month: 12,
+    day: 19,
+    completed: { 'junpei-01': true, 'junpei-02': true }
+  });
+  const junpei4 = linkedAdvisor.getModels(missedJunpei3, { date: missedJunpei3.profile.gameDate })
+    .find((model) => model.id === 'junpei-04');
+  assert(junpei4?.availability.status === 'blocked', 'Junpei episode 4 should be blocked if episode 3 expired incomplete');
+
+  const koromaruWindow = makeSnapshot({
+    month: 9,
+    day: 9,
+    completed: { 'koromaru-01': true }
+  });
+  const koromaruModels = linkedAdvisor.getActionableModels(koromaruWindow, {
+    date: koromaruWindow.profile.gameDate,
+    timeSlot: 'day'
+  });
+  assert(koromaruModels.some((model) => model.id === 'koromaru-02'), 'Koromaru long-window episode should appear when available');
+  const sep9DayPick = advisor.getTopActivityModelForDate(koromaruWindow, {
+    date: koromaruWindow.profile.gameDate,
+    timeSlot: 'day',
+    focusMode: 'balanced'
+  });
+  assert(sep9DayPick?.id !== 'koromaru-02', `Koromaru long-window episode should not crowd out stronger daytime activity, got ${sep9DayPick?.id || sep9DayPick?.arcana}`);
+
+  const unlocks = [
+    ['junpei-05', 'Surt'],
+    ['akihiko-05', 'Horus'],
+    ['koromaru-05', 'Byakko'],
+    ['ken-05', 'Michael'],
+    ['shinjiro-05', 'Hell Biker'],
+    ['ryoji-05', 'Saturnus']
+  ];
+  unlocks.forEach(([id, persona]) => {
+    const episode = LINKED_EPISODES.find((entry) => entry.id === id);
+    assert(episode?.personaUnlock === persona, `${id} should unlock ${persona}`);
+  });
+  assert(Object.keys(SOCIAL_LINKS).length > 0, 'Social link fixture should remain loaded for combined advisor tests');
+
+  console.log('Validated Linked Episode advisor behavior.');
+}
+
 function validateStaleDeadlineFiltering(context) {
   const objectives = getGlobal(context, 'TARTARUS_OBJECTIVES');
   const requests = context.ELIZABETH_REQUESTS;
@@ -428,6 +587,7 @@ function validateRosterOpportunityLevelGates(context) {
     fusionSettings: { dlcEnabled: true, manualUnlocks: {} },
     socialLinks: { ranks: Object.fromEntries(ARCANA_LIST.map((arcana) => [arcana, 0])) },
     objectives: {},
+    linkedEpisodes: { completed: {}, skipped: {} },
     ...overrides
   });
   const isPersonaUnlocked = (name, state) => {
@@ -456,6 +616,9 @@ function validateRosterOpportunityLevelGates(context) {
     }
     if (gate.type === 'objective') {
       return Boolean(state.objectives?.[gate.id]);
+    }
+    if (gate.type === 'linkedEpisode') {
+      return Boolean(state.linkedEpisodes?.completed?.[gate.id] || settings.manualUnlocks?.[gate.legacyKey]);
     }
     if (gate.type === 'manual') {
       return Boolean(settings.manualUnlocks?.[gate.key]);
@@ -569,6 +732,9 @@ function validateRosterOpportunityLevelGates(context) {
   const unlockedSurtState = createFusionState({
     fusionSettings: { dlcEnabled: true, manualUnlocks: { 'junpei-baseball-glove': true } }
   });
+  const linkedSurtState = createFusionState({
+    linkedEpisodes: { completed: { 'junpei-05': true }, skipped: {} }
+  });
   const dlcDisabledState = createFusionState({
     fusionSettings: { dlcEnabled: false, manualUnlocks: {} }
   });
@@ -607,6 +773,8 @@ function validateRosterOpportunityLevelGates(context) {
   );
   assert(reverseLookup('Surt', defaultState).length === 0, 'Locked Surt should not expose normal recipes');
   assert(reverseLookup('Surt', unlockedSurtState).some((entry) => entry.type === 'normal'), 'Unlocked Surt should expose normal recipes');
+  assert(isPersonaUnlocked('Surt', linkedSurtState), 'Completed Junpei final linked episode should unlock Surt');
+  assert(reverseLookup('Surt', linkedSurtState).some((entry) => entry.type === 'normal'), 'Linked-episode-unlocked Surt should expose normal recipes');
   assert(!isPersonaUnlocked('Vanadis', dlcDisabledState), 'DLC-disabled Vanadis should be unavailable by default');
   assert(isPersonaUnlocked('Vanadis', dlcDisabledRosterState), 'Roster-owned Vanadis should stay usable when DLC is disabled');
   assert(
@@ -733,6 +901,10 @@ function validateStoreRoundtrip(context) {
     Object.keys(initial.fusionSettings.manualUnlocks).length === 0,
     'Store default manual fusion unlocks should be empty'
   );
+  assert(
+    Object.keys(initial.linkedEpisodes.completed).length === 0 && Object.keys(initial.linkedEpisodes.skipped).length === 0,
+    'Store default linked episode state should be empty'
+  );
   const initialPersistCount = setItemCalls;
   store.saveToStorage();
   assert(setItemCalls === initialPersistCount, 'Store should skip redundant localStorage writes');
@@ -743,6 +915,8 @@ function validateStoreRoundtrip(context) {
   store.dispatch({ type: 'PROFILE_SET_STAT', payload: { stat: 'courage', value: 99 } });
   store.dispatch({ type: 'SOCIALLINKS_SET_RANK', payload: { arcana: 'Magician', value: 12 } });
   store.dispatch({ type: 'OBJECTIVE_SET_COMPLETE', payload: { id: 'old-document-01', complete: true } });
+  store.dispatch({ type: 'LINKED_EPISODE_SET_COMPLETE', payload: { id: 'junpei-05', complete: true } });
+  store.dispatch({ type: 'LINKED_EPISODE_SET_SKIPPED', payload: { id: 'akihiko-01', skipped: true } });
   store.dispatch({ type: 'FUSION_SET_DLC_ENABLED', payload: false });
   store.dispatch({ type: 'FUSION_SET_MANUAL_UNLOCK', payload: { key: 'junpei-baseball-glove', unlocked: true } });
 
@@ -752,6 +926,8 @@ function validateStoreRoundtrip(context) {
   assert(sanitized.profile.stats.courage === 6, 'Store should clamp social stat values');
   assert(sanitized.socialLinks.ranks.Magician === 10, 'Store should clamp social-link ranks');
   assert(sanitized.objectives['old-document-01'] === true, 'Store should persist objective completion');
+  assert(sanitized.linkedEpisodes.completed['junpei-05'] === true, 'Store should persist linked episode completion');
+  assert(sanitized.linkedEpisodes.skipped['akihiko-01'] === true, 'Store should persist linked episode skipped state');
   assert(sanitized.fusionSettings.dlcEnabled === false, 'Store should persist DLC fusion setting');
   assert(
     sanitized.fusionSettings.manualUnlocks['junpei-baseball-glove'] === true,
@@ -764,6 +940,8 @@ function validateStoreRoundtrip(context) {
   const restored = store.getState();
   assert(JSON.stringify(restored.roster) === JSON.stringify(exported.roster), 'Store import should restore roster');
   assert(restored.profile.playerLevel === exported.profile.playerLevel, 'Store import should restore profile');
+  assert(restored.linkedEpisodes.completed['junpei-05'] === true, 'Store import should restore linked episode completion');
+  assert(restored.linkedEpisodes.skipped['akihiko-01'] === true, 'Store import should restore linked episode skipped state');
   assert(restored.fusionSettings.dlcEnabled === exported.fusionSettings.dlcEnabled, 'Store import should restore DLC fusion setting');
   assert(
     restored.fusionSettings.manualUnlocks['junpei-baseball-glove'] === true,
@@ -829,6 +1007,7 @@ function validateBrowserEntrypoints() {
     'data/personas.js',
     'data/social-links.js',
     'data/social-links-verified.js',
+    'data/linked-episodes.js',
     'data/tartarus-extra.js',
     'data/personas-extra.js',
     'data/fusion-unlocks.js',
@@ -838,6 +1017,7 @@ function validateBrowserEntrypoints() {
     'js/store.js',
     'js/run-state.js',
     'js/social-link-rules.js',
+    'js/linked-episode-advisor.js',
     'js/social-link-advisor.js',
     'js/planner.js',
     'js/requests.js',
@@ -861,6 +1041,7 @@ function validateBrowserEntrypoints() {
     assert(typeof context[name] === 'function', `Browser entrypoint did not register ${name}`);
   });
   assert(context.socialLinkAdvisor && typeof context.socialLinkAdvisor.getTopModelForDate === 'function', 'Social-link advisor did not register');
+  assert(context.linkedEpisodeAdvisor && typeof context.linkedEpisodeAdvisor.getTopModelForDate === 'function', 'Linked-episode advisor did not register');
 
   console.log('Validated browser script load order and public entrypoints.');
 }
@@ -885,6 +1066,8 @@ validatePersonas(dataContext);
 validateEnemies(dataContext);
 validateRequests(dataContext);
 validateTartarusObjectives(dataContext);
+validateLinkedEpisodes(dataContext);
+validateLinkedEpisodeAdvisor();
 validateStaleDeadlineFiltering(dataContext);
 validateFusionRecommendationLevelGates(dataContext);
 validateRosterOpportunityLevelGates(dataContext);

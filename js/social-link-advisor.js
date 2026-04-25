@@ -919,17 +919,83 @@ function getStatBottlenecks(snapshot) {
   return bottlenecks;
 }
 
+function isLinkedEpisodeModel(model) {
+  return model?.type === 'linkedEpisode';
+}
+
+function getLinkedEpisodeAdvisor() {
+  return window.linkedEpisodeAdvisor || null;
+}
+
+function compareActivityModels(left, right, options = {}) {
+  if (isLinkedEpisodeModel(left) || isLinkedEpisodeModel(right)) {
+    return (
+      Number(right.actionableToday) - Number(left.actionableToday) ||
+      right.todayPriority - left.todayPriority ||
+      right.weeklyPressure - left.weeklyPressure ||
+      Number(Boolean(right.linkedEpisode?.storyCritical)) - Number(Boolean(left.linkedEpisode?.storyCritical)) ||
+      Number(Boolean(right.linkedEpisode?.personaUnlock)) - Number(Boolean(left.linkedEpisode?.personaUnlock)) ||
+      (left.deadlineInfo?.daysLeft ?? 999) - (right.deadlineInfo?.daysLeft ?? 999) ||
+      (left.link?.character || '').localeCompare(right.link?.character || '')
+    );
+  }
+  return compareModels(left, right, options);
+}
+
+function getActivityModels(snapshot, options = {}) {
+  const socialModels = getModels(snapshot, options);
+  const linkedAdvisor = getLinkedEpisodeAdvisor();
+  const linkedModels = linkedAdvisor ? linkedAdvisor.getModels(snapshot, options) : [];
+  return [...socialModels, ...linkedModels].sort((left, right) => compareActivityModels(left, right, options));
+}
+
+function getActionableActivityModels(snapshot, options = {}) {
+  const date = options.date || snapshot.profile.gameDate;
+  const timeSlot = options.timeSlot || 'day';
+  const socialModels = getActionableModels(snapshot, { ...options, date, timeSlot });
+  const linkedAdvisor = getLinkedEpisodeAdvisor();
+  const linkedModels = linkedAdvisor ? linkedAdvisor.getActionableModels(snapshot, { ...options, date, timeSlot }) : [];
+  return [...socialModels, ...linkedModels].sort((left, right) => compareActivityModels(left, right, options));
+}
+
+function getTopActivityModelForDate(snapshot, options = {}) {
+  return getActionableActivityModels(snapshot, options)[0] || null;
+}
+
+function getBlockedImportantActivityModel(snapshot, options = {}) {
+  const socialModel = getBlockedImportantModel(snapshot, options);
+  const linkedAdvisor = getLinkedEpisodeAdvisor();
+  const linkedModel = linkedAdvisor ? linkedAdvisor.getBlockedImportantModel(snapshot, options) : null;
+  return [socialModel, linkedModel]
+    .filter(Boolean)
+    .sort((left, right) => compareActivityModels(left, right, options))[0] || null;
+}
+
+function getActivityRecommendationWhy(model, options = {}) {
+  if (isLinkedEpisodeModel(model)) {
+    const linkedAdvisor = getLinkedEpisodeAdvisor();
+    return linkedAdvisor ? linkedAdvisor.getRecommendationWhy(model, options) : model.nextStep;
+  }
+  return getRecommendationWhy(model, options);
+}
+
 window.socialLinkAdvisor = {
   completionFinalDate: SL_COMPLETION_FINAL_DATE,
   completionReward: SL_COMPLETION_REWARD,
   compareModels,
+  compareActivityModels,
   getModel,
   getModels,
+  getActivityModels,
   getActionableModels,
+  getActionableActivityModels,
   getTopModelForDate,
+  getTopActivityModelForDate,
   getBlockedImportantModel,
+  getBlockedImportantActivityModel,
   getStatBottlenecks,
   getRecommendationWhy,
+  getActivityRecommendationWhy,
   getBlockedReason
 };
 })();

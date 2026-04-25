@@ -122,6 +122,27 @@ function sanitizeObjectives(rawObjectives) {
   return nextObjectives;
 }
 
+function sanitizeLinkedEpisodes(rawLinkedEpisodes) {
+  const source = isPlainObject(rawLinkedEpisodes) ? rawLinkedEpisodes : {};
+  const sanitizeFlags = (rawFlags) => {
+    const flags = {};
+    if (!isPlainObject(rawFlags)) {
+      return flags;
+    }
+    Object.entries(rawFlags).forEach(([key, value]) => {
+      if (typeof key === 'string' && key) {
+        flags[key] = Boolean(value);
+      }
+    });
+    return flags;
+  };
+
+  return {
+    completed: sanitizeFlags(source.completed),
+    skipped: sanitizeFlags(source.skipped)
+  };
+}
+
 function sanitizeFusionSettings(rawFusionSettings) {
   const source = isPlainObject(rawFusionSettings) ? rawFusionSettings : {};
   const manualUnlocks = isPlainObject(source.manualUnlocks) ? source.manualUnlocks : {};
@@ -146,6 +167,7 @@ function sanitizeState(rawState, options) {
     profile: options.createDefaultProfileState(),
     socialLinks: options.createDefaultSocialLinksState(),
     objectives: {},
+    linkedEpisodes: sanitizeLinkedEpisodes({}),
     fusionSettings: sanitizeFusionSettings({})
   };
 
@@ -173,6 +195,7 @@ function sanitizeState(rawState, options) {
       options.arcanaOrder
     ),
     objectives: sanitizeObjectives(rawState.objectives),
+    linkedEpisodes: sanitizeLinkedEpisodes(rawState.linkedEpisodes),
     fusionSettings: sanitizeFusionSettings(rawState.fusionSettings)
   };
 }
@@ -231,6 +254,9 @@ function validateImportedPayload(rawData) {
   }
   if (rawData.objectives !== undefined && !isPlainObject(rawData.objectives)) {
     throw new Error('Invalid save data: objectives must be an object.');
+  }
+  if (rawData.linkedEpisodes !== undefined && !isPlainObject(rawData.linkedEpisodes)) {
+    throw new Error('Invalid save data: linkedEpisodes must be an object.');
   }
   if (rawData.fusionSettings !== undefined && !isPlainObject(rawData.fusionSettings)) {
     throw new Error('Invalid save data: fusionSettings must be an object.');
@@ -394,6 +420,52 @@ function createStore(options) {
           }
         };
       }
+      case 'LINKED_EPISODE_SET_COMPLETE': {
+        const { id, complete } = action.payload || {};
+        if (typeof id !== 'string' || !id) {
+          return currentState;
+        }
+        const currentValue = Boolean(currentState.linkedEpisodes.completed[id]);
+        if (currentValue === Boolean(complete)) {
+          return currentState;
+        }
+        return {
+          ...currentState,
+          linkedEpisodes: {
+            completed: {
+              ...currentState.linkedEpisodes.completed,
+              [id]: Boolean(complete)
+            },
+            skipped: {
+              ...currentState.linkedEpisodes.skipped,
+              [id]: false
+            }
+          }
+        };
+      }
+      case 'LINKED_EPISODE_SET_SKIPPED': {
+        const { id, skipped } = action.payload || {};
+        if (typeof id !== 'string' || !id) {
+          return currentState;
+        }
+        const currentValue = Boolean(currentState.linkedEpisodes.skipped[id]);
+        if (currentValue === Boolean(skipped)) {
+          return currentState;
+        }
+        return {
+          ...currentState,
+          linkedEpisodes: {
+            completed: {
+              ...currentState.linkedEpisodes.completed,
+              [id]: false
+            },
+            skipped: {
+              ...currentState.linkedEpisodes.skipped,
+              [id]: Boolean(skipped)
+            }
+          }
+        };
+      }
       case 'FUSION_SET_DLC_ENABLED':
         return {
           ...currentState,
@@ -466,6 +538,7 @@ function createStore(options) {
       profile: snapshot.profile,
       socialLinks: snapshot.socialLinks,
       objectives: snapshot.objectives,
+      linkedEpisodes: snapshot.linkedEpisodes,
       fusionSettings: snapshot.fusionSettings,
       exportedAt: new Date().toISOString()
     };
@@ -481,6 +554,7 @@ function createStore(options) {
         profile: rawData.profile,
         socialLinks: rawData.socialLinks,
         objectives: rawData.objectives,
+        linkedEpisodes: rawData.linkedEpisodes,
         fusionSettings: rawData.fusionSettings
       }
     });

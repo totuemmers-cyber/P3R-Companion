@@ -137,6 +137,31 @@ function getSocialLinkAdvisor() {
   return window.socialLinkAdvisor || null;
 }
 
+function isLinkedEpisodeModel(item) {
+  return item?.type === 'linkedEpisode';
+}
+
+function getActivitySystemLabel(item) {
+  return isLinkedEpisodeModel(item) ? 'Linked Episode' : 'Social Links';
+}
+
+function getActivityMetaLabel(item) {
+  if (isLinkedEpisodeModel(item)) {
+    return `Episode ${item.linkedEpisode.episode}`;
+  }
+  return `${item.arcana} Rank ${item.rank}/10`;
+}
+
+function getActivityWhy(advisor, item, focusMode) {
+  if (!advisor || !item) {
+    return '';
+  }
+  if (typeof advisor.getActivityRecommendationWhy === 'function') {
+    return advisor.getActivityRecommendationWhy(item, { focusMode });
+  }
+  return advisor.getRecommendationWhy(item, { focusMode });
+}
+
 function getSocialLinkFocusMode() {
   return window.p3rApp?.getSocialLinkFocusMode ? window.p3rApp.getSocialLinkFocusMode() : 'balanced';
 }
@@ -493,7 +518,7 @@ function isFusionTargetRecommendable(name, snapshot, rosterSet = getRosterSet(sn
 function getFusionOpportunity(snapshot, dayPick, nextFullMoon) {
   const rosterSet = getRosterSet(snapshot);
 
-  if (dayPick && !getRosterMatchForArcana(dayPick.arcana, snapshot)) {
+  if (dayPick && !isLinkedEpisodeModel(dayPick) && !getRosterMatchForArcana(dayPick.arcana, snapshot)) {
     const target = findSuggestedPersonaForArcana(dayPick.arcana, snapshot);
     if (target) {
       return {
@@ -566,7 +591,7 @@ function buildWarnings(snapshot, context) {
     }
   }
 
-  if (context.dayPick && !getRosterMatchForArcana(context.dayPick.arcana, snapshot)) {
+  if (context.dayPick && !isLinkedEpisodeModel(context.dayPick) && !getRosterMatchForArcana(context.dayPick.arcana, snapshot)) {
     warnings.push({
       tone: 'neutral',
       text: `You do not have a ${context.dayPick.arcana} persona for ${context.dayPick.link.character}'s arcana bonus.`
@@ -614,8 +639,12 @@ function choosePrimaryAction(snapshot, context) {
   if (context.dayPick) {
     return {
       kicker: 'Best Use of Today',
-      title: `Spend time with ${context.dayPick.link.character}`,
-      copy: `This is your strongest available daytime link from the current date, stats, and roster.`,
+      title: isLinkedEpisodeModel(context.dayPick)
+        ? `${context.dayPick.link.character} Linked Episode`
+        : `Spend time with ${context.dayPick.link.character}`,
+      copy: isLinkedEpisodeModel(context.dayPick)
+        ? 'This time-sensitive Linked Episode is your strongest available daytime activity.'
+        : 'This is your strongest available daytime link from the current date, stats, and roster.',
       reasons: [context.dayPick.plannerReason || 'High current social value.'],
       action: { type: 'social-links', label: 'Open Social Links' }
     };
@@ -755,12 +784,12 @@ function buildActionQueue(snapshot, context, primaryAction) {
   if (context.dayPick) {
     queue.push(
       createQueueItem({
-        system: 'Social Links',
+        system: getActivitySystemLabel(context.dayPick),
         title: `Day: ${context.dayPick.link.character}`,
-        copy: context.dayPick.plannerReason || 'Best current daytime social-link value.',
-        meta: `${context.dayPick.arcana} Rank ${context.dayPick.rank}/10`,
+        copy: context.dayPick.plannerReason || 'Best current daytime activity value.',
+        meta: getActivityMetaLabel(context.dayPick),
         action: { type: 'social-links', label: 'Open Social Links' },
-        score: 58
+        score: isLinkedEpisodeModel(context.dayPick) ? 66 : 58
       })
     );
   }
@@ -768,12 +797,12 @@ function buildActionQueue(snapshot, context, primaryAction) {
   if (context.nightPick) {
     queue.push(
       createQueueItem({
-        system: 'Social Links',
+        system: getActivitySystemLabel(context.nightPick),
         title: `Night: ${context.nightPick.link.character}`,
-        copy: context.nightPick.plannerReason || 'Best current evening social-link value.',
-        meta: `${context.nightPick.arcana} Rank ${context.nightPick.rank}/10`,
+        copy: context.nightPick.plannerReason || 'Best current evening activity value.',
+        meta: getActivityMetaLabel(context.nightPick),
         action: { type: 'social-links', label: 'Open Social Links' },
-        score: 54
+        score: isLinkedEpisodeModel(context.nightPick) ? 64 : 54
       })
     );
   } else if (context.statFallback) {
@@ -856,8 +885,9 @@ function createRouteItem({ label, tone = 'normal', title, copy, action = null, c
 function createSocialRouteItem(label, item) {
   return createRouteItem({
     label,
-    title: item.link.character,
-    copy: item.plannerReason || `Best current ${item.link.timeSlot} Social Link pick.`,
+    tone: isLinkedEpisodeModel(item) && item.linkedEpisode.storyCritical ? 'warning' : 'normal',
+    title: isLinkedEpisodeModel(item) ? `${item.link.character} Linked Episode` : item.link.character,
+    copy: item.plannerReason || `Best current ${item.link.timeSlot} ${isLinkedEpisodeModel(item) ? 'Linked Episode' : 'Social Link'} pick.`,
     action: { type: 'social-links', label: 'Open Social Links' }
   });
 }
@@ -937,7 +967,7 @@ function createFusionPrepRouteItem(label, fusionOpportunity) {
 }
 
 function createRosterBonusRouteItem(label, snapshot, pick) {
-  if (!pick || getRosterMatchForArcana(pick.arcana, snapshot)) {
+  if (!pick || isLinkedEpisodeModel(pick) || getRosterMatchForArcana(pick.arcana, snapshot)) {
     return null;
   }
   return createRouteItem({
@@ -1058,29 +1088,47 @@ function getPlannerModel() {
     date: snapshot.profile.gameDate,
     focusMode
   };
-  const plannerModels = advisor ? advisor.getModels(snapshot, advisorOptions) : [];
+  const plannerModels = advisor
+    ? (advisor.getActivityModels ? advisor.getActivityModels(snapshot, advisorOptions) : advisor.getModels(snapshot, advisorOptions))
+    : [];
   const decoratePick = (item) =>
     item
       ? {
           ...item,
-          plannerReason: advisor.getRecommendationWhy(item, { focusMode }) || item.factors.slice(0, 2).join(', ')
+          plannerReason: getActivityWhy(advisor, item, focusMode) || item.factors.slice(0, 2).join(', ')
         }
       : null;
-  const dayPick = advisor ? decoratePick(advisor.getTopModelForDate(snapshot, { ...advisorOptions, timeSlot: 'day' })) : null;
-  const nightPick = advisor ? decoratePick(advisor.getTopModelForDate(snapshot, { ...advisorOptions, timeSlot: 'evening' })) : null;
+  const dayPick = advisor
+    ? decoratePick(
+        advisor.getTopActivityModelForDate
+          ? advisor.getTopActivityModelForDate(snapshot, { ...advisorOptions, timeSlot: 'day' })
+          : advisor.getTopModelForDate(snapshot, { ...advisorOptions, timeSlot: 'day' })
+      )
+    : null;
+  const nightPick = advisor
+    ? decoratePick(
+        advisor.getTopActivityModelForDate
+          ? advisor.getTopActivityModelForDate(snapshot, { ...advisorOptions, timeSlot: 'evening' })
+          : advisor.getTopModelForDate(snapshot, { ...advisorOptions, timeSlot: 'evening' })
+      )
+    : null;
   const highPressureLinks = plannerModels
     .filter(
       (item) =>
         item.link &&
-        !item.link.automatic &&
-        item.rank < 10 &&
+        (!item.link.automatic || isLinkedEpisodeModel(item)) &&
+        (isLinkedEpisodeModel(item) || item.rank < 10) &&
         (focusMode === 'completion' ? item.completion.pressure > 0 : item.weeklyPressure > 0)
     )
-    .sort((left, right) => advisor.compareModels(left, right, { focusMode }))
+    .sort((left, right) =>
+      advisor.compareActivityModels
+        ? advisor.compareActivityModels(left, right, { focusMode })
+        : advisor.compareModels(left, right, { focusMode })
+    )
     .slice(0, 3)
     .map((item) => ({
       ...item,
-      plannerReason: advisor.getRecommendationWhy(item, { focusMode }) || item.factors.slice(0, 2).join(', ')
+      plannerReason: getActivityWhy(advisor, item, focusMode) || item.factors.slice(0, 2).join(', ')
     }));
   const statBottlenecks = getStatBottlenecks(snapshot);
   const statFallback = statBottlenecks[0]

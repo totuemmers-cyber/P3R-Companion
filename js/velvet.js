@@ -121,6 +121,9 @@ function isPersonaUnlocked(name) {
   if (gate.type === 'objective') {
     return Boolean(state?.objectives?.[gate.id]);
   }
+  if (gate.type === 'linkedEpisode') {
+    return Boolean(state?.linkedEpisodes?.completed?.[gate.id] || settings.manualUnlocks?.[gate.legacyKey]);
+  }
   if (gate.type === 'manual') {
     return Boolean(settings.manualUnlocks?.[gate.key]);
   }
@@ -152,8 +155,13 @@ function getFusionAvailabilitySignature() {
     .map(([id]) => id)
     .sort()
     .join(',');
+  const linkedEpisodes = Object.entries(state?.linkedEpisodes?.completed || {})
+    .filter(([, complete]) => complete)
+    .map(([id]) => id)
+    .sort()
+    .join(',');
   const roster = (state?.roster || []).filter((name) => PERSONAS[name]).sort().join(',');
-  return `${settings.dlcEnabled ? 'dlc' : 'base'}|${manual}|${ranks}|${objectives}|${roster}`;
+  return `${settings.dlcEnabled ? 'dlc' : 'base'}|${manual}|${ranks}|${objectives}|${linkedEpisodes}|${roster}`;
 }
 
 function getAvailableResultsByArcana(arcana) {
@@ -1473,11 +1481,16 @@ function renderFusionSettings() {
   const settings = getFusionSettings();
   dlcToggle.checked = settings.dlcEnabled !== false;
   manualContainer.innerHTML = Object.entries(GATED_PERSONAS)
-    .filter(([, gate]) => gate.type === 'manual')
+    .filter(([, gate]) => gate.type === 'manual' || gate.type === 'linkedEpisode')
     .sort((left, right) => left[0].localeCompare(right[0]))
     .map(
-      ([name, gate]) =>
-        `<label class="fusion-unlock-option"><input type="checkbox" data-fusion-unlock="${escapeHtml(gate.key)}" ${settings.manualUnlocks?.[gate.key] ? 'checked' : ''}><div><span>${escapeHtml(name)}</span><br>${escapeHtml(gate.label)}</div></label>`
+      ([name, gate]) => {
+        const manualKey = gate.type === 'linkedEpisode' ? gate.legacyKey : gate.key;
+        const linkedComplete = gate.type === 'linkedEpisode' && velvetStore?.getState()?.linkedEpisodes?.completed?.[gate.id];
+        const checked = linkedComplete || settings.manualUnlocks?.[manualKey];
+        const source = linkedComplete ? 'Linked Episode completed; manual override remains available.' : gate.label;
+        return `<label class="fusion-unlock-option"><input type="checkbox" data-fusion-unlock="${escapeHtml(manualKey)}" ${checked ? 'checked' : ''}><div><span>${escapeHtml(name)}</span><br>${escapeHtml(source)}</div></label>`;
+      }
     )
     .join('');
 }
