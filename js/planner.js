@@ -155,6 +155,26 @@ function getLink(arcana) {
   return SOCIAL_LINKS[arcana];
 }
 
+function getAvailabilityCategory(link) {
+  if (typeof window.getSocialLinkAvailabilityCategory === 'function') {
+    return window.getSocialLinkAvailabilityCategory(link);
+  }
+  const dayCount = Array.isArray(link?.availableDays) ? new Set(link.availableDays).size : 0;
+  return {
+    dayCount,
+    isScarce: dayCount > 0 && dayCount <= 2
+  };
+}
+
+function formatAvailabilityCount(link, options = {}) {
+  if (typeof window.formatSocialLinkAvailabilityCount === 'function') {
+    return window.formatSocialLinkAvailabilityCount(link, options);
+  }
+  const { dayCount } = getAvailabilityCategory(link);
+  const dayWord = dayCount === 1 ? 'day' : 'days';
+  return options.compact ? `${dayCount} ${dayWord}/week` : `Only ${dayCount} ${dayWord} each week`;
+}
+
 function getStatGuide(stat) {
   if (typeof SOCIAL_STAT_ACTIVITY_GUIDES === 'undefined') {
     return [];
@@ -228,9 +248,10 @@ function scoreLink(arcana, snapshot) {
     reasons.push(extra.deadline);
   }
 
-  if (link.availableDays.length > 0 && link.availableDays.length <= 2) {
+  const availabilityCategory = getAvailabilityCategory(link);
+  if (availabilityCategory.isScarce) {
     score += 5;
-    reasons.push(`${link.availableDays.length} day${link.availableDays.length === 1 ? '' : 's'} per week`);
+    reasons.push(formatAvailabilityCount(link, { compact: true }));
   }
 
   if (!statsMet(link, snapshot)) {

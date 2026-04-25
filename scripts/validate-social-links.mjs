@@ -14,6 +14,8 @@ for (const file of ['data/personas.js', 'data/social-links.js', 'data/social-lin
 const SOCIAL_LINKS = vm.runInContext('SOCIAL_LINKS', context);
 const getDefinition = context.window.getSocialLinkDefinition;
 const getAvailability = context.window.getSocialLinkAvailability;
+const getAvailabilityCategory = context.window.getSocialLinkAvailabilityCategory;
+const formatAvailabilityCount = context.window.formatSocialLinkAvailabilityCount;
 const advisor = context.window.socialLinkAdvisor;
 
 const failures = [];
@@ -72,6 +74,45 @@ assert(Object.keys(justice.statRequirements || {}).length === 0, 'Justice should
 const aeon = getDefinition('Aeon');
 assert(JSON.stringify(aeon.availableDays) === JSON.stringify([5]), 'Aeon should only be available on Friday');
 
+const expectedManualDayCounts = {
+  Magician: 3,
+  Priestess: 4,
+  Empress: 3,
+  Emperor: 6,
+  Hierophant: 6,
+  Lovers: 4,
+  Chariot: 4,
+  Justice: 3,
+  Hermit: 1,
+  Fortune: 3,
+  Strength: 2,
+  Hanged: 3,
+  Temperance: 3,
+  Devil: 2,
+  Tower: 4,
+  Star: 3,
+  Moon: 7,
+  Sun: 1,
+  Aeon: 1
+};
+
+for (const [arcana, expectedCount] of Object.entries(expectedManualDayCounts)) {
+  const link = getDefinition(arcana);
+  const category = getAvailabilityCategory(link);
+  assert(category.dayCount === expectedCount, `${arcana} expected ${expectedCount} available days, got ${category.dayCount}`);
+}
+
+const moon = getDefinition('Moon');
+const moonCategory = getAvailabilityCategory(moon);
+assert(JSON.stringify(moon.availableDays) === JSON.stringify([0, 1, 2, 3, 4, 5, 6]), 'Moon should be available every weekday');
+assert(moonCategory.category === 'daily' && !moonCategory.isScarce, `Moon should be daily, got ${moonCategory.category}`);
+assert(formatAvailabilityCount(moon) === 'Available daily', `Moon daily formatter mismatch: ${formatAvailabilityCount(moon)}`);
+
+const hierophantCategory = getAvailabilityCategory(getDefinition('Hierophant'));
+assert(hierophantCategory.category === 'broad' && !hierophantCategory.isScarce, 'Hierophant should be broad, not scarce');
+const towerCategory = getAvailabilityCategory(getDefinition('Tower'));
+assert(towerCategory.category === 'broad' && !towerCategory.isScarce, 'Tower should be broad, not scarce');
+
 const tower = getDefinition('Tower');
 assert(
   (tower.prerequisites || []).some((entry) => entry.type === 'rank' && entry.arcana === 'Strength' && entry.minRank === 4),
@@ -116,6 +157,24 @@ assert(
   chariotStartable.status === 'setup_needed' && chariotStartable.actionable === true,
   'Manual rank 0 links should surface as actionable start events'
 );
+
+const moonStartedSnapshot = {
+  profile: { gameDate: { month: 8, day: 3 }, stats: { academics: 4, charm: 2, courage: 4 } },
+  socialLinks: { ranks: { Magician: 3, Moon: 1 } }
+};
+const moonWeekDates = [
+  { month: 8, day: 3 },
+  { month: 8, day: 4 },
+  { month: 8, day: 5 },
+  { month: 8, day: 6 },
+  { month: 8, day: 7 },
+  { month: 8, day: 8 },
+  { month: 8, day: 9 }
+];
+for (const date of moonWeekDates) {
+  const availability = getAvailability('Moon', moonStartedSnapshot, date, 'day');
+  assert(availability.available === true, `Moon should be available on ${date.month}/${date.day}, got ${availability.status}`);
+}
 
 function makeSnapshot({ month, day, stats, roster = [], ranks = {} }) {
   return {
@@ -174,6 +233,44 @@ const strengthCompletion = advisor.getTopModelForDate(plannerPressureSnapshot, {
   focusMode: 'completion'
 });
 assert(strengthCompletion?.arcana === 'Strength', `Expected June 24 completion pick to stay Strength, got ${strengthCompletion?.arcana}`);
+
+const scarcitySnapshot = makeSnapshot({
+  month: 5,
+  day: 3,
+  stats: { academics: 4, charm: 4, courage: 4 },
+  roster: ['Nekomata', 'Apsaras', 'Angel'],
+  ranks: { Magician: 3, Moon: 1, Hermit: 1, Strength: 4 }
+});
+const moonModel = advisor.getModel(scarcitySnapshot, { arcana: 'Moon', focusMode: 'balanced' });
+assert(!moonModel.isRare && !moonModel.isScarce, 'Moon should not be flagged rare/scarce');
+const moonWhy = advisor.getRecommendationWhy(moonModel, { focusMode: 'balanced' });
+assert(/Available daily/.test(moonWhy), `Moon should use neutral daily wording, got: ${moonWhy}`);
+assert(!/\bOnly\s+7\b|rare|scarce/i.test(moonWhy), `Moon recommendation should not use scarce wording, got: ${moonWhy}`);
+assert(!moonModel.factors.some((factor) => /\bOnly\s+7\b|rare|scarce/i.test(factor)), `Moon factors should not use scarce wording: ${moonModel.factors.join(' | ')}`);
+
+for (const arcana of ['Hierophant', 'Tower']) {
+  const model = advisor.getModel(scarcitySnapshot, { arcana, focusMode: 'balanced' });
+  assert(!model.isRare && !model.isScarce, `${arcana} includes Sunday but should not be rare/scarce`);
+  const why = advisor.getRecommendationWhy(model, { focusMode: 'balanced' });
+  assert(!/rare|scarce|Only\s+[4-7]\s+days?/i.test(why), `${arcana} should not emit rare/broad-only wording, got: ${why}`);
+}
+
+const hermitModel = advisor.getModel(scarcitySnapshot, { arcana: 'Hermit', focusMode: 'balanced' });
+const hermitWhy = advisor.getRecommendationWhy(hermitModel, { focusMode: 'balanced' });
+assert(hermitModel.isScarce && /Only 1 day each week\./.test(hermitWhy), `Hermit should still get scarcity wording, got: ${hermitWhy}`);
+
+const allRecommendationModels = advisor.getModels(scarcitySnapshot, { focusMode: 'balanced' });
+for (const model of allRecommendationModels) {
+  const strings = [
+    advisor.getRecommendationWhy(model, { focusMode: 'balanced' }),
+    advisor.getRecommendationWhy(model, { focusMode: 'completion' }),
+    ...model.factors,
+    ...model.tags
+  ].filter(Boolean);
+  for (const text of strings) {
+    assert(!/\bOnly\s+[4-9]\s+days?/i.test(text), `${model.arcana} emitted invalid broad-only wording: ${text}`);
+  }
+}
 
 if (failures.length) {
   console.error('Social Link validation failed:\n' + failures.map((entry) => `- ${entry}`).join('\n'));

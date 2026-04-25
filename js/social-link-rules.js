@@ -184,6 +184,50 @@ const SCHOOL_HOLIDAYS = [
   { month: 1, day: 11, label: 'School is not in session on holidays.' }
 ];
 
+function getSocialLinkAvailabilityCategory(linkOrDays) {
+  const days = Array.isArray(linkOrDays) ? linkOrDays : linkOrDays?.availableDays;
+  const dayCount = Array.isArray(days) ? new Set(days).size : 0;
+  let category = 'story';
+  if (dayCount >= 7) {
+    category = 'daily';
+  } else if (dayCount >= 4) {
+    category = 'broad';
+  } else if (dayCount === 3) {
+    category = 'moderate';
+  } else if (dayCount >= 1) {
+    category = 'scarce';
+  }
+
+  return {
+    category,
+    dayCount,
+    isDaily: category === 'daily',
+    isBroad: category === 'broad',
+    isModerate: category === 'moderate',
+    isScarce: category === 'scarce'
+  };
+}
+
+function formatSocialLinkAvailabilityCount(linkOrDays, options = {}) {
+  const summary = getSocialLinkAvailabilityCategory(linkOrDays);
+  const dayWord = summary.dayCount === 1 ? 'day' : 'days';
+  if (summary.isDaily) {
+    return 'Available daily';
+  }
+  if (summary.isBroad) {
+    return `Available ${summary.dayCount} ${dayWord}/week`;
+  }
+  if (summary.isModerate) {
+    return `Limited schedule (${summary.dayCount} ${dayWord}/week)`;
+  }
+  if (summary.isScarce) {
+    return options.compact
+      ? `${summary.dayCount} ${dayWord}/week`
+      : `Only ${summary.dayCount} ${dayWord} each week`;
+  }
+  return 'Story schedule';
+}
+
 function dateToNum(date) {
   const month = date.month >= 4 ? date.month : date.month + 12;
   return month * 100 + date.day;
@@ -423,6 +467,8 @@ function getSocialLinkAvailability(arcana, snapshot, date = snapshot.profile.gam
 
 window.getSocialLinkDefinition = getSocialLinkDefinition;
 window.getSocialLinkAvailability = getSocialLinkAvailability;
+window.getSocialLinkAvailabilityCategory = getSocialLinkAvailabilityCategory;
+window.formatSocialLinkAvailabilityCount = formatSocialLinkAvailabilityCount;
 window.getSocialLinkBlockedReason = getGlobalBlockedReason;
 window.getSocialLinkDayOfWeek = getDayOfWeek;
 window.compareSocialDates = compareDates;

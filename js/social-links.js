@@ -206,6 +206,42 @@ function slGetFusionData(arcana) {
   return slFusionCache[arcana] || { pairs: 0, personas: 0 };
 }
 
+function slGetAvailabilityCategory(link) {
+  if (typeof window.getSocialLinkAvailabilityCategory === 'function') {
+    return window.getSocialLinkAvailabilityCategory(link);
+  }
+  const dayCount = Array.isArray(link?.availableDays) ? new Set(link.availableDays).size : 0;
+  return {
+    category: dayCount >= 7 ? 'daily' : dayCount >= 4 ? 'broad' : dayCount === 3 ? 'moderate' : dayCount >= 1 ? 'scarce' : 'story',
+    dayCount,
+    isDaily: dayCount >= 7,
+    isBroad: dayCount >= 4 && dayCount < 7,
+    isModerate: dayCount === 3,
+    isScarce: dayCount > 0 && dayCount <= 2
+  };
+}
+
+function slFormatAvailabilityCount(link, options = {}) {
+  if (typeof window.formatSocialLinkAvailabilityCount === 'function') {
+    return window.formatSocialLinkAvailabilityCount(link, options);
+  }
+  const summary = slGetAvailabilityCategory(link);
+  const dayWord = summary.dayCount === 1 ? 'day' : 'days';
+  if (summary.isDaily) {
+    return 'Available daily';
+  }
+  if (summary.isBroad) {
+    return `Available ${summary.dayCount} ${dayWord}/week`;
+  }
+  if (summary.isModerate) {
+    return `Limited schedule (${summary.dayCount} ${dayWord}/week)`;
+  }
+  if (summary.isScarce) {
+    return options.compact ? `${summary.dayCount} ${dayWord}/week` : `Only ${summary.dayCount} ${dayWord} each week`;
+  }
+  return 'Story schedule';
+}
+
 function slGetRosterMatchForArcana(arcana) {
   const roster = getRosterSet();
   for (const name of roster) {
@@ -249,11 +285,10 @@ function slScoreLink(arcana) {
     }
   }
 
-  if (link.availableDays.length > 0 && link.availableDays.length <= 2) {
-    score += link.availableDays.length === 1 ? 4 : 3;
-    factors.push(
-      `Only available ${link.availableDays.length} day${link.availableDays.length > 1 ? 's' : ''}/week`
-    );
+  const availabilityCategory = slGetAvailabilityCategory(link);
+  if (availabilityCategory.isScarce) {
+    score += availabilityCategory.dayCount === 1 ? 4 : 3;
+    factors.push(slFormatAvailabilityCount(link));
   }
 
   if (!slStatsMet(arcana)) {
@@ -400,7 +435,7 @@ function slGetDeadlineInfo(link, extra, date = slState.gameDate) {
 }
 
 function slIsRareLink(link) {
-  return !!link && (!!link.availableDays?.includes(0) || (link.availableDays || []).length <= 2);
+  return !!link && slGetAvailabilityCategory(link).isScarce;
 }
 
 function slGetChecklistItems(link, rank, availability) {
@@ -986,7 +1021,14 @@ function slRenderPlanningInsights() {
         if (item.missingStats.length) {
           reasons.push(`${item.missingStats[0].stat} gate`);
         }
-        return `<div class="sl-focus-item"><div class="sl-focus-top"><span class="sl-focus-name">${item.link.character}</span><span class="sl-focus-arcana">${item.arcana}</span></div><div class="sl-focus-meta">${item.actionableToday ? 'Actionable today, but mainly important for weekly planning.' : item.nextStep}</div><div class="sl-focus-note">${reasons.join(' | ') || 'Low-frequency opportunity.'}</div></div>`;
+        const fallbackReason = item.availabilityCategory?.isDaily
+          ? 'Available daily; good filler during exams or breaks.'
+          : item.availabilityCategory?.isBroad
+            ? 'Broad weekly availability.'
+            : item.availabilityCategory?.isModerate
+              ? 'Limited schedule.'
+              : 'Low-frequency opportunity.';
+        return `<div class="sl-focus-item"><div class="sl-focus-top"><span class="sl-focus-name">${item.link.character}</span><span class="sl-focus-arcana">${item.arcana}</span></div><div class="sl-focus-meta">${item.actionableToday ? 'Actionable today, but mainly important for weekly planning.' : item.nextStep}</div><div class="sl-focus-note">${reasons.join(' | ') || fallbackReason}</div></div>`;
       })
       .join('');
   }

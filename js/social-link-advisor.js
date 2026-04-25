@@ -132,6 +132,42 @@ function getFusionData(arcana) {
   return fusionCache[arcana] || { pairs: 0, personas: 0 };
 }
 
+function getAvailabilityCategory(link) {
+  if (typeof window.getSocialLinkAvailabilityCategory === 'function') {
+    return window.getSocialLinkAvailabilityCategory(link);
+  }
+  const dayCount = Array.isArray(link?.availableDays) ? new Set(link.availableDays).size : 0;
+  return {
+    category: dayCount >= 7 ? 'daily' : dayCount >= 4 ? 'broad' : dayCount === 3 ? 'moderate' : dayCount >= 1 ? 'scarce' : 'story',
+    dayCount,
+    isDaily: dayCount >= 7,
+    isBroad: dayCount >= 4 && dayCount < 7,
+    isModerate: dayCount === 3,
+    isScarce: dayCount > 0 && dayCount <= 2
+  };
+}
+
+function formatAvailabilityCount(link, options = {}) {
+  if (typeof window.formatSocialLinkAvailabilityCount === 'function') {
+    return window.formatSocialLinkAvailabilityCount(link, options);
+  }
+  const summary = getAvailabilityCategory(link);
+  const dayWord = summary.dayCount === 1 ? 'day' : 'days';
+  if (summary.isDaily) {
+    return 'Available daily';
+  }
+  if (summary.isBroad) {
+    return `Available ${summary.dayCount} ${dayWord}/week`;
+  }
+  if (summary.isModerate) {
+    return `Limited schedule (${summary.dayCount} ${dayWord}/week)`;
+  }
+  if (summary.isScarce) {
+    return options.compact ? `${summary.dayCount} ${dayWord}/week` : `Only ${summary.dayCount} ${dayWord} each week`;
+  }
+  return 'Story schedule';
+}
+
 function scoreLink(arcana, snapshot, date = snapshot.profile.gameDate) {
   const link = getLink(arcana);
   const currentRank = snapshot.socialLinks.ranks[arcana] || 0;
@@ -165,11 +201,10 @@ function scoreLink(arcana, snapshot, date = snapshot.profile.gameDate) {
     }
   }
 
-  if (link.availableDays.length > 0 && link.availableDays.length <= 2) {
-    score += link.availableDays.length === 1 ? 4 : 3;
-    factors.push(
-      `Only available ${link.availableDays.length} day${link.availableDays.length > 1 ? 's' : ''}/week`
-    );
+  const availabilityCategory = getAvailabilityCategory(link);
+  if (availabilityCategory.isScarce) {
+    score += availabilityCategory.dayCount === 1 ? 4 : 3;
+    factors.push(formatAvailabilityCount(link));
   }
 
   if (!statsMet(arcana, snapshot)) {
@@ -247,7 +282,7 @@ function getDeadlineInfo(link, extra, date) {
 }
 
 function isRareLink(link) {
-  return !!link && (!!link.availableDays?.includes(0) || (link.availableDays || []).length <= 2);
+  return !!link && getAvailabilityCategory(link).isScarce;
 }
 
 function getChecklistItems(link, rank, availability, snapshot, date) {
@@ -644,6 +679,8 @@ function buildLinkModel(arcana, snapshot, date, focusMode, completionCache) {
   const actionableToday = !!(availability?.available || availability?.actionable);
   const availableToday = !!availability?.available;
   const isRare = isRareLink(link);
+  const availabilityCategory = getAvailabilityCategory(link);
+  const availabilityLabel = formatAvailabilityCount(link);
   const noPersona = !rosterMatch && !link?.automatic;
   const setupNeeded = availability?.status === 'setup_needed';
   const schoolLink = !!link?.schoolLink;
@@ -700,6 +737,10 @@ function buildLinkModel(arcana, snapshot, date, focusMode, completionCache) {
     checklist,
     guideSummaryBits,
     isRare,
+    isScarce: availabilityCategory.isScarce,
+    availabilityCategory,
+    availableDayCount: availabilityCategory.dayCount,
+    availabilityLabel,
     schoolLink,
     sundayLink,
     score,
@@ -756,7 +797,7 @@ function getRecommendationWhy(model, options = {}) {
     } else if (model.actionableToday) {
       reasons.push(`You can protect this ${getSlotLabel(model.link.timeSlot).toLowerCase()} slot today.`);
     }
-    if (model.isRare) {
+    if (model.isScarce) {
       reasons.push('It competes for scarce weekly slots.');
     }
     return reasons.slice(0, 3).join(' ');
@@ -774,8 +815,12 @@ function getRecommendationWhy(model, options = {}) {
   if (model.deadlineInfo.isSoon && model.actionableToday && model.deadlineInfo.label) {
     reasons.push(model.deadlineInfo.label);
   }
-  if (model.isRare && model.actionableToday) {
-    reasons.push(`Only ${model.link.availableDays.length} day${model.link.availableDays.length === 1 ? '' : 's'} each week.`);
+  if (model.isScarce && model.actionableToday) {
+    reasons.push(formatAvailabilityCount(model.link) + '.');
+  } else if (model.availabilityCategory?.isDaily && model.actionableToday) {
+    reasons.push('Available daily; good filler during exams or breaks.');
+  } else if (model.availabilityCategory?.isModerate && model.actionableToday && reasons.length < 2) {
+    reasons.push('Limited schedule.');
   }
   if (model.actionableToday && !model.availableToday) {
     reasons.push('Ready to start right now.');
