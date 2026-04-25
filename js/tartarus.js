@@ -139,12 +139,12 @@ const state = {
 };
 
 const floorScoutSections = {
-  regular: true,
+  regular: false,
   monad: false,
   gatekeepers: false,
   loot: false,
   grind: false,
-  loadout: true
+  loadout: false
 };
 
 const MONTH_NAME_TO_NUM = {
