@@ -84,7 +84,7 @@ const ENEMY_RAW = {
     "exp": 97906,
     "lvl": 74,
     "race": "Hermit P",
-    "resists": "-s--w--n_-",
+    "resists": "-s--w--n--",
     "skills": ["Strike Attack", "Kougaon", "Makougaon", "Tetrakarn", "Life Drain", "Spirit Drain", "Null Dizzy", "Light Boost", "Drain Ability"],
     "stats": [2349, 999, 46, 46, 46, 46, 42]
   },
@@ -105,7 +105,7 @@ const ENEMY_RAW = {
     "exp": 14952,
     "lvl": 29,
     "race": "Hermit P",
-    "resists": "----n-n__-",
+    "resists": "----n-nnn-",
     "skills": ["Strike Attack", "Agilao", "Maragion", "Bufula", "Mabufula", "Garula", "Magarula", "Zionga", "Mazionga", "Tarukaja", "Heat Riser", "Concentrate", "Null Dizzy", "Fire Amp", "Ice Amp", "Wind Amp", "Elec Amp"],
     "stats": [1200, 999, 12, 30, 24, 22, 17]
   },
@@ -127,7 +127,7 @@ const ENEMY_RAW = {
     "exp": 415,
     "lvl": 29,
     "race": "Emperor",
-    "resists": "--nwn--z--",
+    "resists": "--nwn--w--",
     "skills": ["Pierce Attack", "Torrent Shot", "Arrow Rain", "Bufula", "Freeze Boost"],
     "stats": [323, 40, 22, 17, 22, 18, 18]
   },
@@ -137,7 +137,7 @@ const ENEMY_RAW = {
     "exp": 711,
     "lvl": 7,
     "race": "Chariot P",
-    "resists": "---s--w__-",
+    "resists": "---s--wnn-",
     "skills": ["Strike Attack", "Bash"],
     "stats": [390, 300, 11, 4, 8, 5, 4]
   },
@@ -159,7 +159,7 @@ const ENEMY_RAW = {
     "exp": 838,
     "lvl": 21,
     "race": "Chariot",
-    "resists": "-ss---w__-",
+    "resists": "-ss---w---",
     "skills": ["Strike Attack", "Assault Dive", "Swift Strike", "Tarukaja", "Rebellion", "Strike Boost", "Crit Rate Amp"],
     "stats": [920, 180, 24, 4, 20, 16, 18]
   },
@@ -181,7 +181,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 69,
     "race": "Magician P",
-    "resists": "---dddw_d-",
+    "resists": "---dddwnd-",
     "skills": ["Strike Attack", "Agidyne", "Maragidyne", "Bufudyne", "Mabufudyne", "Garudyne", "Magarudyne", "Ziodyne", "Maziodyne", "Kougaon", "Makougaon", "Eigaon", "Maeigaon", "Concentrate", "Resist Dizzy", "Freeze Boost", "Shock Boost", "Magic Mastery"],
     "stats": [2140, 999, 39, 55, 46, 43, 40]
   },
@@ -192,7 +192,7 @@ const ENEMY_RAW = {
     "exp": 50,
     "lvl": 11,
     "race": "Hermit",
-    "resists": "---n--sz--",
+    "resists": "------sw--",
     "skills": ["Slash Attack", "Power Slash", "Agi", "Maragi"],
     "stats": [192, 40, 8, 10, 8, 10, 4]
   },
@@ -202,7 +202,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 64,
     "race": "Strength P",
-    "resists": "---rw--__-",
+    "resists": "---rw-----",
     "skills": ["Slash Attack", "Agidyne", "Maragidyne", "Tempest Slash", "Matarukaja", "Revolution", "Resist Dizzy", "Slash Boost", "Fire Boost"],
     "stats": [1490, 999, 43, 53, 37, 37, 37]
   },
@@ -289,7 +289,7 @@ const ENEMY_RAW = {
     "exp": 719,
     "lvl": 39,
     "race": "Emperor",
-    "resists": "sss--d--z-",
+    "resists": "sss--d--w-",
     "skills": ["Pierce Attack", "Vile Assault", "Zionga", "Mazionga", "Tarukaja", "Rakukaja", "Sukukaja", "Shock Boost"],
     "stats": [436, 80, 25, 27, 27, 24, 20]
   },
@@ -300,7 +300,7 @@ const ENEMY_RAW = {
     "exp": 2525,
     "lvl": 36,
     "race": "Emperor",
-    "resists": "sss--d-_w-",
+    "resists": "sss--d--w-",
     "skills": ["Pierce Attack", "Vile Assault", "Herculean Strike", "Myriad Arrows", "Zionga", "Mazionga", "Heat Riser", "Pierce Boost", "Shock Boost"],
     "stats": [1500, 220, 26, 22, 25, 24, 27]
   },
@@ -333,7 +333,7 @@ const ENEMY_RAW = {
     "exp": 59186,
     "lvl": 60,
     "race": "Chariot P",
-    "resists": "---n--nr_-",
+    "resists": "---n--nr--",
     "skills": ["Pierce Attack", "Vile Assault", "Cruel Attack", "Primal Force", "Poison Arrow", "Matarukaja", "Charge", "Myriad Arrows", "Null Dizzy", "Pierce Boost"],
     "stats": [2003, 999, 51, 34, 43, 41, 31]
   },
@@ -378,7 +378,7 @@ const ENEMY_RAW = {
     "exp": 93403,
     "lvl": 70,
     "race": "Emperor P",
-    "resists": "r---SS-__-",
+    "resists": "r---ss----",
     "skills": ["Pierce Attack", "Poison Mist", "Matarukaja", "Marakukaja", "Masukukaja", "Matarunda", "Marakunda", "Masukunda", "Null Dizzy"],
     "stats": [2400, 999, 42, 44, 66, 37, 42]
   },
@@ -411,7 +411,7 @@ const ENEMY_RAW = {
     "exp": 1083,
     "lvl": 48,
     "race": "Justice",
-    "resists": "s-s-----z-",
+    "resists": "s-s-----w-",
     "skills": ["Slash Attack", "Tempest Slash", "Blade of Fury", "Marakunda"],
     "stats": [479, 100, 35, 25, 32, 31, 28]
   },
@@ -537,7 +537,7 @@ const ENEMY_RAW = {
     "exp": 76664,
     "lvl": 77,
     "race": "Hierophant P",
-    "resists": "----sswdd-",
+    "resists": "-n-ss-wdd-",
     "skills": ["Slash Attack", "Hamaon", "Mahamaon", "Kougaon", "Makougaon", "Mudoon", "Mamudoon", "Eigaon", "Maeigaon", "Megidola", "Megidolaon", "Marakunda", "Null Dizzy", "Null Freeze", "Null Shock", "Hama Boost", "Mudo Boost", "Almighty Boost"],
     "stats": [2473, 999, 46, 70, 45, 53, 99]
   },
@@ -547,7 +547,7 @@ const ENEMY_RAW = {
     "exp": 44559,
     "lvl": 58,
     "race": "Hierophant P",
-    "resists": "-n-s---_w-",
+    "resists": "-n-s---nw-",
     "skills": ["Slash Attack", "Garudyne", "Magarudyne", "Deathbound", "Sukukaja", "Masukunda", "Concentrate", "Null Dizzy", "Wind Boost", "Wind Amp"],
     "stats": [1950, 999, 39, 55, 42, 38, 30]
   },
@@ -568,7 +568,7 @@ const ENEMY_RAW = {
     "exp": 5845,
     "lvl": 60,
     "race": "Fortune",
-    "resists": "sss---w_n-",
+    "resists": "sss---w-n-",
     "skills": ["Strike Attack", "Mudoon", "Ghastly Wail", "Evil Touch", "Eerie Sound", "Provoke", "Neuro Slash", "Blade of Fury", "Ailment Boost"],
     "stats": [1777, 280, 33, 30, 42, 42, 99]
   },
@@ -578,7 +578,7 @@ const ENEMY_RAW = {
     "exp": 34811,
     "lvl": 50,
     "race": "Chariot P",
-    "resists": "----n--S_-",
+    "resists": "----n--sn-",
     "skills": ["Strike Attack", "Tempest Slash", "Blade of Fury", "Deathbound", "Herculean Strike", "Heat Riser", "Null Dizzy", "Slash Amp"],
     "stats": [2066, 999, 38, 27, 37, 34, 15]
   },
@@ -610,7 +610,7 @@ const ENEMY_RAW = {
     "exp": 6753,
     "lvl": 66,
     "race": "Strength",
-    "resists": "sss---w__-",
+    "resists": "sss---w---",
     "skills": ["Strike Attack", "God's Hand", "Akasha Arts", "Heat Riser", "Marakunda", "Charge", "Resist Freeze", "Resist Shock", "Null Dizzy"],
     "stats": [2040, 180, 54, 41, 41, 38, 29]
   },
@@ -621,7 +621,7 @@ const ENEMY_RAW = {
     "exp": 111,
     "lvl": 20,
     "race": "Empress",
-    "resists": "------wzn-",
+    "resists": "------wwn-",
     "skills": ["Slash Attack", "Assault Dive", "Eiga", "Maeiha"],
     "stats": [254, 50, 14, 14, 13, 16, 10]
   },
@@ -631,7 +631,7 @@ const ENEMY_RAW = {
     "exp": 59463,
     "lvl": 65,
     "race": "Strength P",
-    "resists": "----d-d_r-",
+    "resists": "----d-d-r-",
     "skills": ["Slash Attack", "Eigaon", "Evil Touch", "Ghastly Wail", "Vorpal Blade", "Charge", "Evil Smile", "Null Dizzy", "Resist Freeze", "Resist Shock", "Slash Boost", "Dark Amp", "Fear Boost"],
     "stats": [1722, 999, 49, 34, 43, 34, 66]
   },
@@ -674,7 +674,7 @@ const ENEMY_RAW = {
     "exp": 918,
     "lvl": 42,
     "race": "Hermit",
-    "resists": "---n---zr-",
+    "resists": "---n---wr-",
     "skills": ["Strike Attack", "Agidyne", "Eigaon", "Maragion", "Maeiga", "Matarunda", "Marakunda"],
     "stats": [437, 120, 20, 31, 27, 28, 27]
   },
@@ -685,7 +685,7 @@ const ENEMY_RAW = {
     "exp": 661,
     "lvl": 37,
     "race": "Hierophant",
-    "resists": "-----d-zn-",
+    "resists": "-----d-wn-",
     "skills": ["Strike Attack", "Torrent Shot", "Arrow Rain", "Zionga", "Mazionga"],
     "stats": [409, 80, 24, 24, 23, 21, 17]
   },
@@ -696,7 +696,7 @@ const ENEMY_RAW = {
     "exp": 19495,
     "lvl": 52,
     "race": "Emperor P",
-    "resists": "--nn--w__-",
+    "resists": "--nn--wnn-",
     "skills": ["Pierce Attack", "Ziodyne", "Mazionga", "Eigaon", "Maeiga", "Matarukaja", "Marakunda", "Concentrate", "Resist Dizzy", "Null Shock", "Elec Amp", "Dark Amp"],
     "stats": [1835, 999, 27, 37, 35, 36, 34]
   },
@@ -739,7 +739,7 @@ const ENEMY_RAW = {
     "exp": 17051,
     "lvl": 32,
     "race": "Hanged P",
-    "resists": "----__-__-",
+    "resists": "----------",
     "skills": ["Strike Attack", "Herculean Strike", "Tarukaja", "Charge", "Rebellion", "Null Dizzy", "Strike Boost", "Strike Amp"],
     "stats": [1454, 999, 24, 11, 25, 19, 5]
   },
@@ -772,7 +772,7 @@ const ENEMY_RAW = {
     "exp": 289,
     "lvl": 26,
     "race": "Lovers",
-    "resists": "--sww-n-n-",
+    "resists": "---ww-n-n-",
     "skills": ["Pierce Attack", "Eiga", "Pulinpa", "Foul Breath", "Holy Arrow", "Diarama"],
     "stats": [293, 40, 14, 20, 16, 15, 20]
   },
@@ -782,7 +782,7 @@ const ENEMY_RAW = {
     "exp": 2970,
     "lvl": 14,
     "race": "Fortune P",
-    "resists": "---s-v-__-",
+    "resists": "---s------",
     "skills": ["Strike Attack", "Bewilder", "Eerie Sound", "Bash", "Revolution", "Strike Boost", "Distress Boost"],
     "stats": [690, 999, 18, 10, 12, 12, 2]
   },
@@ -848,7 +848,7 @@ const ENEMY_RAW = {
     "exp": 792,
     "lvl": 41,
     "race": "Empress",
-    "resists": "----s-nzd-",
+    "resists": "----s-nwd-",
     "skills": ["Strike Attack", "Mudoon", "Foul Breath", "Ghastly Wail", "Evil Touch", "Eigaon", "Maeiga", "Fear Boost"],
     "stats": [469, 140, 22, 30, 26, 23, 20]
   },
@@ -859,7 +859,7 @@ const ENEMY_RAW = {
     "exp": 3144,
     "lvl": 40,
     "race": "Empress",
-    "resists": "----swn_d-",
+    "resists": "----swn-d-",
     "skills": ["Strike Attack", "Mudoon", "Stagnant Air", "Ghastly Wail", "Evil Touch", "Evil Smile", "Eigaon", "Eiga", "Maeiga"],
     "stats": [1670, 280, 22, 39, 17, 26, 50]
   },
@@ -1103,7 +1103,7 @@ const ENEMY_RAW = {
     "exp": 510,
     "lvl": 16,
     "race": "Strength",
-    "resists": "---w---__-",
+    "resists": "---w------",
     "skills": ["Strike Attack", "Assault Dive", "Swift Strike", "Zionga", "Mazio", "Shock Boost"],
     "stats": [940, 100, 17, 12, 13, 12, 11]
   },
@@ -1113,7 +1113,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 17,
     "race": "Lovers P",
-    "resists": "-----w-__-",
+    "resists": "-----w----",
     "skills": ["Pierce Attack", "Garula", "Pulinpa", "Provoke", "Holy Arrow", "Dia", "Tarukaja", "Sukukaja"],
     "stats": [240, 999, 6, 9, 10, 7, 8]
   },
@@ -1177,7 +1177,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 58,
     "race": "Justice P",
-    "resists": "---w-d-r_-",
+    "resists": "---w-d-rn-",
     "skills": ["Slash Attack", "Ziodyne", "Maziodyne", "Divine Judgment", "Marakukaja", "Resist Dizzy", "Elec Boost", "Shock Boost", "Ailment Boost"],
     "stats": [1119, 999, 45, 31, 41, 39, 71]
   },
@@ -1210,7 +1210,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 63,
     "race": "Strength P",
-    "resists": "s-----s_n-",
+    "resists": "s-----s-n-",
     "skills": ["Strike Attack", "Assault Dive", "Gigantic Fist", "Herculean Strike", "Heat Wave", "Null Dizzy", "Strike Boost"],
     "stats": [1596, 999, 55, 30, 39, 42, 28]
   },
@@ -1242,7 +1242,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 33,
     "race": "Magician P",
-    "resists": "----n--_w-",
+    "resists": "----n--nw-",
     "skills": ["Strike Attack", "Bufula", "Tarukaja", "Rakukaja", "Matarunda", "Marakunda", "Ice Boost"],
     "stats": [900, 999, 15, 26, 22, 25, 26]
   },
@@ -1285,7 +1285,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 68,
     "race": "Magician P",
-    "resists": "-srwn-sd_-",
+    "resists": "-srwn-sdn-",
     "skills": ["Strike Attack", "Brave Blade", "God's Hand", "Primal Force"],
     "stats": [740, 999, 39, 31, 42, 39, 45]
   },
@@ -1319,7 +1319,7 @@ const ENEMY_RAW = {
     "exp": 521,
     "lvl": 35,
     "race": "Strength",
-    "resists": "-s-s-s--z-",
+    "resists": "-s-s-s--w-",
     "skills": ["Strike Attack", "Gigantic Fist", "Swift Strike"],
     "stats": [560, 50, 28, 18, 25, 21, 2]
   },
@@ -1330,7 +1330,7 @@ const ENEMY_RAW = {
     "exp": 129050,
     "lvl": 79,
     "race": "Hanged P",
-    "resists": "sr--dr-_r-",
+    "resists": "sr--dr-nr-",
     "skills": ["Strike Attack", "Megidolaon", "Tentarafoo", "Akasha Arts", "Primal Force", "Heat Riser", "Marakunda", "Charge", "Concentrate", "Null Dizzy", "Resist Freeze", "Null Shock", "Confuse Boost", "Ailment Boost", "Apt Pupil", "Almighty Amp"],
     "stats": [3333, 999, 85, 80, 60, 50, 75]
   },
@@ -1352,7 +1352,7 @@ const ENEMY_RAW = {
     "exp": 9900,
     "lvl": 70,
     "race": "Magician P",
-    "resists": "rr---_-nn-",
+    "resists": "rr---n-nn-",
     "skills": ["Strike Attack", "Megidolaon", "God's Hand", "Akasha Arts", "Charge", "Null Dizzy", "Strike Amp", "Sharp Student", "Almighty Boost"],
     "stats": [3500, 999, 60, 55, 50, 50, 45]
   },
@@ -1363,7 +1363,7 @@ const ENEMY_RAW = {
     "exp": 276,
     "lvl": 25,
     "race": "Emperor",
-    "resists": "-s--n--rz-",
+    "resists": "-s--n--rw-",
     "skills": ["Strike Attack", "Gigantic Fist", "Kouga", "Makouga"],
     "stats": [321, 45, 20, 17, 21, 15, 12]
   },
@@ -1439,7 +1439,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 13,
     "race": "Magician P",
-    "resists": "---nw--__-",
+    "resists": "---nw--nn-",
     "skills": ["Slash Attack", "Agi", "Poisma", "Pulinpa", "Foul Breath", "Poison Boost"],
     "stats": [320, 999, 6, 11, 10, 7, 14]
   },
@@ -1461,7 +1461,7 @@ const ENEMY_RAW = {
     "exp": 738,
     "lvl": 45,
     "race": "Strength",
-    "resists": "-------zz-",
+    "resists": "-------ww-",
     "skills": ["Slash Attack", "Tempest Slash", "Zan-ei", "Blade of Fury", "Charge", "Slash Boost"],
     "stats": [467, 90, 33, 22, 29, 30, 28]
   },
@@ -1539,7 +1539,7 @@ const ENEMY_RAW = {
     "exp": 59,
     "lvl": 16,
     "race": "Emperor",
-    "resists": "-------sz-",
+    "resists": "-------sw-",
     "skills": ["Strike Attack", "Kouha", "Makouha"],
     "stats": [199, 50, 10, 11, 10, 12, 8]
   },
@@ -1550,7 +1550,7 @@ const ENEMY_RAW = {
     "exp": 1556,
     "lvl": 55,
     "race": "Emperor P",
-    "resists": "tt-t--tzn-",
+    "resists": "ss-s--swn-",
     "skills": ["Pierce Attack", "Mudoon", "Mamudoon", "Eigaon", "Maeigaon", "Marakunda", "Null Dizzy", "Dark Amp", "Mudo Boost"],
     "stats": [9999, 999, 30, 60, 10, 35, 1]
   },
@@ -1560,7 +1560,7 @@ const ENEMY_RAW = {
     "exp": 15174,
     "lvl": 42,
     "race": "Empress P",
-    "resists": "-----w-SS-",
+    "resists": "-----w-ss-",
     "skills": ["Pierce Attack", "Megido", "Megidola", "Matarukaja", "Marakukaja", "Null Dizzy"],
     "stats": [1105, 999, 25, 22, 31, 32, 24]
   },
@@ -1603,7 +1603,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 28,
     "race": "Justice P",
-    "resists": "---ddww__-",
+    "resists": "---ddwwnn-",
     "skills": ["Strike Attack", "Agilao", "Maragi", "Bufula", "Mabufu", "Fire Break", "Ice Break", "Null Dizzy", "Fire Amp", "Ice Amp"],
     "stats": [815, 999, 10, 26, 21, 21, 15]
   },
@@ -1614,7 +1614,7 @@ const ENEMY_RAW = {
     "exp": 43443,
     "lvl": 78,
     "race": "Hanged P",
-    "resists": "r-rn-d-__-",
+    "resists": "r-rn-d-nn-",
     "skills": ["Strike Attack", "Ziodyne", "Maziodyne", "Evil Touch", "Ghastly Wail", "Stagnant Air", "Brave Blade", "Vorpal Blade", "Evil Smile", "Null Dizzy", "Null Shock", "Slash Boost", "Elec Amp", "Fear Boost", "Shock Boost", "Ailment Boost"],
     "stats": [2739, 999, 57, 66, 53, 46, 88]
   },
@@ -1636,7 +1636,7 @@ const ENEMY_RAW = {
     "exp": 1200,
     "lvl": 14,
     "race": "Magician P",
-    "resists": "-----ws__-",
+    "resists": "-----wsnn-",
     "skills": ["Strike Attack", "Zio", "Zionga", "Mazio", "Garu", "Garula", "Magaru"],
     "stats": [640, 999, 8, 15, 11, 11, 7]
   },
@@ -1671,7 +1671,7 @@ const ENEMY_RAW = {
     "exp": 108932,
     "lvl": 75,
     "race": "Justice P",
-    "resists": "sns-n-n_S-",
+    "resists": "sns-n-n-s-",
     "skills": ["Slash Attack", "Bufudyne", "Mabufudyne", "Ziodyne", "Maziodyne", "Brave Blade", "Vorpal Blade", "Heat Riser", "Dekaja", "Null Dizzy", "Slash Boost", "Ice Amp", "Elec Amp", "Freeze Boost", "Shock Boost", "Ailment Boost"],
     "stats": [1913, 999, 61, 59, 99, 43, 66]
   },
@@ -1693,7 +1693,7 @@ const ENEMY_RAW = {
     "exp": 50808,
     "lvl": 63,
     "race": "Strength P",
-    "resists": "-n-wn--_S-",
+    "resists": "-n-wn---s-",
     "skills": ["Strike Attack", "Bufudyne", "Mabufudyne", "Gigantic Fist", "Heat Wave", "Heat Riser", "Null Dizzy", "Resist Shock", "Ice Amp", "Freeze Boost", "Ailment Boost"],
     "stats": [2185, 999, 47, 39, 42, 36, 41]
   },
@@ -1737,7 +1737,7 @@ const ENEMY_RAW = {
     "exp": 27272,
     "lvl": 40,
     "race": "Hierophant P",
-    "resists": "--s--ds__-",
+    "resists": "--s--dsnn-",
     "skills": ["Strike Attack", "Ziodyne", "Mazionga", "Stagnant Air", "Herculean Strike", "Rakukaja", "Marakunda", "Dekaja", "Null Dizzy", "Null Freeze", "Null Shock", "Elec Amp", "Shock Boost", "Ailment Boost"],
     "stats": [1970, 999, 25, 32, 30, 26, 99]
   },
@@ -1814,7 +1814,7 @@ const ENEMY_RAW = {
     "exp": 6059,
     "lvl": 35,
     "race": "Fool",
-    "resists": "--------z-",
+    "resists": "--------w-",
     "skills": ["Strike Attack", "Sukukaja", "Tetrakarn", "Makarakarn"],
     "stats": [600, 80, 1, 1, 25, 99, 99]
   },
@@ -1825,7 +1825,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 72,
     "race": "Lovers P",
-    "resists": "-w-d--s__-",
+    "resists": "-w-d--s---",
     "skills": ["Strike Attack", "Agidyne", "Poison Mist", "Stagnant Air", "Matarunda", "Marakunda", "Spirit Drain", "Resist Dizzy", "Poison Boost"],
     "stats": [1831, 999, 39, 45, 42, 39, 99]
   },
@@ -1923,7 +1923,7 @@ const ENEMY_RAW = {
     "exp": 24951,
     "lvl": 44,
     "race": "Hanged P",
-    "resists": "d--nw--__-",
+    "resists": "d--nw--nn-",
     "skills": ["Strike Attack", "Gigantic Fist", "Swift Strike", "Herculean Strike", "Null Dizzy", "Null Freeze", "Null Shock"],
     "stats": [2150, 999, 99, 20, 31, 29, 23]
   },
@@ -1945,7 +1945,7 @@ const ENEMY_RAW = {
     "exp": 6470,
     "lvl": 63,
     "race": "Hanged",
-    "resists": "-------_w-",
+    "resists": "--------w-",
     "skills": ["Strike Attack", "Akasha Arts", "Gigantic Fist", "Deathbound", "Heat Wave", "Life Drain", "Resist Dizzy", "Slash Amp", "Strike Amp"],
     "stats": [2639, 100, 51, 20, 15, 45, 48]
   },
@@ -1989,7 +1989,7 @@ const ENEMY_RAW = {
     "exp": 2114,
     "lvl": 32,
     "race": "Hanged",
-    "resists": "--wssss__-",
+    "resists": "--wssss---",
     "skills": ["Strike Attack", "Gigantic Fist", "Herculean Strike", "Provoke", "Charge", "Matarunda", "Strike Boost"],
     "stats": [2100, 150, 30, 10, 10, 21, 25]
   },
@@ -2022,7 +2022,7 @@ const ENEMY_RAW = {
     "exp": 263,
     "lvl": 28,
     "race": "Empress",
-    "resists": "--w-s-d-z-",
+    "resists": "--w-s-d-w-",
     "skills": ["Slash Attack", "Fatal End", "Torrent Shot", "Garula", "Sukukaja"],
     "stats": [277, 70, 17, 21, 18, 21, 14]
   },
@@ -2045,7 +2045,7 @@ const ENEMY_RAW = {
     "exp": 307,
     "lvl": 31,
     "race": "Justice",
-    "resists": "-----s--z-",
+    "resists": "-----s--w-",
     "skills": ["Slash Attack", "Fatal End", "Kouga", "Makouga", "Slash Boost"],
     "stats": [322, 80, 35, 6, 22, 19, 17]
   },
@@ -2089,7 +2089,7 @@ const ENEMY_RAW = {
     "exp": 208,
     "lvl": 23,
     "race": "Hierophant",
-    "resists": "-----n-zn-",
+    "resists": "-----n-wn-",
     "skills": ["Strike Attack", "Mudo", "Torrent Shot", "Swift Strike", "Eiga"],
     "stats": [267, 40, 19, 18, 17, 14, 8]
   },
@@ -2110,7 +2110,7 @@ const ENEMY_RAW = {
     "exp": 7000,
     "lvl": 20,
     "race": "Empress P",
-    "resists": "-v-nnnnnn-",
+    "resists": "---nnnnnn-",
     "skills": ["Strike Attack", "Marin Karin", "Eerie Sound", "Pulinpa", "Stagnant Air", "Null Dizzy", "Charm Boost", "Distress Boost", "Confuse Boost"],
     "stats": [950, 999, 19, 20, 15, 12, 12]
   },
@@ -2174,7 +2174,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 11,
     "race": "Empress P",
-    "resists": "--w-s-w__-",
+    "resists": "s-w-s-wnn-",
     "skills": ["Slash Attack", "Zio", "Mazio", "Power Slash"],
     "stats": [384, 999, 7, 9, 9, 10, 3]
   },
@@ -2207,7 +2207,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 61,
     "race": "Lovers P",
-    "resists": "---d-w-r_-",
+    "resists": "---d-w-rn-",
     "skills": ["Pierce Attack", "Kougaon", "Makougaon", "Marin Karin", "Holy Arrow", "Revolution", "Light Amp", "Charm Boost"],
     "stats": [1453, 999, 38, 43, 35, 53, 29]
   },
@@ -2229,7 +2229,7 @@ const ENEMY_RAW = {
     "exp": 1132,
     "lvl": 24,
     "race": "Lovers",
-    "resists": "---dw--__-",
+    "resists": "---dw-----",
     "skills": ["Strike Attack", "Marin Karin", "Sexy Dance", "Foul Breath", "Marakunda", "Agilao", "Maragion", "Fire Boost"],
     "stats": [1000, 240, 12, 21, 19, 18, 20]
   },
@@ -2271,7 +2271,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 68,
     "race": "Priestess P",
-    "resists": "--wr-n-_d-",
+    "resists": "--wr-n-nd-",
     "skills": ["Strike Attack", "Agidyne", "Maragidyne", "Bufudyne", "Mabufudyne", "Garudyne", "Magarudyne", "Ziodyne", "Maziodyne", "Fire Boost", "Ice Boost", "Wind Boost", "Elec Boost"],
     "stats": [630, 999, 42, 51, 38, 42, 37]
   },
@@ -2347,7 +2347,7 @@ const ENEMY_RAW = {
     "exp": 52042,
     "lvl": 59,
     "race": "Justice P",
-    "resists": "nn--ns-__-",
+    "resists": "nn--ns----",
     "skills": ["Slash Attack", "Bufudyne", "Mabufudyne", "Tempest Slash", "Vorpal Blade", "Null Dizzy", "Slash Boost", "Ice Boost", "Freeze Boost", "Ailment Boost"],
     "stats": [1200, 999, 42, 42, 99, 33, 37]
   },
@@ -2380,7 +2380,7 @@ const ENEMY_RAW = {
     "exp": 1310,
     "lvl": 54,
     "race": "Strength",
-    "resists": "-------wr-",
+    "resists": "-n-----wr-",
     "skills": ["Strike Attack", "Gigantic Fist", "Eigaon", "Poison Mist", "Tarukaja"],
     "stats": [650, 75, 36, 31, 32, 34, 31]
   },
@@ -2478,7 +2478,7 @@ const ENEMY_RAW = {
     "exp": 76861,
     "lvl": 69,
     "race": "Hanged P",
-    "resists": "-r---n-S_-",
+    "resists": "-r---n-s--",
     "skills": ["Strike Attack", "Ziodyne", "Maziodyne", "Kougaon", "Makougaon", "Gigantic Fist", "Heat Wave", "Heat Riser", "Charge", "Concentrate", "Null Dizzy", "Null Shock", "Strike Boost", "Elec Boost", "Light Boost"],
     "stats": [2739, 999, 99, 99, 45, 40, 50]
   },
@@ -2499,7 +2499,7 @@ const ENEMY_RAW = {
     "exp": 4243,
     "lvl": 70,
     "race": "Priestess P",
-    "resists": "----__-r_-",
+    "resists": "-------r--",
     "skills": ["Strike Attack", "Hamaon", "Mahamaon", "Kougaon", "Makougaon", "Megidolaon", "Marakukaja", "Matarunda", "Null Dizzy", "Light Boost", "Hama Boost"],
     "stats": [2700, 999, 36, 60, 45, 46, 48]
   },
@@ -2573,7 +2573,7 @@ const ENEMY_RAW = {
     "exp": 68089,
     "lvl": 63,
     "race": "Hermit P",
-    "resists": "n----n-r_-",
+    "resists": "n----n-r--",
     "skills": ["Strike Attack", "Kougaon", "Makougaon", "Megidola", "Megidolaon", "Concentrate", "Null Dizzy", "Null Shock", "Light Boost", "Light Amp", "Hama Boost"],
     "stats": [2397, 999, 39, 65, 43, 39, 45]
   },
@@ -2771,7 +2771,7 @@ const ENEMY_RAW = {
     "exp": 65933,
     "lvl": 69,
     "race": "Fortune P",
-    "resists": "---sSSsSS-",
+    "resists": "---ssssss-",
     "skills": ["Slash Attack", "Kouga", "Kougaon", "Makougaon", "Divine Judgment", "Bewilder", "Eerie Sound", "Tempest Slash", "Vorpal Blade", "Diarahan", "Null Dizzy", "Light Amp", "Distress Boost", "Ailment Boost"],
     "stats": [2000, 999, 41, 51, 43, 49, 70]
   },
@@ -2781,7 +2781,7 @@ const ENEMY_RAW = {
     "exp": 4652,
     "lvl": 28,
     "race": "Fortune P",
-    "resists": "---rwnnSS-",
+    "resists": "---rwnnss-",
     "skills": ["Slash Attack", "Agilao", "Maragion", "Pulinpa", "Power Slash", "Fatal End", "Vacuum Slash", "Neuro Slash", "Null Dizzy", "Slash Boost", "Fire Boost"],
     "stats": [924, 999, 17, 19, 20, 17, 20]
   },
@@ -2792,7 +2792,7 @@ const ENEMY_RAW = {
     "exp": 2175,
     "lvl": 64,
     "race": "Justice P",
-    "resists": "---nnnn__-",
+    "resists": "---nnnnnn-",
     "skills": ["Strike Attack", "Maragidyne", "Mabufudyne", "Magarudyne", "Maziodyne", "Makougaon", "Maeigaon", "Megidola", "Megidolaon", "Heat Riser", "Debilitate", "Concentrate", "Null Dizzy", "Freeze Boost", "Shock Boost", "Ailment Boost", "Almighty Boost", "Magic Mastery"],
     "stats": [3000, 999, 46, 60, 45, 43, 36]
   },
@@ -2847,7 +2847,7 @@ const ENEMY_RAW = {
     "exp": 3938,
     "lvl": 47,
     "race": "Justice",
-    "resists": "sss-wrr__-",
+    "resists": "sss-wrr---",
     "skills": ["Slash Attack", "Neuro Slash", "Ziodyne", "Garudyne", "Mazionga", "Magarula", "Matarunda", "Elec Boost", "Wind Boost"],
     "stats": [1111, 240, 40, 35, 99, 26, 29]
   },
@@ -2869,7 +2869,7 @@ const ENEMY_RAW = {
     "exp": 30873,
     "lvl": 49,
     "race": "Hierophant P",
-    "resists": "-w---dd__-",
+    "resists": "-w---ddnn-",
     "skills": ["Strike Attack", "Garudyne", "Magarula", "Ziodyne", "Mazionga", "Concentrate", "Null Dizzy", "Wind Boost", "Elec Boost"],
     "stats": [1838, 999, 30, 40, 35, 28, 31]
   },
@@ -2902,7 +2902,7 @@ const ENEMY_RAW = {
     "exp": 437,
     "lvl": 38,
     "race": "Hermit",
-    "resists": "---w--dzr-",
+    "resists": "---w--dwr-",
     "skills": ["Strike Attack", "Ghastly Wail", "Evil Touch", "Garula", "Fear Boost"],
     "stats": [382, 140, 19, 31, 23, 24, 24]
   },
@@ -2913,7 +2913,7 @@ const ENEMY_RAW = {
     "exp": 78,
     "lvl": 13,
     "race": "Hermit",
-    "resists": "---s---zn-",
+    "resists": "---s-n-wn-",
     "skills": ["Strike Attack", "Mudo", "Eiha"],
     "stats": [231, 30, 5, 16, 12, 9, 10]
   },
@@ -2935,7 +2935,7 @@ const ENEMY_RAW = {
     "exp": 176,
     "lvl": 22,
     "race": "Hermit",
-    "resists": "-----n-zn-",
+    "resists": "-----n-wn-",
     "skills": ["Strike Attack", "Mudo", "Eiga"],
     "stats": [278, 40, 7, 20, 18, 13, 15]
   },
@@ -2957,7 +2957,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 69,
     "race": "Magician P",
-    "resists": "---dwdd__-",
+    "resists": "---dwddnd-",
     "skills": ["Strike Attack", "Marin Karin", "Bewilder", "Eerie Sound", "Pulinpa", "Tentarafoo", "Diarama", "Sexy Dance", "Resist Dizzy", "Charm Boost", "Distress Boost", "Confuse Boost", "Ailment Boost", "Divine Grace"],
     "stats": [1800, 999, 30, 43, 45, 46, 52]
   },
@@ -3011,7 +3011,7 @@ const ENEMY_RAW = {
     "exp": 2011,
     "lvl": 19,
     "race": "Fool",
-    "resists": "--------z-",
+    "resists": "--------w-",
     "skills": ["Strike Attack"],
     "stats": [420, 60, 1, 1, 15, 99, 99]
   },
@@ -3045,7 +3045,7 @@ const ENEMY_RAW = {
     "exp": 28055,
     "lvl": 59,
     "race": "Fool",
-    "resists": "vvvvvvvvv-",
+    "resists": "----------",
     "skills": ["Strike Attack", "Megidola", "Bewilder"],
     "stats": [9072, 320, 1, 15, 2, 21, 8]
   },
@@ -3055,7 +3055,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 19,
     "race": "Strength P",
-    "resists": "-v----w__-",
+    "resists": "------wnn-",
     "skills": ["Strike Attack", "Bash", "Assault Dive", "Tarukaja", "Null Dizzy", "Strike Boost"],
     "stats": [450, 999, 26, 8, 18, 16, 3]
   },
@@ -3065,7 +3065,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 42,
     "race": "Magician P",
-    "resists": "-d---w-_r-",
+    "resists": "-d---w-nr-",
     "skills": ["Strike Attack", "Poisma", "Bewilder", "Eerie Sound", "Resist Dizzy", "Poison Boost", "Distress Boost"],
     "stats": [1550, 999, 21, 32, 27, 32, 33]
   },
@@ -3076,7 +3076,7 @@ const ENEMY_RAW = {
     "exp": 18588,
     "lvl": 42,
     "race": "Chariot P",
-    "resists": "n---__w__-",
+    "resists": "n---nnwnn-",
     "skills": ["Pierce Attack", "Heat Wave", "Vile Assault", "Tarukaja", "Rakukaja", "Sukukaja", "Charge", "Null Dizzy", "Pierce Boost"],
     "stats": [1550, 999, 40, 15, 88, 25, 23]
   },
@@ -3108,7 +3108,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 39,
     "race": "Fortune P",
-    "resists": "-w-ssss__-",
+    "resists": "-w-ssssnn-",
     "skills": ["Slash Attack", "Fatal End", "Neuro Slash", "Null Dizzy", "Slash Boost", "Fear Boost"],
     "stats": [1213, 999, 32, 20, 26, 29, 25]
   },
@@ -3172,7 +3172,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 58,
     "race": "Hermit P",
-    "resists": "w----s-_n-",
+    "resists": "w----s--n-",
     "skills": ["Strike Attack", "Agidyne", "Maragidyne", "Eigaon", "Maeigaon", "Matarukaja", "Marakunda", "Rebellion", "Fire Boost", "Dark Boost"],
     "stats": [1001, 999, 33, 43, 37, 36, 34]
   },
@@ -3216,7 +3216,7 @@ const ENEMY_RAW = {
     "exp": 4964,
     "lvl": 54,
     "race": "Priestess",
-    "resists": "-----dw_d-",
+    "resists": "-----dw-d-",
     "skills": ["Strike Attack", "Elec Break", "Deathbound", "Ziodyne", "Mazionga", "Elec Amp", "Elec Boost", "Shock Boost", "Ailment Boost"],
     "stats": [1339, 160, 28, 41, 38, 35, 31]
   },
@@ -3226,7 +3226,7 @@ const ENEMY_RAW = {
     "exp": 120,
     "lvl": 5,
     "race": "Hermit P",
-    "resists": "---ws-s__-",
+    "resists": "---ws-snn-",
     "skills": ["Slash Attack", "Bufu", "Mabufu", "Power Slash"],
     "stats": [218, 300, 4, 5, 5, 5, 3]
   },
@@ -3248,7 +3248,7 @@ const ENEMY_RAW = {
     "exp": 4403,
     "lvl": 51,
     "race": "Chariot",
-    "resists": "rn-s-w-__-",
+    "resists": "rn-s-w----",
     "skills": ["Pierce Attack", "Vile Assault", "Myriad Arrows", "Agidyne", "Maragion", "Dekaja", "Concentrate", "Fire Boost", "Fire Amp"],
     "stats": [1771, 300, 36, 54, 48, 30, 25]
   },
@@ -3259,7 +3259,7 @@ const ENEMY_RAW = {
     "exp": 65938,
     "lvl": 66,
     "race": "Fortune P",
-    "resists": "ddd----__-",
+    "resists": "ddd-------",
     "skills": ["Strike Attack", "Megidola", "Megidolaon", "Provoke", "Tempest Slash", "Infuriate", "Null Dizzy", "Rage Boost"],
     "stats": [1444, 999, 39, 51, 39, 39, 99]
   },
@@ -3269,7 +3269,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 52,
     "race": "Lovers P",
-    "resists": "---dw--__-",
+    "resists": "---dw--nn-",
     "skills": ["Strike Attack", "Agidyne", "Maragion", "Poisma", "Marin Karin", "Spirit Drain", "Tentarafoo", "Resist Dizzy", "Fire Boost", "Ailment Boost"],
     "stats": [951, 999, 25, 30, 33, 36, 39]
   },
@@ -3290,7 +3290,7 @@ const ENEMY_RAW = {
     "exp": 9049,
     "lvl": 81,
     "race": "Strength P",
-    "resists": "----__-__-",
+    "resists": "----------",
     "skills": ["Strike Attack", "Maragidyne", "Mabufudyne", "Magarudyne", "Maziodyne", "Makougaon", "Eigaon", "Maeigaon", "Megidolaon", "Virus Breath", "Akasha Arts", "Diarahan", "Heat Riser", "Marakunda", "Dekaja", "Dekunda", "Charge", "Concentrate", "Poison Mist", "Null Dizzy", "Regenerate 3", "Ailment Boost", "Sharp Student", "Apt Pupil", "Almighty Boost", "Magic Ability", "Magic Mastery"],
     "stats": [5000, 999, 80, 80, 65, 50, 50]
   },
@@ -3301,7 +3301,7 @@ const ENEMY_RAW = {
     "exp": 388,
     "lvl": 35,
     "race": "Priestess",
-    "resists": "-----d-nz-",
+    "resists": "-----d-nw-",
     "skills": ["Strike Attack", "Tarunda", "Rakunda", "Sukunda", "Zionga", "Mazionga"],
     "stats": [342, 80, 20, 24, 22, 23, 23]
   },
@@ -3356,7 +3356,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 69,
     "race": "Magician P",
-    "resists": "-n-ddwdd_-",
+    "resists": "-n-ddwddn-",
     "skills": ["Strike Attack", "God's Hand", "Resist Dizzy", "Strike Amp"],
     "stats": [1980, 999, 60, 28, 47, 43, 40]
   },
@@ -3400,7 +3400,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 28,
     "race": "Justice P",
-    "resists": "---wwdd__-",
+    "resists": "---wwddnn-",
     "skills": ["Strike Attack", "Garula", "Magaru", "Zionga", "Mazio", "Wind Break", "Elec Break", "Null Dizzy", "Wind Amp", "Elec Amp"],
     "stats": [815, 999, 10, 26, 21, 21, 15]
   },
@@ -3422,7 +3422,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 13,
     "race": "Hierophant P",
-    "resists": "-----z-wS-",
+    "resists": "-----w-ws-",
     "skills": ["Strike Attack", "Eiha", "Maeiha", "Single Shot", "Torrent Shot", "Pierce Boost", "Dark Boost"],
     "stats": [370, 999, 14, 12, 11, 9, 2]
   },
@@ -3455,7 +3455,7 @@ const ENEMY_RAW = {
     "exp": 1556,
     "lvl": 55,
     "race": "Emperor P",
-    "resists": "tt--tt-nz-",
+    "resists": "ss-ss--nw-",
     "skills": ["Pierce Attack", "Hamaon", "Mahamaon", "Kougaon", "Makougaon", "Matarukaja", "Null Dizzy", "Light Amp", "Hama Boost"],
     "stats": [9999, 999, 30, 60, 10, 35, 1]
   },
@@ -3586,7 +3586,7 @@ const ENEMY_RAW = {
     "exp": 281,
     "lvl": 14,
     "race": "Strength",
-    "resists": "-s---w-__-",
+    "resists": "-s---w----",
     "skills": ["Strike Attack", "Assault Dive", "Bash", "Swift Strike", "Revolution"],
     "stats": [870, 70, 14, 5, 12, 10, 17]
   },
@@ -3608,7 +3608,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 42,
     "race": "Magician P",
-    "resists": "--dw---r_-",
+    "resists": "--dw---rn-",
     "skills": ["Strike Attack", "Matarukaja", "Marakukaja", "Matarunda", "Marakunda", "Resist Dizzy"],
     "stats": [1550, 999, 21, 32, 27, 32, 33]
   },
@@ -3619,7 +3619,7 @@ const ENEMY_RAW = {
     "exp": 3831,
     "lvl": 27,
     "race": "Fool",
-    "resists": "--vnnnnnn-",
+    "resists": "---nnnnnn-",
     "skills": ["Strike Attack"],
     "stats": [500, 70, 1, 1, 20, 99, 99]
   },
@@ -3630,7 +3630,7 @@ const ENEMY_RAW = {
     "exp": 1260,
     "lvl": 9,
     "race": "Chariot P",
-    "resists": "ss---ws__-",
+    "resists": "ss---wsnn-",
     "skills": ["Strike Attack", "Assault Dive", "Magaru", "Tarukaja", "Garu", "Bash"],
     "stats": [422, 300, 12, 9, 10, 7, 4]
   },
@@ -3696,7 +3696,7 @@ const ENEMY_RAW = {
     "exp": 21460,
     "lvl": 43,
     "race": "Magician P",
-    "resists": "-n-----d_-",
+    "resists": "-n-----dn-",
     "skills": ["Slash Attack", "Hamaon", "Mahama", "Foul Breath", "Masukunda", "Null Dizzy", "Null Freeze", "Null Shock", "Hama Boost"],
     "stats": [1638, 999, 22, 25, 36, 30, 44]
   },
@@ -3729,7 +3729,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 31,
     "race": "Priestess P",
-    "resists": "---w-n-__-",
+    "resists": "---w-n----",
     "skills": ["Strike Attack", "Bufula", "Kouha", "Makouha", "Tarukaja", "Rakukaja", "Sukukaja", "Matarunda", "Marakunda", "Masukunda", "Resist Dizzy"],
     "stats": [696, 999, 10, 21, 19, 21, 12]
   },
@@ -3739,7 +3739,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 47,
     "race": "Priestess P",
-    "resists": "----d--_w-",
+    "resists": "----d---w-",
     "skills": ["Strike Attack", "Bufudyne", "Matarukaja", "Marakukaja", "Masukukaja"],
     "stats": [1225, 999, 22, 30, 31, 30, 29]
   },
@@ -3750,7 +3750,7 @@ const ENEMY_RAW = {
     "exp": 30,
     "lvl": 6,
     "race": "Hierophant",
-    "resists": "----sw-z--",
+    "resists": "----sw-w--",
     "skills": ["Strike Attack", "Bufu"],
     "stats": [110, 20, 7, 7, 5, 3, 3]
   },
@@ -3783,7 +3783,7 @@ const ENEMY_RAW = {
     "exp": 842,
     "lvl": 12,
     "race": "Fool",
-    "resists": "-------z--",
+    "resists": "-------w--",
     "skills": ["Strike Attack"],
     "stats": [336, 50, 1, 1, 10, 99, 99]
   },
@@ -3835,7 +3835,7 @@ const ENEMY_RAW = {
     "exp": 21000,
     "lvl": 35,
     "race": "Magician P",
-    "resists": "---n-wn__-",
+    "resists": "---n-wnnn-",
     "skills": ["Strike Attack", "Agidyne", "Maragion", "Poisma", "Poison Mist", "Null Dizzy", "Fire Boost", "Poison Boost", "Ailment Boost"],
     "stats": [1390, 999, 15, 30, 24, 22, 34]
   },
@@ -3868,7 +3868,7 @@ const ENEMY_RAW = {
     "exp": 885,
     "lvl": 42,
     "race": "Strength",
-    "resists": "nnnww-w-z-",
+    "resists": "nnnww-w-w-",
     "skills": ["Strike Attack", "Torrent Shot", "Tarukaja"],
     "stats": [420, 40, 29, 22, 26, 27, 26]
   },
@@ -3889,7 +3889,7 @@ const ENEMY_RAW = {
     "exp": 0,
     "lvl": 64,
     "race": "Strength P",
-    "resists": "-----rw__-",
+    "resists": "-----rw---",
     "skills": ["Slash Attack", "Ziodyne", "Maziodyne", "Getsu-ei", "Elec Break", "Resist Dizzy", "Elec Boost", "Shock Boost"],
     "stats": [1641, 999, 43, 43, 34, 43, 49]
   },
@@ -3922,7 +3922,7 @@ const ENEMY_RAW = {
     "exp": 2445,
     "lvl": 73,
     "race": "Chariot",
-    "resists": "--rs-w----",
+    "resists": "-r-s-w----",
     "skills": ["Pierce Attack", "Primal Force", "Poison Arrow", "Marakunda", "Charge", "Pierce Boost"],
     "stats": [1232, 150, 63, 31, 51, 45, 37]
   },
@@ -3944,7 +3944,7 @@ const ENEMY_RAW = {
     "exp": 80,
     "lvl": 12,
     "race": "Strength",
-    "resists": "--s----zz-",
+    "resists": "--s----ww-",
     "skills": ["Strike Attack", "Sonic Punch", "Bash", "Tarukaja"],
     "stats": [281, 40, 16, 6, 11, 10, 5]
   },
@@ -3966,7 +3966,7 @@ const ENEMY_RAW = {
     "exp": 1596,
     "lvl": 28,
     "race": "Chariot",
-    "resists": "ss--nw-__-",
+    "resists": "ss--nw----",
     "skills": ["Strike Attack", "Assault Dive", "Herculean Strike", "Bufula", "Mabufula", "Strike Boost", "Freeze Boost"],
     "stats": [1250, 160, 21, 19, 23, 17, 20]
   },
@@ -3976,7 +3976,7 @@ const ENEMY_RAW = {
     "exp": 1970,
     "lvl": 12,
     "race": "Hermit P",
-    "resists": "---dw-s__-",
+    "resists": "---dw-snn-",
     "skills": ["Slash Attack", "Agi", "Agilao", "Maragi", "Power Slash", "Sukukaja", "Resist Dizzy", "Slash Boost", "Fire Boost"],
     "stats": [677, 999, 11, 13, 10, 12, 6]
   },
@@ -4020,7 +4020,7 @@ const ENEMY_RAW = {
     "exp": 710,
     "lvl": 40,
     "race": "Priestess",
-    "resists": "--r-----z-",
+    "resists": "--r-----w-",
     "skills": ["Strike Attack", "Diarama", "Matarunda", "Marakunda", "Masukunda", "Kouga", "Makouga"],
     "stats": [458, 120, 23, 26, 22, 24, 23]
   }
