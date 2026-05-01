@@ -257,6 +257,16 @@ function validateRequests(context) {
     }
   });
 
+  const byNumber = Object.fromEntries(requests.map((request) => [request.number, request]));
+  assert(byNumber[7]?.prerequisite?.includes('Quest 2'), 'Request #7 should require the first Old Document request');
+  assert(byNumber[9]?.prerequisite?.includes('Quest 1'), 'Request #9 should unlock after Request #1');
+  assert(!byNumber[9]?.prerequisite?.includes('Quest 9'), 'Request #9 should not require itself');
+  assert(byNumber[11]?.prerequisite?.includes('Quest 9'), 'Request #11 should unlock after Request #9');
+  assert(
+    /look away from the burgers.+eat without stopping.+imagine something sour/i.test(byNumber[11]?.solution || ''),
+    'Request #11 should include the full Big Eater Challenge answer sequence'
+  );
+
   console.log(`Validated ${requests.length} Elizabeth requests.`);
 }
 

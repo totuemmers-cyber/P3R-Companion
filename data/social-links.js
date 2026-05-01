@@ -43,7 +43,7 @@ const SOCIAL_LINKS = {
     automatic: true,
     availableDays: [],
     timeSlot: null,
-    unlockDate: {month:4,day:7},
+    unlockDate: {month:4,day:18},
     endDate: null,
     location: "Iwatodai Dorm",
     statRequirements: {},

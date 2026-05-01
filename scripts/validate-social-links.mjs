@@ -72,7 +72,7 @@ assertDate('Justice unlock date', justice.unlockDate, 4, 27);
 assert(Object.keys(justice.statRequirements || {}).length === 0, 'Justice should not have a stat gate');
 
 const aeon = getDefinition('Aeon');
-assert(JSON.stringify(aeon.availableDays) === JSON.stringify([5]), 'Aeon should only be available on Friday');
+assert(JSON.stringify(aeon.availableDays) === JSON.stringify([1, 2, 3, 4, 5, 6]), 'Aeon should be available Monday through Saturday');
 
 const expectedManualDayCounts = {
   Magician: 3,
@@ -93,7 +93,7 @@ const expectedManualDayCounts = {
   Star: 3,
   Moon: 7,
   Sun: 1,
-  Aeon: 1
+  Aeon: 6
 };
 
 for (const [arcana, expectedCount] of Object.entries(expectedManualDayCounts)) {

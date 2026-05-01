@@ -154,7 +154,7 @@ const SOCIAL_LINK_RULE_OVERRIDES = {
     setupLabel: 'Akinari needs the Red Fountain Pen after Koromaru joins the dorm.'
   },
   Aeon: {
-    availableDays: [5],
+    availableDays: [1, 2, 3, 4, 5, 6],
     schoolLink: true
   }
 };
