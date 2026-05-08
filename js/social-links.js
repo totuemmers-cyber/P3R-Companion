@@ -387,10 +387,10 @@ function slRenderGuideOption(option) {
   }
   const pointsHtml = isBranchOnly ? '' : `<span class="sl-pts">+${option.points}</span>`;
   const branchHtml = option.branchTag
-    ? `<span class="sl-answer-branch-badge">${option.branchLabel || 'Route split'}</span>`
+    ? `<span class="sl-answer-branch-badge">${escapeHtml(option.branchLabel || 'Route split')}</span>`
     : '';
-  const noteHtml = option.branchNote ? `<span class="sl-answer-branch-note">${option.branchNote}</span>` : '';
-  return `<div class="${optionClass}">${pointsHtml}<span class="sl-answer-text">${option.text}</span>${branchHtml}${noteHtml}</div>`;
+  const noteHtml = option.branchNote ? `<span class="sl-answer-branch-note">${escapeHtml(option.branchNote)}</span>` : '';
+  return `<div class="${optionClass}">${pointsHtml}<span class="sl-answer-text">${escapeHtml(option.text)}</span>${branchHtml}${noteHtml}</div>`;
 }
 
 function slGetStatBottlenecks() {
@@ -1780,22 +1780,22 @@ function slRenderMyLinks() {
     if (!link.automatic && link.ranks.some((entry) => (entry.answers && entry.answers.length) || entry.note)) {
       const sourceLine = slRenderGuideSource(link);
       const summaryLine = model.guideSummaryBits.length
-        ? `<div class="sl-guide-summary">${model.guideSummaryBits.join(' | ')}</div>`
+        ? `<div class="sl-guide-summary">${model.guideSummaryBits.map((bit) => escapeHtml(bit)).join(' | ')}</div>`
         : '';
-      answerHtml = `<button class="sl-expand-btn" data-arcana="${arcana}"><span class="sl-expand-arrow">&#9654;</span> Answer Guide</button>${summaryLine}<div class="sl-answer-guide"><div class="sl-persona-reminder">Carry a ${arcana} Persona for +1 bonus points per answer</div>${sourceLine}`;
+      answerHtml = `<button class="sl-expand-btn" data-arcana="${escapeHtml(arcana)}"><span class="sl-expand-arrow">&#9654;</span> Answer Guide</button>${summaryLine}<div class="sl-answer-guide"><div class="sl-persona-reminder">Carry a ${escapeHtml(arcana)} Persona for +1 bonus points per answer</div>${sourceLine}`;
       link.ranks.forEach((entry) => {
         if (!entry.answers || !entry.answers.length) {
           if (entry.note) {
-            answerHtml += `<div class="sl-answer-rank"><div class="sl-answer-rank-header">Rank ${entry.rank}</div><div class="sl-answer-note">${entry.note}</div></div>`;
+            answerHtml += `<div class="sl-answer-rank"><div class="sl-answer-rank-header">Rank ${entry.rank}</div><div class="sl-answer-note">${escapeHtml(entry.note)}</div></div>`;
           }
           return;
         }
         answerHtml += `<div class="sl-answer-rank${entry.rank === rank + 1 ? ' highlight' : ''}"><div class="sl-answer-rank-header">Rank ${entry.rank}${entry.rank === rank + 1 ? ' <span class="sl-next-badge">Next</span>' : ''}</div>`;
         if (entry.note) {
-          answerHtml += `<div class="sl-answer-note">${entry.note}</div>`;
+          answerHtml += `<div class="sl-answer-note">${escapeHtml(entry.note)}</div>`;
         }
         entry.answers.forEach((answer) => {
-          answerHtml += `<div class="sl-answer-prompt">${answer.prompt}</div><div class="sl-answer-options">`;
+          answerHtml += `<div class="sl-answer-prompt">${escapeHtml(answer.prompt)}</div><div class="sl-answer-options">`;
           answer.options
             .slice()
             .sort((left, right) => right.points - left.points)
@@ -1815,7 +1815,7 @@ function slRenderMyLinks() {
       checklistHtml = `<details class="sl-checklist"><summary>Prerequisites / unlock checklist</summary><div class="sl-checklist-body">${checklistItems
         .map(
           (entry) =>
-            `<div class="sl-checklist-item${entry.met ? ' met' : ''}"><span class="sl-checklist-state">${entry.met ? 'Met' : 'Open'}</span><span>${entry.label}</span></div>`
+            `<div class="sl-checklist-item${entry.met ? ' met' : ''}"><span class="sl-checklist-state">${entry.met ? 'Met' : 'Open'}</span><span>${escapeHtml(entry.label)}</span></div>`
         )
         .join('')}</div></details>`;
     }

@@ -207,9 +207,14 @@ function validateEnemies(context) {
 
   for (const [name, enemy] of Object.entries(ENEMY_RAW)) {
     assert(typeof enemy.area === 'string' && enemy.area.length > 0, `${name} has no area`);
+    assert(!/\bUnknown\b/i.test(enemy.area), `${name} has unresolved area text: ${enemy.area}`);
     assert(Number.isInteger(enemy.lvl) && enemy.lvl >= 1 && enemy.lvl <= 99, `${name} has invalid level`);
     assert(Number.isInteger(enemy.exp) && enemy.exp >= 0, `${name} has invalid EXP`);
     assert(typeof enemy.race === 'string' && enemy.race.length > 0, `${name} has no race`);
+    assert(!/\bUnknown\b/i.test(enemy.race), `${name} has unresolved arcana text: ${enemy.race}`);
+    if (/floor unverified/i.test(enemy.area)) {
+      assert(typeof enemy.sourceNote === 'string' && enemy.sourceNote.length > 0, `${name} has unverified floor data without a source note`);
+    }
     assert(typeof enemy.resists === 'string' && enemy.resists.length === 10, `${name} has invalid resist string`);
     if (enemy.ailments !== undefined) {
       assert(typeof enemy.ailments === 'string' && /^[nsv-]{6}$/.test(enemy.ailments), `${name} has invalid ailment string`);
@@ -1057,6 +1062,24 @@ function validateStoreRoundtrip(context) {
   }
   assert(rejected, 'Store import should reject invalid payloads');
 
+  const failingStorageStore = context.createStore({
+    validPersonaNames: new Set(Object.keys(PERSONAS)),
+    arcanaOrder: ARCANA_LIST,
+    createDefaultSocialLinksState,
+    createDefaultProfileState,
+    localStorageRef: {
+      getItem() {
+        throw new Error('storage disabled');
+      },
+      setItem() {
+        throw new Error('quota exceeded');
+      }
+    }
+  });
+  assert(failingStorageStore.getState().profile.playerLevel === 1, 'Store should still initialize when localStorage reads fail');
+  failingStorageStore.dispatch({ type: 'ROSTER_ADD', payload: 'Orpheus' });
+  assert(Boolean(failingStorageStore.getLastPersistError()), 'Store should retain the last localStorage write failure');
+
   console.log('Validated store defaults, sanitization, and save import/export.');
 }
 
@@ -1121,6 +1144,7 @@ function validateBrowserEntrypoints() {
     'js/social-link-rules.js',
     'js/linked-episode-advisor.js',
     'js/social-link-advisor.js',
+    'js/fusion-engine.js',
     'js/planner.js',
     'js/requests.js',
     'js/tartarus.js',
@@ -1134,6 +1158,7 @@ function validateBrowserEntrypoints() {
     'mountRunStatePanel',
     'getSocialLinkDefinition',
     'getSocialLinkAvailability',
+    'createFusionEngine',
     'initPlanner',
     'initRequests',
     'initTartarus',
@@ -1162,6 +1187,7 @@ runSocialLinkValidator();
 
 const dataContext = loadDataContext();
 runScript(dataContext, 'js/store.js');
+runScript(dataContext, 'js/fusion-engine.js');
 
 validateEncoding();
 validatePersonas(dataContext);

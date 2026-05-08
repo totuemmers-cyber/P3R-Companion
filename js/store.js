@@ -201,7 +201,12 @@ function sanitizeState(rawState, options) {
 }
 
 function readJson(localStorageRef, key) {
-  const raw = localStorageRef.getItem(key);
+  let raw;
+  try {
+    raw = localStorageRef.getItem(key);
+  } catch (error) {
+    return null;
+  }
   if (!raw) {
     return null;
   }
@@ -269,6 +274,7 @@ function createStore(options) {
 
   let state = readPersistedState(localStorageRef, options);
   let lastPersistedState = null;
+  let lastPersistError = null;
 
   function emit(snapshot = getState()) {
     listeners.forEach((listener) => listener(snapshot));
@@ -279,8 +285,13 @@ function createStore(options) {
     if (serialized === lastPersistedState) {
       return;
     }
-    localStorageRef.setItem(STORE_KEY, serialized);
-    lastPersistedState = serialized;
+    try {
+      localStorageRef.setItem(STORE_KEY, serialized);
+      lastPersistedState = serialized;
+      lastPersistError = null;
+    } catch (error) {
+      lastPersistError = error;
+    }
   }
 
   function getState() {
@@ -569,7 +580,10 @@ function createStore(options) {
     loadFromStorage,
     saveToStorage,
     exportSave,
-    importSave
+    importSave,
+    getLastPersistError() {
+      return lastPersistError;
+    }
   };
 }
 

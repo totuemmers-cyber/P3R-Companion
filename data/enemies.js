@@ -1205,11 +1205,12 @@ const ENEMY_RAW = {
   },
   "Feral Beast": {
     "ailments": "nn-nnv",
-    "area": "Unknown",
+    "area": "Supplemental encounter (floor unverified)",
     "dodds": {"Wicked Fur": 100},
     "exp": 0,
     "lvl": 63,
     "race": "Strength P",
+    "sourceNote": "Supplemental enemy record; floor listing is not available in the current Tartarus source tables.",
     "resists": "s-----s-n-",
     "skills": ["Strike Attack", "Assault Dive", "Gigantic Fist", "Herculean Strike", "Heat Wave", "Null Dizzy", "Strike Boost"],
     "stats": [1596, 999, 55, 30, 39, 42, 28]
@@ -1270,11 +1271,12 @@ const ENEMY_RAW = {
   },
   "Flowing Sand B": {
     "ailments": "ns-nns",
-    "area": "Unknown",
+    "area": "Supplemental encounter (floor unverified)",
     "dodds": {"Red Sand": 30},
     "exp": 503,
     "lvl": 21,
     "race": "Fortune P",
+    "sourceNote": "Supplemental enemy record; floor listing is not available in the current Tartarus source tables.",
     "resists": "-w--ss-S_-",
     "skills": ["Slash Attack", "Garula", "Magaru", "Power Slash", "Vacuum Slash", "Sukukaja", "Neuro Slash", "Wind Boost", "Confuse Boost"],
     "stats": [820, 999, 18, 12, 14, 15, 13]
@@ -1523,11 +1525,12 @@ const ENEMY_RAW = {
   },
   "Haughty Belle": {
     "ailments": "nnnnnn",
-    "area": "Unknown",
+    "area": "Supplemental encounter (floor unverified)",
     "dodds": {"Saint's Stool": 100},
     "exp": 0,
     "lvl": 64,
     "race": "Priestess P",
+    "sourceNote": "Supplemental enemy record; floor listing is not available in the current Tartarus source tables.",
     "resists": "---w-n-n_-",
     "skills": ["Strike Attack", "Ziodyne", "Maziodyne", "Kougaon", "Makougaon", "Eerie Sound", "Tentarafoo", "Provoke", "Heat Riser", "Marakunda", "Null Dizzy", "Distress Boost", "Confuse Boost", "Rage Boost", "Ailment Boost"],
     "stats": [1736, 999, 31, 54, 45, 38, 47]
@@ -1885,11 +1888,12 @@ const ENEMY_RAW = {
   },
   "Jealous Cupid B": {
     "ailments": "vn-nnn",
-    "area": "Unknown",
+    "area": "Supplemental encounter (floor unverified)",
     "dodds": {"Arrowhead of Envy": 100},
     "exp": 0,
     "lvl": 23,
     "race": "Lovers P",
+    "sourceNote": "Supplemental enemy record; floor listing is not available in the current Tartarus source tables.",
     "resists": "---r-sw__-",
     "skills": ["Pierce Attack", "Agilao", "Media", "Resist Dizzy"],
     "stats": [283, 999, 12, 21, 20, 20, 12]
@@ -2309,11 +2313,12 @@ const ENEMY_RAW = {
   },
   "Magical Magus B": {
     "ailments": "nnnnnn",
-    "area": "Unknown",
+    "area": "Supplemental encounter (floor unverified)",
     "dodds": {"Cap of Wizardry": 100},
     "exp": 0,
     "lvl": 25,
     "race": "Priestess P",
+    "sourceNote": "Supplemental enemy record; floor listing is not available in the current Tartarus source tables.",
     "resists": "sssw---__-",
     "skills": ["Strike Attack", "Agilao", "Maragi", "Bufula", "Mabufu", "Garula", "Magaru", "Zionga", "Mazio", "Null Dizzy", "Fire Amp", "Ice Amp", "Wind Amp", "Elec Amp"],
     "stats": [1080, 999, 12, 32, 24, 23, 10]
@@ -3158,10 +3163,11 @@ const ENEMY_RAW = {
   },
   "Regal Mother B": {
     "ailments": "nnnnnn",
-    "area": "Unknown",
+    "area": "Supplemental encounter (floor unverified)",
     "exp": 0,
     "lvl": 40,
     "race": "Empress P",
+    "sourceNote": "Supplemental enemy record; floor listing is not available in the current Tartarus source tables.",
     "resists": "---n-wnwn-",
     "skills": ["Strike Attack", "Agidyne", "Diarama", "Tarukaja", "Rakukaja", "Sukukaja", "Marakunda", "Fire Boost"],
     "stats": [766, 999, 23, 33, 28, 28, 24]
@@ -3658,11 +3664,11 @@ const ENEMY_RAW = {
   },
   "Tank-Form Shadow": {
     "ailments": "nnnnnn",
-    "area": "Yabbashah I Full Moon",
+    "area": "Underground Bunker Full Moon",
     "boss": true,
     "exp": 0,
     "lvl": 34,
-    "race": "Unknown B",
+    "race": "Chariot/Justice B",
     "resists": "ttttTTtTT-",
     "skills": ["Pierce Attack", "Separate", "Armor-Piercing Shell", "High-Explosive Shell", "Null Dizzy", "Null Freeze", "Null Shock"],
     "stats": [3000, 999, 40, 30, 70, 25, 35]
@@ -3702,11 +3708,12 @@ const ENEMY_RAW = {
   },
   "Terror Dice": {
     "ailments": "nnn-ns",
-    "area": "Unknown",
+    "area": "Supplemental encounter (floor unverified)",
     "dodds": {"Ring of Anxiety": 30},
     "exp": 503,
     "lvl": 22,
     "race": "Fortune P",
+    "sourceNote": "Supplemental enemy record; floor listing is not available in the current Tartarus source tables.",
     "resists": "-n-----wn-",
     "skills": ["Strike Attack", "Eiga", "Maeiga", "Evil Touch", "Fatal End", "Evil Smile", "Dark Boost", "Fear Boost"],
     "stats": [812, 999, 15, 20, 17, 13, 15]
@@ -3767,11 +3774,12 @@ const ENEMY_RAW = {
   },
   "Tranquil Idol B": {
     "ailments": "n--nn-",
-    "area": "Unknown",
+    "area": "Supplemental encounter (floor unverified)",
     "dodds": {"Throne of Serenity": 30},
     "exp": 503,
     "lvl": 20,
     "race": "Priestess P",
+    "sourceNote": "Supplemental enemy record; floor listing is not available in the current Tartarus source tables.",
     "resists": "---nw--__-",
     "skills": ["Strike Attack", "Agilao", "Agidyne", "Assault Dive", "Swift Strike", "Tarukaja", "Fire Boost", "Fire Amp"],
     "stats": [715, 999, 14, 20, 16, 14, 11]
@@ -3788,10 +3796,11 @@ const ENEMY_RAW = {
     "stats": [336, 50, 1, 1, 10, 99, 99]
   },
   "Ultimate Gigas": {
-    "area": "Unknown",
+    "area": "Supplemental encounter (floor unverified)",
     "exp": 0,
     "lvl": 40,
     "race": "Strength P",
+    "sourceNote": "Supplemental enemy record; floor listing is not available in the current Tartarus source tables.",
     "resists": "----------",
     "skills": ["Strike Attack"],
     "stats": [800, 999, 65, 43, 45, 40, 31]
@@ -3928,11 +3937,12 @@ const ENEMY_RAW = {
   },
   "Wicked Turret B": {
     "ailments": "nnnnnn",
-    "area": "Unknown",
+    "area": "Supplemental encounter (floor unverified)",
     "dodds": {"Ominous Turret": 100},
     "exp": 0,
     "lvl": 25,
     "race": "Chariot P",
+    "sourceNote": "Supplemental enemy record; floor listing is not available in the current Tartarus source tables.",
     "resists": "-nn--w-__-",
     "skills": ["Pierce Attack", "Torrent Shot", "Vile Assault", "Revolution", "Charge", "Null Dizzy"],
     "stats": [1215, 999, 30, 15, 25, 22, 13]

@@ -19,7 +19,12 @@ const contentTypes = {
 };
 
 function resolvePath(urlPath) {
-  const sanitized = decodeURIComponent(urlPath.split('?')[0]).replace(/^\/+/, '');
+  let sanitized;
+  try {
+    sanitized = decodeURIComponent(urlPath.split('?')[0]).replace(/^\/+/, '');
+  } catch (error) {
+    return null;
+  }
   const relative = sanitized || 'index.html';
   const absolute = normalize(join(rootDir, relative));
   if (!absolute.startsWith(rootDir)) {
@@ -33,6 +38,12 @@ function resolvePath(urlPath) {
 }
 
 createServer((request, response) => {
+  if (!['GET', 'HEAD'].includes(request.method || 'GET')) {
+    response.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+    response.end('Method not allowed');
+    return;
+  }
+
   const filePath = resolvePath(request.url || '/');
   if (!filePath) {
     response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -44,7 +55,18 @@ createServer((request, response) => {
     'Content-Type': contentTypes[extname(filePath).toLowerCase()] || 'application/octet-stream',
     'Cache-Control': 'no-cache'
   });
-  createReadStream(filePath).pipe(response);
+  if (request.method === 'HEAD') {
+    response.end();
+    return;
+  }
+  createReadStream(filePath)
+    .on('error', () => {
+      if (!response.headersSent) {
+        response.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+      }
+      response.end('Server error');
+    })
+    .pipe(response);
 }).listen(port, host, () => {
   console.log(`P3R Companion available at http://${host}:${port}`);
 });

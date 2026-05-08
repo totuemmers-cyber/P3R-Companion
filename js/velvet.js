@@ -4,8 +4,6 @@ const V_RESIST_LABELS = { w: 'WK', s: 'RS', n: 'NU', r: 'RP', d: 'AB', '-': '—
 const RESIST_CLASS = { w: 'resist-w', s: 'resist-s', n: 'resist-n', r: 'resist-r', d: 'resist-d', '-': 'resist-x' };
 const STAT_NAMES = ['St', 'Ma', 'En', 'Ag', 'Lu'];
 const STAT_COLORS = ['#ff5722', '#7c4dff', '#2196f3', '#4caf50', '#ffc107'];
-const MAX_PLANNER_DEPTH = 6;
-const MAX_PLANNER_RECIPES = 12;
 const ELEM_NAMES = {
   fir: 'Fire',
   ice: 'Ice',
@@ -29,29 +27,14 @@ const MAX_SOON_OPPORTUNITIES = 5;
 const SOON_LEVEL_WINDOW = 5;
 
 const FUSION_UNLOCK_DATA = typeof FUSION_UNLOCKS !== 'undefined' ? FUSION_UNLOCKS : { dlcPersonas: [], gatedPersonas: {} };
-const DLC_PERSONAS = new Set(FUSION_UNLOCK_DATA.dlcPersonas || []);
 const GATED_PERSONAS = FUSION_UNLOCK_DATA.gatedPersonas || {};
-const specialPersonas = new Set(Object.keys(SPECIAL_RECIPES));
 const personaList = Object.entries(PERSONAS)
   .map(([name, data]) => ({ name, ...data }))
   .sort((a, b) => a.lvl - b.lvl);
-const resultsByArcana = {};
-const ingredientsByArcana = {};
-personaList.forEach((persona) => {
-  if (!ingredientsByArcana[persona.race]) {
-    ingredientsByArcana[persona.race] = [];
-  }
-  ingredientsByArcana[persona.race].push(persona);
-  if (!specialPersonas.has(persona.name)) {
-    if (!resultsByArcana[persona.race]) {
-      resultsByArcana[persona.race] = [];
-    }
-    resultsByArcana[persona.race].push(persona);
-  }
-});
 
 let velvetRoot;
 let velvetStore;
+let fusionEngine;
 let initialized = false;
 let storeRenderQueued = false;
 let fuseAName = null;
@@ -67,7 +50,6 @@ let selectedPersona = null;
 let cachedCoverage = null;
 let cachedDefense = null;
 let plannerTargetName = null;
-const reverseLookupCache = new Map();
 
 function escapeHtml(value) {
   return String(value)
@@ -93,79 +75,39 @@ function getFusionSettings() {
   return velvetStore?.getState()?.fusionSettings || { dlcEnabled: true, manualUnlocks: {} };
 }
 
-function isPersonaUnlocked(name) {
-  if (!PERSONAS[name]) {
-    return false;
-  }
-  if (getRosterSet().has(name)) {
-    return true;
-  }
-  const state = velvetStore?.getState();
-  const settings = state?.fusionSettings || { dlcEnabled: true, manualUnlocks: {} };
-  if (DLC_PERSONAS.has(name) && !settings.dlcEnabled) {
-    return false;
-  }
-  const gate = GATED_PERSONAS[name];
-  if (!gate) {
-    return true;
-  }
-  if (gate.type === 'social') {
-    return (state?.socialLinks?.ranks?.[gate.arcana] || 0) >= 10;
-  }
-  if (gate.type === 'socialAll') {
-    return ARCANA_LIST.every((arcana) => {
-      const link = SOCIAL_LINKS[arcana];
-      return !link || link.automatic || (state?.socialLinks?.ranks?.[arcana] || 0) >= 10;
+function getFusionEngine() {
+  if (!fusionEngine) {
+    fusionEngine = createFusionEngine({
+      personas: PERSONAS,
+      specialRecipes: SPECIAL_RECIPES,
+      arcanaChart: ARCANA_CHART,
+      arcanaList: ARCANA_LIST,
+      socialLinks: SOCIAL_LINKS,
+      fusionUnlocks: FUSION_UNLOCK_DATA,
+      getState: () => velvetStore?.getState() || {}
     });
   }
-  if (gate.type === 'objective') {
-    return Boolean(state?.objectives?.[gate.id]);
-  }
-  if (gate.type === 'linkedEpisode') {
-    return Boolean(state?.linkedEpisodes?.completed?.[gate.id] || settings.manualUnlocks?.[gate.legacyKey]);
-  }
-  if (gate.type === 'manual') {
-    return Boolean(settings.manualUnlocks?.[gate.key]);
-  }
-  return true;
+  return fusionEngine;
+}
+
+function isPersonaUnlocked(name) {
+  return getFusionEngine().isPersonaUnlocked(name);
 }
 
 function getPersonaUnlockLabel(name) {
-  if (DLC_PERSONAS.has(name) && !getFusionSettings().dlcEnabled) {
-    return 'Enable DLC Personas in Fusion Settings';
-  }
-  return GATED_PERSONAS[name]?.label || '';
+  return getFusionEngine().getPersonaUnlockLabel(name);
 }
 
-function getFusionAvailabilitySignature() {
-  const state = velvetStore?.getState();
-  const settings = state?.fusionSettings || { dlcEnabled: true, manualUnlocks: {} };
-  const manual = Object.entries(settings.manualUnlocks || {})
-    .filter(([, value]) => value)
-    .map(([key]) => key)
-    .sort()
-    .join(',');
-  const ranks = Object.entries(state?.socialLinks?.ranks || {})
-    .filter(([, rank]) => rank >= 10)
-    .map(([arcana]) => arcana)
-    .sort()
-    .join(',');
-  const objectives = Object.entries(state?.objectives || {})
-    .filter(([, complete]) => complete)
-    .map(([id]) => id)
-    .sort()
-    .join(',');
-  const linkedEpisodes = Object.entries(state?.linkedEpisodes?.completed || {})
-    .filter(([, complete]) => complete)
-    .map(([id]) => id)
-    .sort()
-    .join(',');
-  const roster = (state?.roster || []).filter((name) => PERSONAS[name]).sort().join(',');
-  return `${settings.dlcEnabled ? 'dlc' : 'base'}|${manual}|${ranks}|${objectives}|${linkedEpisodes}|${roster}`;
+function fuseDyad(p1, p2) {
+  return getFusionEngine().fuseDyad(p1, p2);
 }
 
-function getAvailableResultsByArcana(arcana) {
-  return (resultsByArcana[arcana] || []).filter((persona) => isPersonaUnlocked(persona.name));
+function reverseLookup(targetName) {
+  return getFusionEngine().reverseLookup(targetName);
+}
+
+function buildFusionPlanner(targetName) {
+  return getFusionEngine().buildFusionPlanner(targetName, getCurrentPlayerLevel());
 }
 
 function getActiveSocialLinks() {
@@ -180,395 +122,6 @@ function getActiveSocialLinks() {
       rank,
       character: SOCIAL_LINKS[arcana].character
     }));
-}
-
-function uniqueValues(values) {
-  return [...new Set(values.filter(Boolean))];
-}
-
-function getResultArcana(a1, a2) {
-  if (a1 === a2) {
-    return a1;
-  }
-  return (ARCANA_CHART[a1] && ARCANA_CHART[a1][a2]) || null;
-}
-
-function checkSpecialRecipe(names) {
-  const nameSet = new Set(names);
-  for (const [result, ingredients] of Object.entries(SPECIAL_RECIPES)) {
-    if (ingredients.length === names.length && ingredients.every((ingredient) => nameSet.has(ingredient))) {
-      return result;
-    }
-  }
-  return null;
-}
-
-function fuseSameArcana(p1, p2) {
-  const candidates = getAvailableResultsByArcana(p1.race).filter(
-    (candidate) => candidate.name !== p1.name && candidate.name !== p2.name
-  );
-  if (!candidates.length) {
-    return null;
-  }
-  const sumLvl = p1.lvl + p2.lvl;
-  let index = -1;
-  for (let cursor = candidates.length - 1; cursor >= 0; cursor -= 1) {
-    if (sumLvl + 2 >= 2 * candidates[cursor].lvl) {
-      index = cursor;
-      break;
-    }
-  }
-  if (index < 0) {
-    return null;
-  }
-  if (candidates[index].lvl === p2.lvl) {
-    index -= 1;
-  }
-  return index >= 0 ? candidates[index] : null;
-}
-
-function selectClosestFusionResult(resultArcana, targetLevel, p1, p2) {
-  return getAvailableResultsByArcana(resultArcana)
-    .filter((candidate) => candidate.name !== p1.name && candidate.name !== p2.name)
-    .sort(
-      (left, right) =>
-        Math.abs(left.lvl - targetLevel) - Math.abs(right.lvl - targetLevel) ||
-        left.lvl - right.lvl ||
-        left.name.localeCompare(right.name)
-    )[0] || null;
-}
-
-function fuseDyad(p1, p2) {
-  const special = checkSpecialRecipe([p1.name, p2.name]);
-  if (special) {
-    return isPersonaUnlocked(special) ? { name: special, ...PERSONAS[special], special: true } : null;
-  }
-  if (p1.race === p2.race) {
-    return fuseSameArcana(p1, p2);
-  }
-  const resultArcana = getResultArcana(p1.race, p2.race);
-  if (!resultArcana) {
-    return null;
-  }
-  const targetLevel = Math.ceil((p1.lvl + p2.lvl) / 2);
-  return selectClosestFusionResult(resultArcana, targetLevel, p1, p2);
-}
-
-function reverseLookup(targetName) {
-  const cacheKey = `${targetName}|${getFusionAvailabilitySignature()}`;
-  if (reverseLookupCache.has(cacheKey)) {
-    return reverseLookupCache.get(cacheKey);
-  }
-  const target = PERSONAS[targetName];
-  if (!target || !isPersonaUnlocked(targetName)) {
-    return [];
-  }
-  if (SPECIAL_RECIPES[targetName]) {
-    const specialResults = [{ type: 'special', ingredients: SPECIAL_RECIPES[targetName] }];
-    reverseLookupCache.set(cacheKey, specialResults);
-    return specialResults;
-  }
-  const results = [];
-  const seen = new Set();
-  for (let i = 0; i < ARCANA_LIST.length; i += 1) {
-    for (let j = i; j < ARCANA_LIST.length; j += 1) {
-      const a1 = ARCANA_LIST[i];
-      const a2 = ARCANA_LIST[j];
-      const resultArcana = a1 === a2 ? a1 : getResultArcana(a1, a2);
-      if (resultArcana !== target.race) {
-        continue;
-      }
-      const list1 = (ingredientsByArcana[a1] || []).filter((persona) => isPersonaUnlocked(persona.name));
-      const list2 = a1 === a2 ? list1 : (ingredientsByArcana[a2] || []).filter((persona) => isPersonaUnlocked(persona.name));
-      for (const p1 of list1) {
-        for (const p2 of list2) {
-          if (p1.name === p2.name) {
-            continue;
-          }
-          if (a1 === a2 && p1.lvl >= p2.lvl) {
-            continue;
-          }
-          const result = fuseDyad(p1, p2);
-          if (result && result.name === targetName) {
-            const key = `${p1.name}|${p2.name}`;
-            if (!seen.has(key)) {
-              seen.add(key);
-              results.push({ type: 'normal', p1: p1.name, p2: p2.name });
-            }
-          }
-        }
-      }
-    }
-  }
-  reverseLookupCache.set(cacheKey, results);
-  return results;
-}
-
-function compareSolvablePlans(left, right) {
-  if (left.directOwnedCount !== right.directOwnedCount) {
-    return right.directOwnedCount - left.directOwnedCount;
-  }
-  if (left.stepCount !== right.stepCount) {
-    return left.stepCount - right.stepCount;
-  }
-  if (left.missing.length !== right.missing.length) {
-    return left.missing.length - right.missing.length;
-  }
-  if (left.maxDepth !== right.maxDepth) {
-    return left.maxDepth - right.maxDepth;
-  }
-  if (left.ingredientLevelSum !== right.ingredientLevelSum) {
-    return left.ingredientLevelSum - right.ingredientLevelSum;
-  }
-  return left.recipeKey.localeCompare(right.recipeKey);
-}
-
-function compareBlockedPlans(left, right) {
-  if (left.directOwnedCount !== right.directOwnedCount) {
-    return right.directOwnedCount - left.directOwnedCount;
-  }
-  if (left.blockers.length !== right.blockers.length) {
-    return left.blockers.length - right.blockers.length;
-  }
-  if (left.ingredientLevelSum !== right.ingredientLevelSum) {
-    return left.ingredientLevelSum - right.ingredientLevelSum;
-  }
-  return left.recipeKey.localeCompare(right.recipeKey);
-}
-
-function getRecipeCandidates(targetName, roster) {
-  const recipes = reverseLookup(targetName).map((entry) => {
-    if (entry.type === 'special') {
-      return {
-        type: 'special',
-        ingredients: [...entry.ingredients]
-      };
-    }
-    return {
-      type: 'fuse',
-      ingredients: [entry.p1, entry.p2]
-    };
-  });
-  return recipes
-    .map((recipe) => ({
-      ...recipe,
-      directOwnedCount: recipe.ingredients.filter((ingredient) => roster.has(ingredient)).length,
-      ingredientLevelSum: recipe.ingredients.reduce(
-        (sum, ingredient) => sum + (PERSONAS[ingredient]?.lvl || 99),
-        0
-      )
-    }))
-    .sort((left, right) => {
-      if (left.directOwnedCount !== right.directOwnedCount) {
-        return right.directOwnedCount - left.directOwnedCount;
-      }
-      if (left.ingredientLevelSum !== right.ingredientLevelSum) {
-        return left.ingredientLevelSum - right.ingredientLevelSum;
-      }
-      return left.ingredients.join('|').localeCompare(right.ingredients.join('|'));
-    })
-    .slice(0, MAX_PLANNER_RECIPES);
-}
-
-function buildPlanNode(targetName, roster, memo, depth = 0, trail = new Set()) {
-  if (!PERSONAS[targetName]) {
-    return {
-      status: 'blocked',
-      name: targetName,
-      blockers: [targetName],
-      hintIngredients: [],
-      directOwnedCount: 0,
-      ingredientLevelSum: 999,
-      recipeKey: targetName
-    };
-  }
-
-  if (!roster.has(targetName) && !isPersonaUnlocked(targetName)) {
-    return {
-      status: 'locked',
-      name: targetName,
-      blockers: [targetName],
-      hintIngredients: [],
-      directOwnedCount: 0,
-      ingredientLevelSum: 999,
-      recipeKey: targetName,
-      unlockLabel: getPersonaUnlockLabel(targetName)
-    };
-  }
-
-  if (roster.has(targetName)) {
-    return {
-      status: 'owned',
-      name: targetName,
-      path: [],
-      missing: [],
-      blockers: [],
-      stepCount: 0,
-      maxDepth: 0
-    };
-  }
-
-  if (trail.has(targetName) || depth > MAX_PLANNER_DEPTH) {
-    return {
-      status: 'blocked',
-      name: targetName,
-      blockers: [targetName],
-      hintIngredients: [],
-      directOwnedCount: 0,
-      ingredientLevelSum: 999,
-      recipeKey: targetName
-    };
-  }
-
-  const memoKey = `${targetName}|${depth}`;
-  if (memo.has(memoKey)) {
-    return memo.get(memoKey);
-  }
-
-  const recipes = getRecipeCandidates(targetName, roster);
-  if (!recipes.length) {
-    const noRecipeNode = {
-      status: 'blocked',
-      name: targetName,
-      blockers: [targetName],
-      hintIngredients: [],
-      directOwnedCount: 0,
-      ingredientLevelSum: 999,
-      recipeKey: targetName
-    };
-    memo.set(memoKey, noRecipeNode);
-    return noRecipeNode;
-  }
-
-  const nextTrail = new Set(trail);
-  nextTrail.add(targetName);
-  const solvableCandidates = [];
-  const blockedCandidates = [];
-
-  recipes.forEach((recipe) => {
-    const childNodes = recipe.ingredients.map((ingredient) =>
-      buildPlanNode(ingredient, roster, memo, depth + 1, nextTrail)
-    );
-    const directOwnedCount = childNodes.filter((child) => child.status === 'owned').length;
-    const ingredientLevelSum = recipe.ingredients.reduce(
-      (sum, ingredient) => sum + (PERSONAS[ingredient]?.lvl || 99),
-      0
-    );
-    const recipeKey = recipe.ingredients.join('|');
-
-    if (childNodes.every((child) => child.status !== 'blocked' && child.status !== 'locked')) {
-      const path = childNodes.flatMap((child) => child.path).concat({
-        type: recipe.type,
-        result: targetName,
-        ingredients: [...recipe.ingredients],
-        level: PERSONAS[targetName]?.lvl || 0,
-        arcana: PERSONAS[targetName]?.race || ''
-      });
-      const missing = uniqueValues(
-        childNodes.flatMap((child) => {
-          if (child.status === 'owned') {
-            return [];
-          }
-          return [child.name, ...child.missing];
-        })
-      ).filter((name) => name !== targetName);
-
-      solvableCandidates.push({
-        status: 'solvable',
-        name: targetName,
-        path,
-        missing,
-        blockers: [],
-        stepCount: path.length,
-        maxDepth: Math.max(0, ...childNodes.map((child) => child.maxDepth || 0)) + 1,
-        directOwnedCount,
-        ingredientLevelSum,
-        recipeKey
-      });
-      return;
-    }
-
-    blockedCandidates.push({
-      status: 'blocked',
-      name: targetName,
-      blockers: uniqueValues(
-        childNodes.flatMap((child) => (child.blockers?.length ? child.blockers : [child.name]))
-      ),
-      hintIngredients: [...recipe.ingredients],
-      directOwnedCount,
-      ingredientLevelSum,
-      recipeKey
-    });
-  });
-
-  if (solvableCandidates.length) {
-    const bestSolvable = solvableCandidates.sort(compareSolvablePlans)[0];
-    memo.set(memoKey, bestSolvable);
-    return bestSolvable;
-  }
-  const bestBlocked = blockedCandidates.sort(compareBlockedPlans)[0];
-  memo.set(memoKey, bestBlocked);
-  return bestBlocked;
-}
-
-function buildFusionPlanner(targetName) {
-  const roster = getRosterSet();
-  const memo = new Map();
-  if (roster.has(targetName)) {
-    return {
-      status: 'owned',
-      target: targetName,
-      path: [],
-      nextActions: [],
-      neededFirst: [],
-      blockers: []
-    };
-  }
-
-  const node = buildPlanNode(targetName, roster, memo);
-  if (node.status === 'locked') {
-    return {
-      status: 'locked',
-      target: targetName,
-      path: [],
-      nextActions: [],
-      neededFirst: [],
-      blockers: node.blockers || [targetName],
-      unlockLabel: node.unlockLabel || getPersonaUnlockLabel(targetName)
-    };
-  }
-  if (node.status === 'blocked') {
-    return {
-      status: 'blocked',
-      target: targetName,
-      path: [],
-      nextActions: [],
-      neededFirst: [],
-      blockers: node.blockers || [targetName],
-      hintIngredients: node.hintIngredients || []
-    };
-  }
-
-  const currentLevel = getCurrentPlayerLevel();
-  const nextActions = node.path.filter(
-    (step) => step.ingredients.every((ingredient) => roster.has(ingredient)) && (step.level || 0) <= currentLevel
-  );
-  const neededFirst = uniqueValues(
-    node.path
-      .map((step) => step.result)
-      .filter((name) => name !== targetName && !roster.has(name))
-  );
-
-  return {
-    status: 'solvable',
-    target: targetName,
-    path: node.path,
-    nextActions,
-    neededFirst,
-    blockers: [],
-    stepCount: node.stepCount,
-    maxDepth: node.maxDepth
-  };
 }
 
 function renderPlannerAction(step, label) {
@@ -597,51 +150,51 @@ function renderPlannerPath(path, targetName) {
           } else if (available.has(ingredient)) {
             stateClass = 'fused';
           }
-          return `<span class="chain-ing ${stateClass}">${ingredient}</span>`;
+          return `<span class="chain-ing ${stateClass}">${escapeHtml(ingredient)}</span>`;
         })
         .join(' + ');
       available.add(step.result);
-      return `<div class="chain-step ${readyNow ? 'planner-step-ready' : ''}"><span class="chain-num">${index + 1}</span><span class="chain-ings">${ingredientHtml}</span><span class="chain-arrow">&rarr;</span><span class="chain-result${step.result === targetName ? ' chain-target' : ''}">${step.result}</span><span class="chain-meta">Lv${step.level || '?'} ${step.arcana || ''}</span><span class="planner-step-action">${renderPlannerAction(step, readyNow ? 'Fuse Now' : 'Load Recipe')}</span></div>`;
+      return `<div class="chain-step ${readyNow ? 'planner-step-ready' : ''}"><span class="chain-num">${index + 1}</span><span class="chain-ings">${ingredientHtml}</span><span class="chain-arrow">&rarr;</span><span class="chain-result${step.result === targetName ? ' chain-target' : ''}">${escapeHtml(step.result)}</span><span class="chain-meta">Lv${step.level || '?'} ${escapeHtml(step.arcana || '')}</span><span class="planner-step-action">${renderPlannerAction(step, readyNow ? 'Fuse Now' : 'Load Recipe')}</span></div>`;
     })
     .join('')}</div>`;
 }
 
 function renderPlanner(plan) {
   const target = PERSONAS[plan.target];
-  const targetMeta = `<span class="r-arcana-badge">${target?.race || ''}</span><span class="r-lvl-badge">Lv ${target?.lvl || '?'}</span>`;
+  const targetMeta = `<span class="r-arcana-badge">${escapeHtml(target?.race || '')}</span><span class="r-lvl-badge">Lv ${target?.lvl || '?'}</span>`;
   const targetInsight = target ? `<div class="planner-target-insight">${renderPersonaInsightMarkup(plan.target)}</div>` : '';
 
   if (plan.status === 'owned') {
-    return `<div class="planner-shell"><div class="planner-summary planner-summary-owned"><div class="planner-summary-main"><span class="planner-status planner-status-owned">Owned</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>This persona is already in your roster.</p></div>${targetInsight}</div>`;
+    return `<div class="planner-shell"><div class="planner-summary planner-summary-owned"><div class="planner-summary-main"><span class="planner-status planner-status-owned">Owned</span><span class="planner-target">${escapeHtml(plan.target)}</span>${targetMeta}</div><p>This persona is already in your roster.</p></div>${targetInsight}</div>`;
   }
 
   if (plan.status === 'locked') {
-    return `<div class="planner-shell"><div class="planner-summary planner-summary-blocked"><div class="planner-summary-main"><span class="planner-status planner-status-blocked">Locked</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>${escapeHtml(plan.unlockLabel || 'Unlock this Persona before fusion recipes are available.')}</p></div>${targetInsight}</div>`;
+    return `<div class="planner-shell"><div class="planner-summary planner-summary-blocked"><div class="planner-summary-main"><span class="planner-status planner-status-blocked">Locked</span><span class="planner-target">${escapeHtml(plan.target)}</span>${targetMeta}</div><p>${escapeHtml(plan.unlockLabel || 'Unlock this Persona before fusion recipes are available.')}</p></div>${targetInsight}</div>`;
   }
 
   if (plan.status === 'blocked') {
     const blockers = plan.blockers.length
-      ? plan.blockers.map((name) => `<span class="planner-pill planner-pill-blocked">${name}</span>`).join('')
+      ? plan.blockers.map((name) => `<span class="planner-pill planner-pill-blocked">${escapeHtml(name)}</span>`).join('')
       : `<span class="planner-empty">No reachable blocker identified.</span>`;
     const closestRecipe = plan.hintIngredients?.length
-      ? `<div class="planner-section"><h4>Closest Recipe</h4><div class="planner-pill-row">${plan.hintIngredients.map((name) => `<span class="planner-pill">${name}</span>`).join('')}<span class="chain-arrow">&rarr;</span><span class="planner-pill planner-pill-target">${plan.target}</span></div></div>`
+      ? `<div class="planner-section"><h4>Closest Recipe</h4><div class="planner-pill-row">${plan.hintIngredients.map((name) => `<span class="planner-pill">${escapeHtml(name)}</span>`).join('')}<span class="chain-arrow">&rarr;</span><span class="planner-pill planner-pill-target">${escapeHtml(plan.target)}</span></div></div>`
       : '';
-    return `<div class="planner-shell"><div class="planner-summary planner-summary-blocked"><div class="planner-summary-main"><span class="planner-status planner-status-blocked">Blocked</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>No full fusion path could be derived from your current roster.</p></div>${targetInsight}<div class="planner-section"><h4>Blocked By</h4><div class="planner-pill-row">${blockers}</div></div>${closestRecipe}</div>`;
+    return `<div class="planner-shell"><div class="planner-summary planner-summary-blocked"><div class="planner-summary-main"><span class="planner-status planner-status-blocked">Blocked</span><span class="planner-target">${escapeHtml(plan.target)}</span>${targetMeta}</div><p>No full fusion path could be derived from your current roster.</p></div>${targetInsight}<div class="planner-section"><h4>Blocked By</h4><div class="planner-pill-row">${blockers}</div></div>${closestRecipe}</div>`;
   }
 
   const nextActions = plan.nextActions.length
     ? plan.nextActions
         .map(
           (step) =>
-            `<div class="planner-action-card"><div><div class="planner-action-name">${step.result}</div><div class="planner-action-from">${step.ingredients.join(' + ')}</div></div>${renderPlannerAction(step, step.type === 'special' ? 'Special Fusion' : 'Fuse Now')}</div>`
+            `<div class="planner-action-card"><div><div class="planner-action-name">${escapeHtml(step.result)}</div><div class="planner-action-from">${step.ingredients.map((ingredient) => escapeHtml(ingredient)).join(' + ')}</div></div>${renderPlannerAction(step, step.type === 'special' ? 'Special Fusion' : 'Fuse Now')}</div>`
         )
         .join('')
     : `<div class="planner-empty">No step is immediately fuseable from the current roster.</div>`;
   const neededFirst = plan.neededFirst.length
-    ? plan.neededFirst.map((name) => `<span class="planner-pill">${name}</span>`).join('')
+    ? plan.neededFirst.map((name) => `<span class="planner-pill">${escapeHtml(name)}</span>`).join('')
     : `<span class="planner-empty">No intermediate personas needed.</span>`;
 
-  return `<div class="planner-shell"><div class="planner-summary"><div class="planner-summary-main"><span class="planner-status planner-status-solvable">Solvable</span><span class="planner-target">${plan.target}</span>${targetMeta}</div><p>Best path found with ${plan.stepCount} step${plan.stepCount === 1 ? '' : 's'}.</p></div>${targetInsight}<div class="planner-grid"><div class="planner-section"><h4>Next Action</h4><div class="planner-action-list">${nextActions}</div></div><div class="planner-section"><h4>Needed First</h4><div class="planner-pill-row">${neededFirst}</div></div></div><div class="planner-section"><h4>Best Path</h4>${renderPlannerPath(plan.path, plan.target)}</div></div>`;
+  return `<div class="planner-shell"><div class="planner-summary"><div class="planner-summary-main"><span class="planner-status planner-status-solvable">Solvable</span><span class="planner-target">${escapeHtml(plan.target)}</span>${targetMeta}</div><p>Best path found with ${plan.stepCount} step${plan.stepCount === 1 ? '' : 's'}.</p></div>${targetInsight}<div class="planner-grid"><div class="planner-section"><h4>Next Action</h4><div class="planner-action-list">${nextActions}</div></div><div class="planner-section"><h4>Needed First</h4><div class="planner-pill-row">${neededFirst}</div></div></div><div class="planner-section"><h4>Best Path</h4>${renderPlannerPath(plan.path, plan.target)}</div></div>`;
 }
 
 function addToRoster(name) {
@@ -822,7 +375,7 @@ function renderPersonaCard(name) {
     return '<div class="invalid-msg">Unknown persona</div>';
   }
   const inheritLabel = getInheritLabel(name);
-  return `<div class="result-card"><div class="r-header"><span class="r-name">${name}</span><span class="r-arcana-badge">${persona.race}</span><span class="r-lvl-badge">Lv ${persona.lvl}</span>${inheritLabel ? `<span class="inherit-badge">Inherits: ${inheritLabel}</span>` : ''}</div><div class="stats-grid">${renderStats(
+  return `<div class="result-card"><div class="r-header"><span class="r-name">${escapeHtml(name)}</span><span class="r-arcana-badge">${escapeHtml(persona.race)}</span><span class="r-lvl-badge">Lv ${persona.lvl}</span>${inheritLabel ? `<span class="inherit-badge">Inherits: ${escapeHtml(inheritLabel)}</span>` : ''}</div><div class="stats-grid">${renderStats(
     persona.stats
   )}</div><div class="resists-row">${renderResists(persona.resists)}</div><div class="skills-list">${renderSkills(
     persona.skills
@@ -1396,7 +949,7 @@ function renderAllFusions() {
   velvetRoot.querySelector('#all-fusions-body').innerHTML = filtered
     .map(
       (fusion) =>
-        `<tr style="cursor:pointer" data-action="populate-fusion" data-a="${escapeHtml(fusion.a)}" data-b="${escapeHtml(fusion.b)}"><td>${fusion.a}</td><td>${fusion.b}</td><td>${fusion.result}${fusion.isNew ? '<span class="new-badge">NEW</span>' : ''}</td><td>${fusion.arcana}</td><td>${fusion.level}</td><td><span class="score-cell" style="${getScoreColor(fusion.score)}">${fusion.score}</span></td></tr>`
+        `<tr style="cursor:pointer" data-action="populate-fusion" data-a="${escapeHtml(fusion.a)}" data-b="${escapeHtml(fusion.b)}"><td>${escapeHtml(fusion.a)}</td><td>${escapeHtml(fusion.b)}</td><td>${escapeHtml(fusion.result)}${fusion.isNew ? '<span class="new-badge">NEW</span>' : ''}</td><td>${escapeHtml(fusion.arcana)}</td><td>${fusion.level}</td><td><span class="score-cell" style="${getScoreColor(fusion.score)}">${fusion.score}</span></td></tr>`
     )
     .join('');
 }
@@ -1453,7 +1006,7 @@ function renderRecommendedFusions() {
         const locked = mode === 'soon';
         const levelText = locked ? `Lv ${fusion.level} / current Lv ${currentLevel}` : `Lv ${fusion.level}`;
         const reason = getRecommendationReason(fusion) || (fusion.isNew ? 'New compendium entry' : 'Useful inheritance check');
-        return `<div class="rec-item${locked ? ' rec-locked' : ''}"><span class="rec-score" style="${getScoreColor(fusion.score)}">${fusion.score}</span><div class="rec-main"><div class="rec-title-row"><span class="rec-name">${fusion.result}</span><span class="rec-meta">${levelText}</span><span class="rec-meta">${fusion.arcana}</span>${fusion.isNew ? '<span class="new-badge">NEW</span>' : ''}${locked ? '<span class="rec-meta rec-locked-label">Locked</span>' : ''}</div><div class="rec-from">${fusion.a} + ${fusion.b}</div><div class="rec-reason">${reason}</div></div><button class="btn btn-sm rec-action" data-action="populate-fusion" data-a="${escapeHtml(fusion.a)}" data-b="${escapeHtml(fusion.b)}">${locked ? 'Preview' : 'Load'}</button></div>`;
+        return `<div class="rec-item${locked ? ' rec-locked' : ''}"><span class="rec-score" style="${getScoreColor(fusion.score)}">${fusion.score}</span><div class="rec-main"><div class="rec-title-row"><span class="rec-name">${escapeHtml(fusion.result)}</span><span class="rec-meta">${escapeHtml(levelText)}</span><span class="rec-meta">${escapeHtml(fusion.arcana)}</span>${fusion.isNew ? '<span class="new-badge">NEW</span>' : ''}${locked ? '<span class="rec-meta rec-locked-label">Locked</span>' : ''}</div><div class="rec-from">${escapeHtml(fusion.a)} + ${escapeHtml(fusion.b)}</div><div class="rec-reason">${escapeHtml(reason)}</div></div><button class="btn btn-sm rec-action" data-action="populate-fusion" data-a="${escapeHtml(fusion.a)}" data-b="${escapeHtml(fusion.b)}">${locked ? 'Preview' : 'Load'}</button></div>`;
       }
     )
     .join('');
@@ -1785,7 +1338,7 @@ function switchTab(tab) {
 }
 
 function rerenderFromStore() {
-  reverseLookupCache.clear();
+  getFusionEngine().clearCache();
   renderRoster();
   renderSpecialFusions();
   renderFusionSettings();

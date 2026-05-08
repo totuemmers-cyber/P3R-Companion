@@ -20,11 +20,18 @@ function createDefaultProfileState() {
 }
 
 function encodeSharePayload(payload) {
-  return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+  let binary = '';
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
 }
 
 function decodeSharePayload(code) {
-  return JSON.parse(decodeURIComponent(escape(atob(code))));
+  const binary = atob(code);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
 }
 
 function downloadSave(payload) {

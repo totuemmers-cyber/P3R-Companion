@@ -2,6 +2,11 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node scripts/validate-project.mjs"
+    "test": "npm run test:validate && npm run test:browser",
+    "test:browser": "playwright test",
+    "test:validate": "node scripts/validate-project.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
   }
 }
