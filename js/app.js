@@ -208,6 +208,27 @@ function bootstrap() {
       if (typeof window.openVelvetFusionTarget === 'function') {
         window.openVelvetFusionTarget(targetName);
       }
+    },
+    openReminderDrawer() {
+      switchSection('planner');
+      const open = () => {
+        if (typeof window.openPlannerReminderDrawer === 'function') {
+          window.openPlannerReminderDrawer();
+        }
+      };
+      if (typeof window.requestAnimationFrame === 'function') {
+        window.requestAnimationFrame(open);
+      } else {
+        setTimeout(open, 0);
+      }
+    },
+    addReminderFromContext(payload) {
+      const snapshot = store.dispatch({
+        type: 'REMINDER_ADD',
+        payload
+      });
+      this.openReminderDrawer();
+      return snapshot.reminders;
     }
   };
 

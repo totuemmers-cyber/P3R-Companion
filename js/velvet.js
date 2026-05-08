@@ -1159,7 +1159,7 @@ function renderCompDetailEmptyState(title = 'Select a Persona', message = 'Pick 
 }
 
 function renderCompDetailMarkup(name) {
-  return `<div class="detail-panel">${renderPersonaCard(name)}${renderPersonaInsightMarkup(name)}<div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap"><button class="btn btn-gold" data-action="add-roster" data-name="${escapeHtml(name)}">Add to Roster</button><button class="btn" data-action="set-target" data-name="${escapeHtml(name)}">Set as Fusion Target</button></div><h3 style="margin-top:1rem;font-size:0.95rem">How to Fuse</h3><div data-role="reverse-results"><p style="color:var(--text-muted);font-size:0.85rem">Computing...</p></div></div>`;
+  return `<div class="detail-panel">${renderPersonaCard(name)}${renderPersonaInsightMarkup(name)}<div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap"><button class="btn btn-gold" data-action="add-roster" data-name="${escapeHtml(name)}">Add to Roster</button><button class="btn" data-action="set-target" data-name="${escapeHtml(name)}">Set as Fusion Target</button><button class="btn" data-action="remind-fusion-target" data-name="${escapeHtml(name)}">Remind</button></div><h3 style="margin-top:1rem;font-size:0.95rem">How to Fuse</h3><div data-role="reverse-results"><p style="color:var(--text-muted);font-size:0.85rem">Computing...</p></div></div>`;
 }
 
 function openCompDetailDrawer() {
@@ -1532,6 +1532,25 @@ function initVelvet({ root, store }) {
       closeCompDetailDrawer();
       switchTab('fusion');
       showChainPlanner(setTargetButton.dataset.name);
+      return;
+    }
+    const remindFusionButton = event.target.closest('[data-action="remind-fusion-target"]');
+    if (remindFusionButton && window.p3rApp) {
+      const name = remindFusionButton.dataset.name || '';
+      const persona = PERSONAS[name];
+      const snapshot = velvetStore.getState();
+      if (persona) {
+        window.p3rApp.addReminderFromContext({
+          id: `fusion-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+          system: 'Velvet Room',
+          title: `Fuse ${name}`,
+          detail: `Lv ${persona.lvl} ${persona.race}. Use the Fusion Planner before the next boss or request window.`,
+          date: snapshot.profile.gameDate,
+          priority: 'normal',
+          source: `fusion:${name}`,
+          targetAction: { type: 'velvet-target', label: 'Open Fusion Planner', target: name }
+        });
+      }
       return;
     }
     const compRow = event.target.closest('#comp-body tr[data-name]');

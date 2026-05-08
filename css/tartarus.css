@@ -344,6 +344,18 @@
 #tartarus .objective-note{font-size:0.76rem;color:var(--text-dim);line-height:1.45}
 #tartarus .objective-item.complete .objective-title{text-decoration:line-through;color:var(--text-dim)}
 #tartarus .objective-item.complete .objective-note{opacity:0.75}
+#tartarus .objective-reminder-btn{
+  align-self:flex-start;
+  margin-top:0.25rem;
+  border:1px solid rgba(255,211,106,0.24);
+  background:rgba(255,211,106,0.08);
+  color:#ffd36a;
+  border-radius:6px;
+  padding:0.25rem 0.5rem;
+  font-size:0.72rem;
+  font-weight:800;
+  cursor:pointer;
+}
 
 #tartarus .fullmoon-section{max-width:1400px;margin:0 auto;padding:0 1rem 2rem;display:none}
 #tartarus .fullmoon-section.active{display:block}

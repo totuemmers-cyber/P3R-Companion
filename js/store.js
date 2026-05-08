@@ -160,15 +160,100 @@ function sanitizeFusionSettings(rawFusionSettings) {
   };
 }
 
+function sanitizeReminderTargetAction(rawAction) {
+  if (!isPlainObject(rawAction)) {
+    return null;
+  }
+  const type = typeof rawAction.type === 'string' ? rawAction.type : '';
+  if (!['requests', 'social-links', 'tartarus-floor', 'velvet-target'].includes(type)) {
+    return null;
+  }
+  const action = {
+    type,
+    label: typeof rawAction.label === 'string' && rawAction.label ? rawAction.label.slice(0, 80) : ''
+  };
+  if (type === 'tartarus-floor') {
+    action.floor = clampInt(rawAction.floor, 2, 264, 2);
+  }
+  if (type === 'velvet-target') {
+    action.target = typeof rawAction.target === 'string' ? rawAction.target.slice(0, 80) : '';
+  }
+  if (!action.label) {
+    action.label =
+      type === 'requests'
+        ? 'Open Requests'
+        : type === 'social-links'
+          ? 'Open Social Links'
+          : type === 'tartarus-floor'
+            ? 'Open Floor Ops'
+            : 'Open Fusion Planner';
+  }
+  return action;
+}
+
+function sanitizeReminder(rawReminder, fallbackDate) {
+  if (!isPlainObject(rawReminder)) {
+    return null;
+  }
+  const id = typeof rawReminder.id === 'string' && rawReminder.id ? rawReminder.id.slice(0, 120) : '';
+  const title = typeof rawReminder.title === 'string' && rawReminder.title.trim() ? rawReminder.title.trim().slice(0, 160) : '';
+  if (!id || !title) {
+    return null;
+  }
+  const priority = ['low', 'normal', 'high', 'critical'].includes(rawReminder.priority) ? rawReminder.priority : 'normal';
+  const status = rawReminder.status === 'done' ? 'done' : 'active';
+  return {
+    id,
+    system: typeof rawReminder.system === 'string' && rawReminder.system ? rawReminder.system.slice(0, 40) : 'Planner',
+    title,
+    detail: typeof rawReminder.detail === 'string' ? rawReminder.detail.slice(0, 260) : '',
+    date: sanitizeDate(rawReminder.date, fallbackDate),
+    priority,
+    status,
+    source: typeof rawReminder.source === 'string' ? rawReminder.source.slice(0, 120) : '',
+    targetAction: sanitizeReminderTargetAction(rawReminder.targetAction)
+  };
+}
+
+function sanitizeReminders(rawReminders, fallbackDate) {
+  if (!Array.isArray(rawReminders)) {
+    return [];
+  }
+  const seen = new Set();
+  const reminders = [];
+  rawReminders.forEach((entry) => {
+    const reminder = sanitizeReminder(entry, fallbackDate);
+    if (!reminder || seen.has(reminder.id)) {
+      return;
+    }
+    seen.add(reminder.id);
+    reminders.push(reminder);
+  });
+  return reminders;
+}
+
+function createReminderId(reminder) {
+  if (typeof reminder.id === 'string' && reminder.id) {
+    return reminder.id;
+  }
+  const source = typeof reminder.source === 'string' && reminder.source ? reminder.source : '';
+  const date = reminder.date ? `${reminder.date.month}-${reminder.date.day}` : 'no-date';
+  const title = typeof reminder.title === 'string' ? reminder.title : 'reminder';
+  const key = `${source}|${date}|${title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `reminder-${key || Date.now()}`;
+}
+
 function sanitizeState(rawState, options) {
+  const defaultProfile = options.createDefaultProfileState();
   const baseState = {
     version: 1,
     roster: [],
-    profile: options.createDefaultProfileState(),
+    profile: defaultProfile,
     socialLinks: options.createDefaultSocialLinksState(),
     objectives: {},
     linkedEpisodes: sanitizeLinkedEpisodes({}),
-    fusionSettings: sanitizeFusionSettings({})
+    fusionSettings: sanitizeFusionSettings({}),
+    reminders: []
   };
 
   if (!isPlainObject(rawState)) {
@@ -177,18 +262,20 @@ function sanitizeState(rawState, options) {
 
   const legacySocialLinks = isPlainObject(rawState.socialLinks) ? rawState.socialLinks : {};
 
+  const profile = sanitizeProfile(
+    isPlainObject(rawState.profile)
+      ? rawState.profile
+      : {
+          gameDate: legacySocialLinks.gameDate,
+          stats: legacySocialLinks.stats
+        },
+    options.createDefaultProfileState
+  );
+
   return {
     version: 1,
     roster: sanitizeRoster(rawState.roster, options.validPersonaNames),
-    profile: sanitizeProfile(
-      isPlainObject(rawState.profile)
-        ? rawState.profile
-        : {
-            gameDate: legacySocialLinks.gameDate,
-            stats: legacySocialLinks.stats
-          },
-      options.createDefaultProfileState
-    ),
+    profile,
     socialLinks: sanitizeSocialLinks(
       legacySocialLinks,
       options.createDefaultSocialLinksState,
@@ -196,7 +283,8 @@ function sanitizeState(rawState, options) {
     ),
     objectives: sanitizeObjectives(rawState.objectives),
     linkedEpisodes: sanitizeLinkedEpisodes(rawState.linkedEpisodes),
-    fusionSettings: sanitizeFusionSettings(rawState.fusionSettings)
+    fusionSettings: sanitizeFusionSettings(rawState.fusionSettings),
+    reminders: sanitizeReminders(rawState.reminders, profile.gameDate)
   };
 }
 
@@ -265,6 +353,9 @@ function validateImportedPayload(rawData) {
   }
   if (rawData.fusionSettings !== undefined && !isPlainObject(rawData.fusionSettings)) {
     throw new Error('Invalid save data: fusionSettings must be an object.');
+  }
+  if (rawData.reminders !== undefined && !Array.isArray(rawData.reminders)) {
+    throw new Error('Invalid save data: reminders must be an array.');
   }
 }
 
@@ -505,6 +596,63 @@ function createStore(options) {
           }
         };
       }
+      case 'REMINDER_ADD': {
+        const payload = isPlainObject(action.payload) ? { ...action.payload } : {};
+        payload.id = createReminderId(payload);
+        const reminder = sanitizeReminder(payload, currentState.profile.gameDate);
+        if (!reminder) {
+          return currentState;
+        }
+        const existingIndex = currentState.reminders.findIndex(
+          (entry) => entry.id === reminder.id || (reminder.source && entry.source === reminder.source)
+        );
+        if (existingIndex >= 0) {
+          const reminders = currentState.reminders.slice();
+          reminders[existingIndex] = {
+            ...reminders[existingIndex],
+            ...reminder,
+            id: reminders[existingIndex].id,
+            status: 'active'
+          };
+          return { ...currentState, reminders };
+        }
+        return { ...currentState, reminders: [...currentState.reminders, reminder] };
+      }
+      case 'REMINDER_UPDATE': {
+        const { id, patch } = action.payload || {};
+        if (typeof id !== 'string' || !isPlainObject(patch)) {
+          return currentState;
+        }
+        const index = currentState.reminders.findIndex((entry) => entry.id === id);
+        if (index < 0) {
+          return currentState;
+        }
+        const reminder = sanitizeReminder({ ...currentState.reminders[index], ...patch, id }, currentState.profile.gameDate);
+        if (!reminder) {
+          return currentState;
+        }
+        const reminders = currentState.reminders.slice();
+        reminders[index] = reminder;
+        return { ...currentState, reminders };
+      }
+      case 'REMINDER_SET_DONE': {
+        const { id, done } = action.payload || {};
+        if (typeof id !== 'string') {
+          return currentState;
+        }
+        const reminders = currentState.reminders.map((reminder) =>
+          reminder.id === id ? { ...reminder, status: done === false ? 'active' : 'done' } : reminder
+        );
+        return reminders === currentState.reminders ? currentState : { ...currentState, reminders };
+      }
+      case 'REMINDER_DELETE': {
+        const id = action.payload;
+        if (typeof id !== 'string') {
+          return currentState;
+        }
+        const reminders = currentState.reminders.filter((reminder) => reminder.id !== id);
+        return reminders.length === currentState.reminders.length ? currentState : { ...currentState, reminders };
+      }
       case 'STATE_IMPORT':
         return sanitizeState(action.payload, options);
       case 'STATE_RESET':
@@ -551,6 +699,7 @@ function createStore(options) {
       objectives: snapshot.objectives,
       linkedEpisodes: snapshot.linkedEpisodes,
       fusionSettings: snapshot.fusionSettings,
+      reminders: snapshot.reminders,
       exportedAt: new Date().toISOString()
     };
   }
@@ -566,7 +715,8 @@ function createStore(options) {
         socialLinks: rawData.socialLinks,
         objectives: rawData.objectives,
         linkedEpisodes: rawData.linkedEpisodes,
-        fusionSettings: rawData.fusionSettings
+        fusionSettings: rawData.fusionSettings,
+        reminders: rawData.reminders
       }
     });
   }

@@ -1011,6 +1011,7 @@ function validateStoreRoundtrip(context) {
     Object.keys(initial.linkedEpisodes.completed).length === 0 && Object.keys(initial.linkedEpisodes.skipped).length === 0,
     'Store default linked episode state should be empty'
   );
+  assert(initial.reminders.length === 0, 'Store default reminders should be empty');
   const initialPersistCount = setItemCalls;
   store.saveToStorage();
   assert(setItemCalls === initialPersistCount, 'Store should skip redundant localStorage writes');
@@ -1025,6 +1026,20 @@ function validateStoreRoundtrip(context) {
   store.dispatch({ type: 'LINKED_EPISODE_SET_SKIPPED', payload: { id: 'akihiko-01', skipped: true } });
   store.dispatch({ type: 'FUSION_SET_DLC_ENABLED', payload: false });
   store.dispatch({ type: 'FUSION_SET_MANUAL_UNLOCK', payload: { key: 'junpei-baseball-glove', unlocked: true } });
+  store.dispatch({
+    type: 'REMINDER_ADD',
+    payload: {
+      id: 'request-test',
+      system: 'Requests',
+      title: 'Request reminder',
+      detail: 'Deadline check',
+      date: { month: 6, day: 1 },
+      priority: 'high',
+      source: 'request:test',
+      targetAction: { type: 'requests', label: 'Open Requests' }
+    }
+  });
+  store.dispatch({ type: 'REMINDER_SET_DONE', payload: { id: 'request-test', done: true } });
 
   const sanitized = store.getState();
   assert(JSON.stringify(sanitized.roster) === JSON.stringify(['Orpheus']), 'Store should reject invalid roster entries');
@@ -1039,6 +1054,7 @@ function validateStoreRoundtrip(context) {
     sanitized.fusionSettings.manualUnlocks['junpei-baseball-glove'] === true,
     'Store should persist manual fusion unlocks'
   );
+  assert(sanitized.reminders[0]?.status === 'done', 'Store should persist reminder state');
 
   const exported = store.exportSave();
   store.dispatch({ type: 'STATE_RESET' });
@@ -1053,6 +1069,7 @@ function validateStoreRoundtrip(context) {
     restored.fusionSettings.manualUnlocks['junpei-baseball-glove'] === true,
     'Store import should restore manual fusion unlocks'
   );
+  assert(restored.reminders[0]?.id === 'request-test', 'Store import should restore reminders');
 
   let rejected = false;
   try {
@@ -1145,6 +1162,7 @@ function validateBrowserEntrypoints() {
     'js/linked-episode-advisor.js',
     'js/social-link-advisor.js',
     'js/fusion-engine.js',
+    'js/reminders.js',
     'js/planner.js',
     'js/requests.js',
     'js/tartarus.js',
@@ -1169,6 +1187,7 @@ function validateBrowserEntrypoints() {
   });
   assert(context.socialLinkAdvisor && typeof context.socialLinkAdvisor.getTopModelForDate === 'function', 'Social-link advisor did not register');
   assert(context.linkedEpisodeAdvisor && typeof context.linkedEpisodeAdvisor.getTopModelForDate === 'function', 'Linked-episode advisor did not register');
+  assert(context.p3rReminders && typeof context.p3rReminders.createReminderPlannerModel === 'function', 'Reminder planner did not register');
 
   console.log('Validated browser script load order and public entrypoints.');
 }

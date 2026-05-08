@@ -919,6 +919,15 @@ function slRenderActivityButton(item, label = 'Open') {
   return slRenderFocusButton(item.arcana, label);
 }
 
+function slRenderReminderButton(item) {
+  const id = slIsLinkedEpisodeModel(item) ? item.id : item.arcana;
+  return `<button class="sl-mini-action sl-reminder-action" data-sl-reminder="${escapeHtml(id)}">Remind</button>`;
+}
+
+function slRenderActivityActions(item, label = 'Open') {
+  return `${slRenderActivityButton(item, label)}${slRenderReminderButton(item)}`;
+}
+
 function slFormatActivityMeta(item) {
   if (slIsLinkedEpisodeModel(item)) {
     return `Linked Episode ${item.linkedEpisode.episode}`;
@@ -1009,6 +1018,36 @@ function slGetActionableModels(date = slState.gameDate, timeSlot = 'day') {
 
 function slGetTopTodayModelForDate(date = slState.gameDate, timeSlot = 'day') {
   return slGetActionableModels(date, timeSlot)[0] || null;
+}
+
+function slFindReminderModel(id) {
+  const models = [
+    ...slGetModelsForCurrentState(),
+    ...slGetActionableModels(slState.gameDate, 'day'),
+    ...slGetActionableModels(slState.gameDate, 'evening')
+  ];
+  return models.find((item) => (slIsLinkedEpisodeModel(item) ? item.id === id : item.arcana === id)) || null;
+}
+
+function slAddReminderForModel(id) {
+  const model = slFindReminderModel(id);
+  if (!model || !window.p3rApp) {
+    return;
+  }
+  const title = slIsLinkedEpisodeModel(model)
+    ? `${model.link.character} Linked Episode ${model.linkedEpisode.episode}`
+    : `${model.link.character} Social Link`;
+  const detail = slGetRecommendationWhy(model) || model.nextStep || 'Check this activity before spending the slot elsewhere.';
+  window.p3rApp.addReminderFromContext({
+    id: `social-${slIsLinkedEpisodeModel(model) ? model.id : model.arcana}`,
+    system: slIsLinkedEpisodeModel(model) ? 'Linked Episode' : 'Social Links',
+    title,
+    detail,
+    date: slState.gameDate,
+    priority: model.completion?.state === 'must_act_now' || model.deadlineInfo?.isSoon ? 'high' : 'normal',
+    source: `social:${slIsLinkedEpisodeModel(model) ? model.id : model.arcana}`,
+    targetAction: { type: 'social-links', label: 'Open Social Links' }
+  });
 }
 
 function slGetBlockedImportantModel(timeSlot) {
@@ -1159,7 +1198,7 @@ function slRenderBestUseBoard() {
       const why = slGetRecommendationWhy(item) || item.factors.slice(0, 2).join(' | ');
       return `<div class="sl-action-card${slIsLinkedEpisodeModel(item) ? ' linked-episode' : ''}"><div class="sl-action-top"><span class="sl-action-slot">${label}</span><span class="sl-action-state">${stateLabel}</span></div><div class="sl-action-main">${item.link.character}</div><div class="sl-action-copy">${why}</div>${
         item.deadlineInfo.isSoon && item.deadlineInfo.label ? `<div class="sl-action-note">${item.deadlineInfo.label}</div>` : ''
-      }<div class="sl-action-cta">${slRenderActivityButton(item)}</div></div>`;
+      }<div class="sl-action-cta">${slRenderActivityActions(item)}</div></div>`;
     }
     return `<div class="sl-action-card"><div class="sl-action-top"><span class="sl-action-slot">${label}</span><span class="sl-action-state">Fallback</span></div><div class="sl-action-main">Raise ${statFallback.stat}</div><div class="sl-action-copy">${statFallback.note}</div></div>`;
   };
@@ -1330,7 +1369,7 @@ function slRenderUnlockNext() {
         .slice(0, 3)
         .map((entry) => entry.label)
         .join(' | ');
-      return `<div class="sl-focus-item${slIsLinkedEpisodeModel(item) ? ' linked-episode' : ''}"><div class="sl-focus-top"><span class="sl-focus-name">${item.link.character}</span><span class="sl-focus-arcana">${slFormatActivityMeta(item)}</span></div><div class="sl-focus-meta">${item.actionableToday ? 'Start today' : item.nextStep}</div><div class="sl-focus-note">${remaining || (slIsLinkedEpisodeModel(item) ? item.linkedEpisode.reward : 'Everything is in place.')}</div><div class="sl-risk-actions">${slRenderActivityButton(item)}</div></div>`;
+      return `<div class="sl-focus-item${slIsLinkedEpisodeModel(item) ? ' linked-episode' : ''}"><div class="sl-focus-top"><span class="sl-focus-name">${item.link.character}</span><span class="sl-focus-arcana">${slFormatActivityMeta(item)}</span></div><div class="sl-focus-meta">${item.actionableToday ? 'Start today' : item.nextStep}</div><div class="sl-focus-note">${remaining || (slIsLinkedEpisodeModel(item) ? item.linkedEpisode.reward : 'Everything is in place.')}</div><div class="sl-risk-actions">${slRenderActivityActions(item)}</div></div>`;
     })
     .join('');
 }
@@ -1420,7 +1459,7 @@ function slRenderPremiumWeek() {
       if (item.deadlineInfo.isSoon && item.deadlineInfo.label) {
         tags.push(item.deadlineInfo.label);
       }
-      return `<div class="sl-focus-item${slIsLinkedEpisodeModel(item) ? ' linked-episode' : ''}"><div class="sl-focus-top"><span class="sl-focus-name">${item.link.character}</span><span class="sl-focus-arcana">${slFormatActivityMeta(item)}</span></div><div class="sl-focus-meta">${slFormatDate(item.date)} | ${slGetSlotLabel(item.timeSlot)}</div><div class="sl-focus-note">${tags.join(' | ')}</div><div class="sl-risk-actions">${slRenderActivityButton(item)}</div></div>`;
+      return `<div class="sl-focus-item${slIsLinkedEpisodeModel(item) ? ' linked-episode' : ''}"><div class="sl-focus-top"><span class="sl-focus-name">${item.link.character}</span><span class="sl-focus-arcana">${slFormatActivityMeta(item)}</span></div><div class="sl-focus-meta">${slFormatDate(item.date)} | ${slGetSlotLabel(item.timeSlot)}</div><div class="sl-focus-note">${tags.join(' | ')}</div><div class="sl-risk-actions">${slRenderActivityActions(item)}</div></div>`;
     })
     .join('');
 }
@@ -1596,7 +1635,7 @@ function slRenderRecommendations() {
       : primary.rosterMatch
       ? `<div class="sl-rec-planning sl-rec-planning-ok">Matching persona: ${primary.rosterMatch}</div>`
       : '<div class="sl-rec-planning sl-rec-planning-gap">No matching persona in roster.</div>'
-  }${slBuildGuidePreview(primaryNextRank)}<div class="sl-rec-actions">${slRenderActivityButton(primary)}</div></section>`;
+  }${slBuildGuidePreview(primaryNextRank)}<div class="sl-rec-actions">${slRenderActivityActions(primary)}</div></section>`;
 
   if (backups.length) {
     html += `<section class="sl-rec-group"><h3>${backupTitle}</h3>${backups
@@ -1610,7 +1649,7 @@ function slRenderRecommendations() {
           nextRankData
         )}</div><div class="sl-rec-side"><span class="sl-rec-rank-badge">${
           slIsLinkedEpisodeModel(item) ? `Ep ${item.linkedEpisode.episode}` : item.actionableToday && !item.availableToday ? 'Start' : `Rk ${item.rank}/10`
-        }</span>${slRenderActivityButton(item)}</div></div>`;
+        }</span>${slRenderActivityActions(item)}</div></div>`;
       })
       .join('')}</section>`;
   }
@@ -1621,7 +1660,7 @@ function slRenderRecommendations() {
       : blockedImportant.nextStep;
     html += `<section class="sl-rec-group"><h3>${blockedTitle}</h3><div class="sl-rec-item blocked-callout${slIsLinkedEpisodeModel(blockedImportant) ? ' linked-episode' : ''}"><div class="sl-rec-info"><div class="sl-rec-name-row"><span class="sl-rec-name">${blockedImportant.link.character}</span><span class="sl-rec-arcana">${slFormatActivityMeta(blockedImportant)}</span></div>${renderTags(
       blockedImportant.tags.slice(0, 3)
-    )}<div class="sl-rec-detail">${blockedReason}</div></div><div class="sl-rec-side">${slRenderActivityButton(
+    )}<div class="sl-rec-detail">${blockedReason}</div></div><div class="sl-rec-side">${slRenderActivityActions(
       blockedImportant,
       'Open'
     )}</div></div></section>`;
@@ -2317,6 +2356,12 @@ function initSocialLinks({ root, store }) {
     const focusButton = event.target.closest('[data-sl-focus]');
     if (focusButton) {
       slFocusArcana(focusButton.dataset.slFocus);
+      return;
+    }
+
+    const reminderButton = event.target.closest('[data-sl-reminder]');
+    if (reminderButton) {
+      slAddReminderForModel(reminderButton.dataset.slReminder);
       return;
     }
 

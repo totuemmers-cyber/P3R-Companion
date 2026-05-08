@@ -555,6 +555,20 @@ function buildWarnings(snapshot, context) {
   const warnings = [];
   const currentLevel = snapshot.profile.playerLevel;
 
+  (context.reminderModel?.urgent || []).forEach((reminder) => {
+    warnings.push({
+      tone: reminder.group === 'overdue' || reminder.priority === 'critical' ? 'critical' : 'warning',
+      text:
+        reminder.group === 'overdue'
+          ? `${reminder.title} is overdue.`
+          : reminder.group === 'today'
+            ? `${reminder.title} is due today.`
+            : `${reminder.title} is coming up on ${window.p3rReminders.formatReminderDate(reminder.date)}.`,
+      action: reminder.targetAction,
+      reminderId: reminder.id
+    });
+  });
+
   if (context.urgentObjective) {
     warnings.push({
       tone: 'warning',
@@ -738,6 +752,20 @@ function buildActionQueue(snapshot, context, primaryAction) {
       score: 100
     })
   ];
+
+  (context.reminderModel?.urgent || []).forEach((reminder) => {
+    queue.push(
+      createQueueItem({
+        system: reminder.system || 'Reminder',
+        tone: reminder.group === 'overdue' || reminder.priority === 'critical' ? 'critical' : 'warning',
+        title: reminder.title,
+        copy: reminder.detail || `${window.p3rReminders.formatReminderDate(reminder.date)} reminder.`,
+        meta: reminder.group === 'today' ? 'Due today' : reminder.group === 'overdue' ? 'Overdue' : 'Reminder',
+        action: reminder.targetAction || { type: 'planner-reminders', label: 'Open Reminders' },
+        score: reminder.urgencyScore
+      })
+    );
+  });
 
   if (context.urgentRequest) {
     queue.push(
@@ -923,6 +951,19 @@ function createUrgentRequestRouteItem(label, request) {
   });
 }
 
+function createReminderRouteItem(label, reminder) {
+  if (!reminder) {
+    return null;
+  }
+  return createRouteItem({
+    label,
+    tone: reminder.group === 'overdue' || reminder.priority === 'critical' ? 'critical' : 'warning',
+    title: reminder.title,
+    copy: reminder.detail || `${window.p3rReminders.formatReminderDate(reminder.date)} reminder.`,
+    action: reminder.targetAction || { type: 'planner-reminders', label: 'Open Reminders' }
+  });
+}
+
 function createTartarusPrepRouteItem(label, snapshot, context) {
   if (context.nearestObjective) {
     return createRouteItem({
@@ -1043,6 +1084,7 @@ function buildTodayRoute(snapshot, context, warnings) {
 
   const optional = uniqueRouteItems(
     [
+      createReminderRouteItem('Reminder', context.reminderModel?.routePicks?.[0]),
       context.urgentRequest && !usedCompleteIds.has(context.urgentRequest.id)
         ? createUrgentRequestRouteItem('Optional', context.urgentRequest)
         : null,
@@ -1143,6 +1185,9 @@ function getPlannerModel() {
   const urgentRequest = getUrgentRequest(snapshot);
   const nearestObjective = currentBlock ? getNearestObjective(snapshot, currentFloor, currentBlock.id) : null;
   const fusionOpportunity = getFusionOpportunity(snapshot, dayPick, nextFullMoon);
+  const reminderModel = window.p3rReminders
+    ? window.p3rReminders.createReminderPlannerModel(snapshot)
+    : { reminders: [], groups: {}, urgent: [], routePicks: [], summary: { activeCount: 0, todayCount: 0, overdueCount: 0, soonCount: 0 } };
   const context = {
     currentBlock,
     dayPick,
@@ -1154,7 +1199,8 @@ function getPlannerModel() {
     urgentObjective,
     urgentRequest,
     nearestObjective,
-    fusionOpportunity
+    fusionOpportunity,
+    reminderModel
   };
   const primaryAction = choosePrimaryAction(snapshot, {
     ...context,
@@ -1171,7 +1217,8 @@ function getPlannerModel() {
     warnings,
     primaryAction,
     actionQueue,
-    todayRoute
+    todayRoute,
+    reminderModel
   };
 }
 
@@ -1246,17 +1293,70 @@ function renderTodayRoute(model) {
     ? `<div class="planner-route-optional">${route.optional.map(renderTodayRouteItem).join('')}</div>`
     : '';
   const warningHtml = route.warning ? `<div class="planner-route-warning">${renderTodayRouteItem(route.warning)}</div>` : '';
+  const reminderSummary = model.reminderModel.summary;
+  const reminderChip = model.reminderModel.reminders.length
+    ? `<button class="planner-reminder-chip" type="button" data-open-reminders>${
+        reminderSummary.activeCount
+          ? reminderSummary.todayCount || reminderSummary.overdueCount
+            ? `${reminderSummary.overdueCount + reminderSummary.todayCount} due`
+            : `${reminderSummary.activeCount} reminders`
+          : 'Reminders'
+      }</button>`
+    : '';
 
   return `<div class="planner-route-head">
       <div>
         <h2>Today's Route</h2>
         <div class="planner-muted">${escapeHtml(formatDate(model.snapshot.profile.gameDate))} condensed into the next few decisions.</div>
       </div>
-      <span class="planner-action-queue-count">2-slot plan</span>
+      <div class="planner-route-tools">${reminderChip}<span class="planner-action-queue-count">2-slot plan</span></div>
     </div>
     <div class="planner-route-grid">${route.primary.map(renderTodayRouteItem).join('')}</div>
     ${optionalHtml}
     ${warningHtml}`;
+}
+
+function renderReminderDrawer(model) {
+  const body = plannerRoot.querySelector('#reminder-drawer-body');
+  if (!body) {
+    return;
+  }
+  const reminderModel = model.reminderModel;
+  if (!reminderModel.reminders.length) {
+    body.innerHTML = '<div class="reminder-empty">No reminders yet. Add them from Requests, Social Links, Tartarus, or Velvet Room when a deadline or prep target matters.</div>';
+    return;
+  }
+  body.innerHTML = window.p3rReminders.groupOrder
+    .map((group) => {
+      const reminders = reminderModel.groups[group] || [];
+      if (!reminders.length) {
+        return '';
+      }
+      return `<section class="reminder-group"><div class="reminder-group-title">${escapeHtml(
+        window.p3rReminders.groupLabels[group] || group
+      )}</div>${reminders.map(renderReminderItem).join('')}</section>`;
+    })
+    .join('');
+}
+
+function renderReminderItem(reminder) {
+  const actionButton = reminder.targetAction ? renderActionButton(reminder.targetAction) : '';
+  const doneLabel = reminder.status === 'done' ? 'Reopen' : 'Mark Done';
+  return `<article class="reminder-item reminder-item-${escapeHtml(reminder.group)}">
+    <div class="reminder-item-head">
+      <div>
+        <div class="reminder-item-title">${escapeHtml(reminder.title)}</div>
+        <div class="planner-muted">${escapeHtml(reminder.system)} &bull; ${escapeHtml(window.p3rReminders.formatReminderDate(reminder.date))}</div>
+      </div>
+      <div class="reminder-item-meta">${escapeHtml(reminder.priority)}</div>
+    </div>
+    ${reminder.detail ? `<div class="reminder-item-detail">${escapeHtml(reminder.detail)}</div>` : ''}
+    <div class="reminder-actions">
+      ${actionButton}
+      <button class="planner-action-btn planner-reminder-done-btn" type="button" data-reminder-done="${escapeHtml(reminder.id)}" data-reminder-next="${reminder.status === 'done' ? 'active' : 'done'}">${doneLabel}</button>
+      <button class="planner-action-btn planner-reminder-delete-btn" type="button" data-reminder-delete="${escapeHtml(reminder.id)}">Delete</button>
+    </div>
+  </article>`;
 }
 
 function renderSlotActionLegacy(label, item, fallback, blockedReason) {
@@ -1357,6 +1457,9 @@ function renderActionButton(action) {
   if (action.type === 'velvet-target') {
     return `<button class="planner-action-btn" data-nav="velvet-target" data-target="${escapeHtml(action.target)}">${escapeHtml(action.label)}</button>`;
   }
+  if (action.type === 'planner-reminders') {
+    return `<button class="planner-action-btn" data-open-reminders>${escapeHtml(action.label)}</button>`;
+  }
   return `<button class="planner-action-btn" data-nav="${escapeHtml(action.type)}">${escapeHtml(action.label)}</button>`;
 }
 
@@ -1386,6 +1489,7 @@ function renderPlanner() {
   plannerRoot.querySelector('#planner-day-night').innerHTML = renderDayNight(model);
   plannerRoot.querySelector('#planner-tartarus').innerHTML = renderTartarus(model);
   plannerRoot.querySelector('#planner-fusion').innerHTML = renderFusion(model);
+  renderReminderDrawer(model);
 }
 
 function scheduleRenderPlanner() {
@@ -1404,7 +1508,60 @@ function scheduleRenderPlanner() {
   }
 }
 
+function openReminderDrawer() {
+  const overlay = plannerRoot.querySelector('#reminder-drawer-overlay');
+  const drawer = plannerRoot.querySelector('#reminder-drawer');
+  if (!overlay || !drawer) {
+    return;
+  }
+  overlay.classList.add('active');
+  drawer.classList.add('active');
+  drawer.setAttribute('aria-hidden', 'false');
+}
+
+function closeReminderDrawer() {
+  const overlay = plannerRoot.querySelector('#reminder-drawer-overlay');
+  const drawer = plannerRoot.querySelector('#reminder-drawer');
+  if (!overlay || !drawer) {
+    return;
+  }
+  overlay.classList.remove('active');
+  drawer.classList.remove('active');
+  drawer.setAttribute('aria-hidden', 'true');
+}
+
 function onPlannerAction(event) {
+  if (event.target.closest('[data-open-reminders]')) {
+    openReminderDrawer();
+    return;
+  }
+
+  if (event.target.closest('#reminder-drawer-close') || event.target === plannerRoot.querySelector('#reminder-drawer-overlay')) {
+    closeReminderDrawer();
+    return;
+  }
+
+  const doneButton = event.target.closest('[data-reminder-done]');
+  if (doneButton) {
+    plannerStore.dispatch({
+      type: 'REMINDER_SET_DONE',
+      payload: {
+        id: doneButton.dataset.reminderDone,
+        done: doneButton.dataset.reminderNext !== 'active'
+      }
+    });
+    return;
+  }
+
+  const deleteButton = event.target.closest('[data-reminder-delete]');
+  if (deleteButton) {
+    plannerStore.dispatch({
+      type: 'REMINDER_DELETE',
+      payload: deleteButton.dataset.reminderDelete
+    });
+    return;
+  }
+
   const completeButton = event.target.closest('[data-complete-id]');
   if (completeButton) {
     plannerStore.dispatch({
@@ -1436,6 +1593,7 @@ function onPlannerAction(event) {
   }
   if (nav === 'velvet-target') {
     window.p3rApp.openFusionTarget(button.dataset.target || '');
+    return;
   }
 }
 
@@ -1465,6 +1623,7 @@ function initPlanner({ root, store }) {
     window.p3rApp.subscribeToSocialLinkFocusMode(scheduleRenderPlanner);
   }
   renderPlanner();
+  window.openPlannerReminderDrawer = openReminderDrawer;
 }
 
 window.initPlanner = initPlanner;

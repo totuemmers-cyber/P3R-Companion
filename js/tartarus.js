@@ -1190,7 +1190,7 @@ function renderObjectiveItem(objective, { floor, exactMatch = false } = {}) {
   if (!exactMatch && Number.isFinite(floorDelta)) {
     floorLine += floorDelta > 0 ? ` • +${floorDelta}F` : floorDelta < 0 ? ` • ${floorDelta}F` : '';
   }
-  return `<label class="objective-item objective-${tone}${complete ? ' complete' : ''}">
+  return `<div class="objective-item objective-${tone}${complete ? ' complete' : ''}">
     <input type="checkbox" class="objective-toggle" data-objective-id="${escapeHtml(objective.id)}"${complete ? ' checked' : ''}>
     <span class="objective-main">
       <span class="objective-top">
@@ -1202,8 +1202,9 @@ function renderObjectiveItem(objective, { floor, exactMatch = false } = {}) {
         objective.socialLink ? ` • protects ${escapeHtml(objective.socialLink)}` : ''
       }</span>
       ${objective.note ? `<span class="objective-note">${escapeHtml(objective.note)}</span>` : ''}
+      ${objective.deadline ? `<button class="objective-reminder-btn" type="button" data-objective-reminder="${escapeHtml(objective.id)}">Remind</button>` : ''}
     </span>
-  </label>`;
+  </div>`;
 }
 
 function renderObjectives(floor, block) {
@@ -1797,6 +1798,27 @@ function initTartarus({ root, store }) {
         id: toggle.dataset.objectiveId,
         complete: toggle.checked
       }
+    });
+  });
+  tartRoot.querySelector('#tartarus-objectives').addEventListener('click', (event) => {
+    const reminderButton = event.target.closest('[data-objective-reminder]');
+    if (!reminderButton || !window.p3rApp) {
+      return;
+    }
+    const objective = getObjectiveList().find((entry) => entry.id === reminderButton.dataset.objectiveReminder);
+    const deadlineDate = parseObjectiveDate(objective?.deadline);
+    if (!objective || !deadlineDate) {
+      return;
+    }
+    window.p3rApp.addReminderFromContext({
+      id: `tartarus-${objective.id}`,
+      system: 'Tartarus',
+      title: objective.title,
+      detail: `Deadline ${objective.deadline}. Target ${objective.floor}F. Reward: ${objective.reward || 'Unknown'}.`,
+      date: deadlineDate,
+      priority: objective.type === 'missing-person' ? 'critical' : 'high',
+      source: `tartarus:${objective.id}`,
+      targetAction: { type: 'tartarus-floor', label: 'Open Floor Ops', floor: objective.floor }
     });
   });
 

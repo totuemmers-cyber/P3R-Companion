@@ -344,6 +344,11 @@ function renderDetail(snapshot) {
   } else if (selected.system === 'velvet') {
     actions.push('<button class="request-action-btn" data-action="velvet">Open Velvet Room</button>');
   }
+  if (selected.deadline) {
+    actions.push(
+      `<button class="request-action-btn" data-action="remind-request" data-reminder-request-id="${escapeHtml(selected.id)}">Remind</button>`
+    );
+  }
 
   container.innerHTML = `
     <div class="request-detail-head">
@@ -484,6 +489,24 @@ function onClick(event) {
   }
   if (action.dataset.action === 'velvet') {
     window.p3rApp.switchSection('velvet');
+    return;
+  }
+  if (action.dataset.action === 'remind-request') {
+    const request = ELIZABETH_REQUESTS.find((entry) => entry.id === action.dataset.reminderRequestId);
+    const deadlineDate = parseMonthDayLabel(request?.deadline);
+    if (!request || !deadlineDate) {
+      return;
+    }
+    window.p3rApp.addReminderFromContext({
+      id: `request-${request.id}`,
+      system: 'Requests',
+      title: `Request #${request.number}: ${request.title}`,
+      detail: `Deadline ${request.deadline}. Reward: ${request.reward || 'Unknown'}.`,
+      date: deadlineDate,
+      priority: 'high',
+      source: `request:${request.id}`,
+      targetAction: { type: 'requests', label: 'Open Requests' }
+    });
   }
 }
 
