@@ -1229,6 +1229,15 @@ function showCompDetail(name, options = {}) {
   }, 10);
 }
 
+function selectCompendiumRow(row) {
+  if (!row) {
+    return;
+  }
+  selectedPersona = row.dataset.name;
+  renderCompendium();
+  showCompDetail(selectedPersona, { openDrawer: isCompDetailDrawerMode() });
+}
+
 function syncCompDetailLayout() {
   if (!selectedPersona) {
     closeCompDetailDrawer();
@@ -1469,6 +1478,12 @@ function initVelvet({ root, store }) {
   });
   velvetRoot.querySelector('#comp-detail-close').addEventListener('click', closeCompDetailDrawer);
   velvetRoot.querySelector('#comp-detail-overlay').addEventListener('click', closeCompDetailDrawer);
+  velvetRoot.querySelector('#comp-body').addEventListener('pointerdown', (event) => {
+    const compRow = event.target.closest('tr[data-name]');
+    if (compRow) {
+      selectCompendiumRow(compRow);
+    }
+  });
   window.addEventListener('resize', syncCompDetailLayout);
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
@@ -1555,9 +1570,7 @@ function initVelvet({ root, store }) {
     }
     const compRow = event.target.closest('#comp-body tr[data-name]');
     if (compRow) {
-      selectedPersona = compRow.dataset.name;
-      renderCompendium();
-      showCompDetail(selectedPersona, { openDrawer: isCompDetailDrawerMode() });
+      selectCompendiumRow(compRow);
     }
   });
 
